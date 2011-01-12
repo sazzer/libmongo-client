@@ -56,4 +56,24 @@ def bson_build_complex ():
             })
     print (b.__repr__ ())
 
+    # A complex document, with arrays and subdocuments
+    b = BSON.encode ({
+            "user": {
+                "name": "V.A. Lucky",
+                "id": 12345,
+            },
+            "posts": [
+                {
+                    "title": "Post #1",
+                    "date": datetime.utcfromtimestamp (1294860709),
+                    "comments": ["first!", "2nd!", "last!"],
+                },
+                {
+                    "title": "Post #2",
+                    "date": datetime.utcfromtimestamp (1294860709),
+                }
+            ]
+    })
+    print (b.__repr__ ())
+
 eval (sys.argv[1] + '()')
