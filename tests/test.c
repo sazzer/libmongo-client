@@ -27,7 +27,15 @@ test_bson_dump (bson *b)
   for (i = 0; i < bson_size (b); i++)
     {
       if (isprint (d[i]))
-	printf ("%c", d[i]);
+	switch (d[i])
+	  {
+	  case '\\':
+	    printf ("\\\\");
+	    break;
+	  default:
+	    printf ("%c", d[i]);
+	    break;
+	  }
       else
 	switch (d[i])
 	  {
