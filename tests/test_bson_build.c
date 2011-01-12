@@ -3,6 +3,7 @@
 #include <ctype.h>
 
 #include "bson.h"
+#include "test.h"
 
 int
 main (void)
@@ -13,6 +14,8 @@ main (void)
   bson *a;
 
   const guint8 *d;
+
+  gboolean r;
 
   a = bson_new ();
   bson_append_string (a, "0", "awesome", -1);
@@ -28,17 +31,8 @@ main (void)
   
   d = bson_data (b);
 
-  for (i = 0; i < bson_size (b); i++)
-    {
-      if (isprint (d[i]))
-	printf ("%c", d[i]);
-      else
-	printf ("\\x%02x", d[i]);
-    }
-
-  printf ("\n");
+  r = test_bson_dump (b);
   bson_free (b);
-  
-  return 0;
-}
 
+  return (r) ? 0 : -1;
+}
