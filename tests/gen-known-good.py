@@ -2,6 +2,8 @@
 from bson import BSON
 from datetime import datetime
 
+import sys
+
 def bson_build_simple ():
     # bson_empty
     b = BSON.encode ({})
@@ -39,4 +41,19 @@ def bson_build_simple ():
     b = BSON.encode ({"int64": 9876543210})
     print (b.__repr__ ())
 
-bson_build_simple ()
+def bson_build_complex ():
+    # Everything from bson_build_simple in one, except the empty bson.
+    b = BSON.encode ({
+            "hello": "world",
+            "goodbye": "cruel world",
+            "double": 3.14,
+            "TRUE": True,
+            "FALSE": False,
+            "date": datetime.utcfromtimestamp (1294860709),
+            "null": None,
+            "int32": 1984,
+            "int64": 9876543210
+            })
+    print (b.__repr__ ())
+
+eval (sys.argv[1] + '()')

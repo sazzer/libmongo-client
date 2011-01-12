@@ -20,3 +20,4 @@ run_test ()
 }
 
 run_test bson_build_simple
+run_test bson_build_complex
