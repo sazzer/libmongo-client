@@ -19,7 +19,15 @@ test_bson_dump (bson *b)
       if (isprint (d[i]))
 	printf ("%c", d[i]);
       else
-	printf ("\\x%02x", d[i]);
+	switch (d[i])
+	  {
+	  case '\t':
+	    printf ("\\t");
+	    break;
+	  default:
+	    printf ("\\x%02x", d[i]);
+	    break;
+	  }
     }
 
   printf ("\n");

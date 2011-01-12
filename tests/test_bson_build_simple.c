@@ -74,9 +74,9 @@ test_bson_boolean (void)
   bson *b;
 
   b = bson_new ();
-  if (!bson_append_boolean (b, "TRUE", TRUE))
-    return FALSE;
   if (!bson_append_boolean (b, "FALSE", FALSE))
+    return FALSE;
+  if (!bson_append_boolean (b, "TRUE", TRUE))
     return FALSE;
   bson_finish (b);
 
