@@ -4,15 +4,14 @@ set -e
 run_test ()
 {
 	test=$1
-	t=$(tempfile)
+	t="$test.out"
 
 	echo "# Running ${test}..."
 	if ! ./test_${test} >$t 2>/dev/null; then
-		rm -f $t
 		return 1
 	fi
 	if ! cmp $t ${srcdir}/${test}.ok 2>/dev/null; then
-		rm -f $t
+		diff -u0 $t ${srcdir}/${test}.ok || true
 		return 1
 	fi
 
