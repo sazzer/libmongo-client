@@ -1,3 +1,4 @@
 #! /bin/sh
+set -e
 
-./test1
+./test_bson_build_simple
