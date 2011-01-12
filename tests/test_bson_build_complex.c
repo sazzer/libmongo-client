@@ -26,7 +26,7 @@ test_bson_complex_1 (void)
   if (!bson_append_int64 (b, "int64", 9876543210))
     return FALSE;
   if (!bson_append_null (b, "null"))
-    return NULL;
+    return FALSE;
   if (!bson_append_boolean (b, "TRUE", TRUE))
     return FALSE;
   if (!bson_append_string (b, "hello", "world", -1))
