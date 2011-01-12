@@ -5,7 +5,7 @@ TESTS = run-tests.sh
 AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
 
-EXTRA_DIST = gen-known-good.py known-good.txt
+EXTRA_DIST = gen-known-good.py bson_build_simple.ok run-tests.sh
 
 test_srcs = test.c test.h
 
