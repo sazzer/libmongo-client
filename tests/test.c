@@ -24,6 +24,9 @@ test_bson_dump (bson *b)
 	  case '\t':
 	    printf ("\\t");
 	    break;
+	  case '\n':
+	    printf ("\\n");
+	    break;
 	  default:
 	    printf ("\\x%02x", d[i]);
 	    break;
