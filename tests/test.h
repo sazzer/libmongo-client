@@ -4,5 +4,6 @@
 #include "bson.h"
 
 gboolean test_bson_dump (bson *b);
+gboolean dump_bson (bson *b);
 
 #endif

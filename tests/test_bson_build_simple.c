@@ -6,16 +6,6 @@
 #include "bson.h"
 #include "test.h"
 
-static gboolean
-dump_bson (bson *b)
-{
-  gboolean r;
-
-  r = test_bson_dump (b);
-  bson_free (b);
-  return r;
-}
-
 gboolean
 test_bson_empty (void)
 {
