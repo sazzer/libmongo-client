@@ -56,6 +56,9 @@ mongo_wire_packet_get_data (mongo_packet *p, const guint8 **data)
 void
 mongo_wire_packet_free (mongo_packet *p)
 {
+  if (!p)
+    return;
+
   g_byte_array_free (p->data, TRUE);
   g_free (p);
 }

@@ -2,6 +2,7 @@
 #define LIBMONGO_CLIENT_TEST_H 1
 
 #include "bson.h"
+#include <stdio.h>
 
 static gchar *current_test = NULL;
 
