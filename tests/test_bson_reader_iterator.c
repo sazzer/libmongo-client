@@ -95,8 +95,39 @@ test_bson_reader_iterate_flat (void)
   return TRUE;
 }
 
+static gboolean
+test_bson_reader_iterate_nested (void)
+{
+  bson *b;
+  bson_cursor *c;
+
+  b = test_bson_generate_nested ();
+
+  c = bson_cursor_new (b);
+
+  TEST (bson_reader_nested_iterate.1);
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOCUMENT);
+  PASS ();
+
+  TEST (bson_reader_nested_iterate.2);
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_ARRAY);
+  PASS ();
+
+  TEST (bson_reader_nested_iterate.3);
+  g_assert (!bson_cursor_next (c));
+  PASS ();
+
+  g_free (c);
+  bson_free (b);
+
+  return TRUE;
+}
+
 int
 main (void)
 {
   g_assert (test_bson_reader_iterate_flat ());
+  g_assert (test_bson_reader_iterate_nested ());
 }
