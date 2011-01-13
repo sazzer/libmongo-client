@@ -58,7 +58,9 @@ gboolean bson_append_int32 (bson *b, const gchar *name, gint32 i);
 gboolean bson_append_timestamp (bson *b, const gchar *name, gint64 ts);
 gboolean bson_append_int64 (bson *b, const gchar *name, gint64 i);
 
+bson_cursor *bson_cursor_new (const bson *b);
 bson_cursor *bson_find (const bson *b, const gchar *name);
+gboolean bson_cursor_next (bson_cursor *c);
 
 bson_type bson_cursor_type (const bson_cursor *c);
 const gchar *bson_cursor_key (const bson_cursor *c);

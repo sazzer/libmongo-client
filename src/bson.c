@@ -312,6 +312,86 @@ bson_append_int64 (bson *b, const gchar *name, gint64 i)
  * Find & retrieve data
  */
 bson_cursor *
+bson_cursor_new (const bson *b)
+{
+  bson_cursor *c;
+
+  if (bson_size (b) == -1)
+    return NULL;
+
+  c = (bson_cursor *)g_try_new0 (bson_cursor, 1);
+  if (!c)
+    return NULL;
+
+  c->obj = b;
+
+  return c;
+}
+
+static gint32
+_bson_get_block_size (bson_type type, const guint8 *data)
+{
+  switch (type)
+    {
+    case BSON_TYPE_STRING:
+    case BSON_TYPE_JS_CODE:
+    case BSON_TYPE_SYMBOL:
+    case BSON_TYPE_JS_CODE_W_SCOPE:
+      return (gint32)data[0] + sizeof (gint32);
+    case BSON_TYPE_DOCUMENT:
+    case BSON_TYPE_ARRAY:
+      return(gint32)data[0];
+    case BSON_TYPE_DOUBLE:
+      return sizeof (gdouble);
+    case BSON_TYPE_BINARY:
+      return (gint32)data[0] + 1;
+    case BSON_TYPE_OID:
+      return 12;
+    case BSON_TYPE_BOOLEAN:
+      return 1;
+    case BSON_TYPE_UTC_DATETIME:
+    case BSON_TYPE_TIMESTAMP:
+    case BSON_TYPE_INT64:
+      return sizeof (gint64);
+    case BSON_TYPE_NULL:
+      return 0;
+    case BSON_TYPE_REGEXP:
+      return -1;
+    case BSON_TYPE_INT32:
+      return sizeof (gint32);
+    default:
+      return -1;
+    }
+}
+
+gboolean
+bson_cursor_next (bson_cursor *c)
+{
+  const guint8 *d;
+  gint32 pos;
+
+  if (!c)
+    return FALSE;
+
+  d = bson_data (c->obj);
+
+  if (c->pos == 0)
+    pos = sizeof (guint32);
+  else
+    pos = c->value_pos +
+      _bson_get_block_size (bson_cursor_type (c), d + c->value_pos);
+
+  if (pos >= bson_size (c->obj) - 1)
+    return FALSE;
+
+  c->pos = pos;
+  c->key = (gchar *) &d[c->pos + 1];
+  c->value_pos = c->pos + strlen (c->key) + 2;
+
+  return TRUE;
+}
+
+bson_cursor *
 bson_find (const bson *b, const gchar *name)
 {
   gint32 pos = sizeof (guint32);
@@ -343,48 +423,7 @@ bson_find (const bson *b, const gchar *name)
 
 	  return c;
 	}
-      pos = value_pos;
-
-      switch (t)
-	{
-	case BSON_TYPE_STRING:
-	case BSON_TYPE_JS_CODE:
-	case BSON_TYPE_SYMBOL:
-	case BSON_TYPE_JS_CODE_W_SCOPE:
-	  pos += (gint32)d[value_pos] + sizeof (gint32);
-	  break;
-	case BSON_TYPE_DOCUMENT:
-	case BSON_TYPE_ARRAY:
-	  pos += (gint32)d[value_pos];
-	  break;
-	case BSON_TYPE_DOUBLE:
-	  pos += sizeof (gdouble);
-	  break;
-	case BSON_TYPE_BINARY:
-	  pos += (gint32)d[value_pos] + 1;
-	  break;
-	case BSON_TYPE_OID:
-	  pos += 12;
-	  break;
-	case BSON_TYPE_BOOLEAN:
-	  pos += 1;
-	  break;
-	case BSON_TYPE_UTC_DATETIME:
-	case BSON_TYPE_TIMESTAMP:
-	case BSON_TYPE_INT64:
-	  pos += sizeof (gint64);
-	  break;
-	case BSON_TYPE_NULL:
-	  break;
-	case BSON_TYPE_REGEXP:
-	  /* FIXME: Add this */
-	  break;
-	case BSON_TYPE_INT32:
-	  pos += sizeof (gint32);
-	  break;
-	default:
-	  break;
-	}
+      pos = value_pos + _bson_get_block_size (t, &d[value_pos]);
     }
 
   return NULL;
