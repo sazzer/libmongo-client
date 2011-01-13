@@ -25,6 +25,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_STDC
 AC_PROG_CC_C99
+AC_PROG_RANLIB
 if test "x$ac_cv_prog_cc_c99" = "xno"; then
 	AC_MSG_ERROR("C99 standard compliant C compiler required. Try GCC 3.x or later.")
 fi
@@ -64,6 +65,7 @@ AC_HEADER_STDC
 dnl ***************************************************************************
 dnl Header checks
 dnl ***************************************************************************
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netinet/in.h sys/socket.h])
 
 AC_CACHE_CHECK(for struct sockaddr_storage, blb_cv_c_struct_sockaddr_storage,
   [AC_EGREP_HEADER([sockaddr_storage], sys/socket.h, blb_cv_c_struct_sockaddr_storage=yes,blb_cv_c_struct_sockaddr_storage=no)])
@@ -81,7 +83,7 @@ AC_CHECK_LIB(socket, socket, BASE_LIBS="$BASE_LIBS -lsocket")
 AC_CHECK_LIB(nsl, gethostbyname, BASE_LIBS="$BASE_LIBS -lnsl")
 AC_CHECK_LIB(resolv, res_init, RESOLV_LIBS="-lresolv")
 
-AC_CHECK_FUNCS(inet_aton inet_ntoa getaddrinfo)
+AC_CHECK_FUNCS(memset socket inet_aton inet_ntoa getaddrinfo)
 
 dnl ***************************************************************************
 dnl GLib headers/libraries
@@ -117,6 +119,7 @@ fi
 dnl ***************************************************************************
 dnl misc features to be enabled
 dnl ***************************************************************************
+AC_C_INLINE
 
 AC_MSG_CHECKING(whether to enable IPv6 support)
 if test "x$blb_cv_c_struct_sockaddr_in6" = "xyes"; then
