@@ -1,6 +1,6 @@
 #include "test.h"
 #include "bson.h"
-#include "mongo_wire.h"
+#include "mongo-wire.h"
 
 #include <glib.h>
 

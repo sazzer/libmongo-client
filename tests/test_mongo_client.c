@@ -2,7 +2,7 @@
 #include "test-generator.h"
 
 #include "mongo-client.h"
-#include "mongo_wire.h"
+#include "mongo-wire.h"
 #include "bson.h"
 
 #include <glib.h>

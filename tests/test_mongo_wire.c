@@ -1,7 +1,7 @@
 #include <glib.h>
 
 #include "bson.h"
-#include "mongo_wire.h"
+#include "mongo-wire.h"
 #include "test-generator.h"
 
 #include <stdio.h>
