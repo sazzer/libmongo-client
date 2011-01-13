@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 static void
 test_mongo_wire_update (void)
@@ -17,6 +18,9 @@ test_mongo_wire_update (void)
 
   const guint8 *hdr, *data;
   gint32 hdr_size, data_size;
+
+  bson_cursor *c;
+  gint32 pos;
 
   sel = bson_new ();
   g_assert (bson_append_null (sel, "_id"));
@@ -29,17 +33,30 @@ test_mongo_wire_update (void)
   bson_free (sel);
   bson_free (upd);
 
-  g_assert ((hdr_size = mongo_wire_packet_get_header (p, &hdr)));
-  g_assert ((data_size = mongo_wire_packet_get_data (p, &data)));
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
+  g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
 
-  /*
-   * FIXME: Right here, we should load up the bson from `data' and
-   * parse it to verify that everything's in order.
-   */
-  /*
-    sel = (bson *)(data + sizeof (gint32) + strlen ("test.libmongo") + 1 +
-		 sizeof (gint32));
-  */
+  pos = sizeof (gint32) + strlen ("test.libmongo") + 1 + sizeof (gint32);
+  g_assert ((sel = bson_new_from_data (data + pos, (gint32)data[pos] - 1)));
+  bson_finish (sel);
+
+  g_assert ((c = bson_find (sel, "_id")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_NULL);
+  g_free (c);
+  bson_free (sel);
+
+  pos += (gint32)data[pos];
+  g_assert ((upd = bson_new_from_data (data + pos, (gint32)data[pos] - 1)));
+  bson_finish (upd);
+
+  g_assert ((c = bson_find (upd, "user")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOCUMENT);
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_ARRAY);
+  g_assert (!bson_cursor_next (c));
+
+  g_free (c);
+  bson_free (upd);
 }
 
 int
