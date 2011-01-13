@@ -36,7 +36,7 @@ typedef enum
 gint32
 mongo_wire_packet_get_header (mongo_packet *p, const guint8 **header)
 {
-  if (!p || !header || !*header)
+  if (!p || !header)
     return -1;
 
   *header = (const guint8 *)&p->header;
@@ -46,7 +46,7 @@ mongo_wire_packet_get_header (mongo_packet *p, const guint8 **header)
 gint32
 mongo_wire_packet_get_data (mongo_packet *p, const guint8 **data)
 {
-  if (!p || !data || !*data)
+  if (!p || !data)
     return -1;
 
   *data = (const guint8 *)p->data->data;
