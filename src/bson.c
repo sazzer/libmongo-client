@@ -43,6 +43,9 @@ _bson_append_int64 (bson *b, const gint64 i)
 static inline gboolean
 _bson_append_element_header (bson *b, bson_type type, const gchar *name)
 {
+  if (!name)
+    return FALSE;
+
   if (b->finished)
     return FALSE;
 
@@ -59,7 +62,12 @@ gboolean
 _bson_append_string_element (bson *b, bson_type type, const gchar *name,
 			     const gchar *val, gint32 length)
 {
-  gint32 len = (length != -1) ? length + 1: strlen (val) + 1;
+  gint32 len;
+
+  if (!val || !length)
+    return FALSE;
+
+  len = (length != -1) ? length + 1: strlen (val) + 1;
 
   if (!_bson_append_element_header (b, type, name))
     return FALSE;
@@ -167,6 +175,9 @@ bson_finish (bson *b)
 {
   gint32 *i;
 
+  if (!b)
+    return FALSE;
+
   if (b->finished)
     return TRUE;
 
@@ -184,6 +195,9 @@ bson_finish (bson *b)
 gint32
 bson_size (const bson *b)
 {
+  if (!b)
+    return -1;
+
   if (b->finished)
     return b->data->len;
   else
@@ -193,6 +207,9 @@ bson_size (const bson *b)
 const guint8 *
 bson_data (const bson *b)
 {
+  if (!b)
+    return NULL;
+
   if (b->finished)
     return b->data->data;
   else
@@ -202,6 +219,9 @@ bson_data (const bson *b)
 void
 bson_free (bson *b)
 {
+  if (!b)
+    return;
+
   g_byte_array_free (b->data, TRUE);
   g_free (b);
 }
@@ -250,6 +270,9 @@ bson_append_binary (bson *b, const gchar *name, guint8 subtype,
 gboolean
 bson_append_oid (bson *b, const gchar *name, const guint8 *oid)
 {
+  if (!oid)
+    return FALSE;
+
   if (!_bson_append_element_header (b, BSON_TYPE_OID, name))
     return FALSE;
 
@@ -282,6 +305,9 @@ gboolean
 bson_append_regex (bson *b, const gchar *name, const gchar *regexp,
 		   const gchar *options)
 {
+  if (!regexp || !options)
+    return FALSE;
+
   if (!_bson_append_element_header (b, BSON_TYPE_REGEXP, name))
     return FALSE;
 
@@ -429,7 +455,7 @@ bson_find (const bson *b, const gchar *name)
   gint32 pos = sizeof (guint32);
   const guint8 *d;
 
-  if (bson_size (b) == -1)
+  if (bson_size (b) == -1 || !name)
     return NULL;
 
   d = bson_data (b);
@@ -464,7 +490,7 @@ bson_find (const bson *b, const gchar *name)
 bson_type
 bson_cursor_type (const bson_cursor *c)
 {
-  if (!c)
+  if (!c || c->pos < sizeof (gint32))
     return BSON_TYPE_NONE;
 
   return (bson_type)(bson_data (c->obj)[c->pos]);
@@ -486,6 +512,9 @@ bson_cursor_key (const bson_cursor *c)
 gboolean
 bson_cursor_get_string (const bson_cursor *c, const gchar **dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_STRING);
 
   *dest = (gchar *)(bson_data (c->obj) + c->value_pos + sizeof (gint32));
@@ -496,6 +525,9 @@ bson_cursor_get_string (const bson_cursor *c, const gchar **dest)
 gboolean
 bson_cursor_get_double (const bson_cursor *c, gdouble *dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_DOUBLE);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gdouble));
@@ -508,6 +540,9 @@ bson_cursor_get_document (const bson_cursor *c, bson **dest)
 {
   bson *b;
   gint32 size;
+
+  if (!dest)
+    return FALSE;
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_DOCUMENT);
 
@@ -529,6 +564,9 @@ bson_cursor_get_array (const bson_cursor *c, bson **dest)
   bson *b;
   gint32 size;
 
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_ARRAY);
 
   size = (gint32)(bson_data (c->obj)[c->value_pos]);
@@ -546,6 +584,9 @@ bson_cursor_get_array (const bson_cursor *c, bson **dest)
 gboolean
 bson_cursor_get_oid (const bson_cursor *c, const guint8 **dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_OID);
 
   *dest = (guint8 *)(bson_data (c->obj) + c->value_pos);
@@ -556,6 +597,9 @@ bson_cursor_get_oid (const bson_cursor *c, const guint8 **dest)
 gboolean
 bson_cursor_get_boolean (const bson_cursor *c, gboolean *dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_BOOLEAN);
 
   *dest = FALSE;
@@ -568,6 +612,9 @@ gboolean
 bson_cursor_get_utc_datetime (const bson_cursor *c,
 			      gint64 *dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_UTC_DATETIME);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
@@ -579,6 +626,11 @@ gboolean
 bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
 		       const gchar **options)
 {
+  if (!regex || !options)
+    return FALSE;
+
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_REGEXP);
+
   g_warning ("bson_cursor_get_regex is not implemented yet");
   return FALSE;
 }
@@ -586,17 +638,22 @@ bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
 gboolean
 bson_cursor_get_javascript (const bson_cursor *c, const gchar **dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_JS_CODE);
 
   *dest = (gchar *)(bson_data (c->obj) + c->value_pos + sizeof (gint32));
 
   return TRUE;
-
 }
 
 gboolean
 bson_cursor_get_symbol (const bson_cursor *c, const gchar **dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_SYMBOL);
 
   *dest = (gchar *)(bson_data (c->obj) + c->value_pos + sizeof (gint32));
@@ -607,6 +664,9 @@ bson_cursor_get_symbol (const bson_cursor *c, const gchar **dest)
 gboolean
 bson_cursor_get_int32 (const bson_cursor *c, gint32 *dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_INT32);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint32));
@@ -617,6 +677,9 @@ bson_cursor_get_int32 (const bson_cursor *c, gint32 *dest)
 gboolean
 bson_cursor_get_timestamp (const bson_cursor *c, gint64 *dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_TIMESTAMP);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
@@ -627,6 +690,9 @@ bson_cursor_get_timestamp (const bson_cursor *c, gint64 *dest)
 gboolean
 bson_cursor_get_int64 (const bson_cursor *c, gint64 *dest)
 {
+  if (!dest)
+    return FALSE;
+
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_INT64);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
