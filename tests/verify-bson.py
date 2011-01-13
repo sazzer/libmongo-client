@@ -1,10 +1,18 @@
 #! /usr/bin/python
-from bson import BSON
 from datetime import datetime
-
 import sys
 
+skip = False
+try:
+    from bson import BSON
+except:
+    skip = True
+
 def verify_bson (name, source, ok):
+    if skip:
+        print "SKIP: %s" % name
+        return
+
     d = BSON.encode (ok)
     s = BSON (source.rstrip ().decode ('string_escape'))
     s = BSON.encode (s.decode ())
