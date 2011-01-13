@@ -24,7 +24,7 @@ def verify_bson (name, source, ok):
         print "# dest  : %s" % d.decode ()
         exit (1)
 
-def bson_build_simple (f):
+def bson_build_base (f):
     verify_bson ("bson_empty", f.readline (), {})
     verify_bson ("bson_string", f.readline (),
                  {"hello": "world"})
@@ -46,9 +46,9 @@ def bson_build_simple (f):
         print "FAIL: garbage after tests"
         exit (1)
 
-def bson_build_complex (f):
+def bson_build_compound (f):
     # Everything from bson_build_simple in one, except the empty bson.
-    verify_bson ("bson_complex_1", f.readline (),
+    verify_bson ("bson_compound_flat", f.readline (),
                  {"hello": "world",
                   "goodbye": "cruel world",
                   "double": 3.14,
@@ -61,7 +61,7 @@ def bson_build_complex (f):
                  })
 
     # A complex document, with arrays and subdocuments
-    verify_bson ("bson_complex_2", f.readline (),
+    verify_bson ("bson_compound_nested", f.readline (),
                  { "user":
                        { "name": "V.A. Lucky", "id": 12345 },
                    "posts": [ {"title": "Post #1",

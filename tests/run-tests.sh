@@ -13,5 +13,5 @@ run_test ()
 	return 0
 }
 
-run_test bson_build_simple
-run_test bson_build_complex
+run_test bson_build_base
+run_test bson_build_compound
