@@ -9,14 +9,20 @@ static gchar *current_test = NULL;
 #define TEST(s) current_test = #s
 #define PASS()					\
   {						\
-    printf (" + %s\n", current_test);	\
+    printf (" + %s\n", current_test);		\
     current_test = NULL;			\
   }
-#define FAIL() \
-  {	       \
-    printf (" - %s\n", current_test);	\
+#define FAIL()					\
+  {						\
+    printf (" - %s\n", current_test);		\
     current_test = NULL;			\
     abort ();					\
+  }
+#define SKIP()					\
+  {						\
+    printf (" ! %s, skipped\n", current_test);	\
+    current_test = NULL;			\
+    return;					\
   }
 
 gboolean test_bson_dump (bson *b);
