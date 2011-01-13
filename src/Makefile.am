@@ -3,4 +3,5 @@ libmongo_client_la_LIBADD = @GLIB_LIBS@
 libmongo_client_la_CFLAGS = @GLIB_CFLAGS@
 
 libmongo_client_la_SOURCES = \
-	bson.c bson.h
+	bson.c bson.h \
+	mongo_wire.c mongo_wire.h
