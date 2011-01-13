@@ -1,7 +1,8 @@
 check_PROGRAMS = test_bson_build_base test_bson_build_compound \
-	test_bson_reader_base test_bson_reader_iterator
+	test_bson_reader_base test_bson_reader_iterator test_bson_from_data
 
-TESTS = run-tests.sh test_bson_reader_base test_bson_reader_iterator
+TESTS = run-tests.sh \
+	test_bson_reader_base test_bson_reader_iterator test_bson_from_data
 
 AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
@@ -15,5 +16,6 @@ test_bson_build_compound_SOURCES = test_bson_build_compound.c $(test_srcs)
 
 test_bson_reader_base_SOURCES = test_bson_reader_base.c $(test_srcs)
 test_bson_reader_iterator_SOURCES = test_bson_reader_iterator.c $(test_srcs)
+test_bson_from_data_SOURCES = test_bson_from_data.c $(test_srcs)
 
 run-tests.sh: ${check_PROGRAMS} verify-bson.py
