@@ -5,6 +5,30 @@
 
 typedef struct _bson bson;
 
+typedef enum
+  {
+    BSON_TYPE_DOUBLE = 0x01,
+    BSON_TYPE_STRING,
+    BSON_TYPE_DOCUMENT,
+    BSON_TYPE_ARRAY,
+    BSON_TYPE_BINARY,
+    BSON_TYPE_UNDEFINED, /* Deprecated*/
+    BSON_TYPE_OID,
+    BSON_TYPE_BOOLEAN,
+    BSON_TYPE_UTC_DATETIME,
+    BSON_TYPE_NULL,
+    BSON_TYPE_REGEXP,
+    BSON_TYPE_DBPOINTER, /* Deprecated */
+    BSON_TYPE_JS_CODE,
+    BSON_TYPE_SYMBOL,
+    BSON_TYPE_JS_CODE_W_SCOPE,
+    BSON_TYPE_INT32,
+    BSON_TYPE_TIMESTAMP,
+    BSON_TYPE_INT64,
+    BSON_TYPE_MIN = 0xff,
+    BSON_TYPE_MAX = 0x7f
+  } bson_type;
+
 bson *bson_new (void);
 bson *bson_new_sized (gint32 size);
 gboolean bson_finish (bson *b);

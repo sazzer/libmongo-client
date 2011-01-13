@@ -9,30 +9,6 @@ struct _bson
   gboolean finished;
 };
 
-enum
-  {
-    BSON_TYPE_DOUBLE = 0x01,
-    BSON_TYPE_STRING,
-    BSON_TYPE_DOCUMENT,
-    BSON_TYPE_ARRAY,
-    BSON_TYPE_BINARY,
-    BSON_TYPE_UNDEFINED, /* Deprecated*/
-    BSON_TYPE_OID,
-    BSON_TYPE_BOOLEAN,
-    BSON_TYPE_UTC_DATETIME,
-    BSON_TYPE_NULL,
-    BSON_TYPE_REGEXP,
-    BSON_TYPE_DBPOINTER, /* Deprecated */
-    BSON_TYPE_JS_CODE,
-    BSON_TYPE_SYMBOL,
-    BSON_TYPE_JS_CODE_W_SCOPE,
-    BSON_TYPE_INT32,
-    BSON_TYPE_TIMESTAMP,
-    BSON_TYPE_INT64,
-    BSON_TYPE_MIN = 0xff,
-    BSON_TYPE_MAX = 0x7f
-  };
-
 #define DATA_OK(b) (b->data) ? TRUE : FALSE
 
 static inline gboolean
@@ -57,12 +33,12 @@ _bson_append_int64 (bson *b, const gint64 i)
 }
 
 static inline gboolean
-_bson_append_element_header (bson *b, guint8 type, const gchar *name)
+_bson_append_element_header (bson *b, bson_type type, const gchar *name)
 {
   if (b->finished)
     return FALSE;
 
-  if (!_bson_append_byte (b, type))
+  if (!_bson_append_byte (b, (guint8) type))
     return FALSE;
 
   b->data = g_byte_array_append (b->data, (const guint8 *)name,
@@ -72,7 +48,7 @@ _bson_append_element_header (bson *b, guint8 type, const gchar *name)
 }
 
 gboolean
-_bson_append_string_element (bson *b, guint8 type, const gchar *name,
+_bson_append_string_element (bson *b, bson_type type, const gchar *name,
 			     const gchar *val, gint32 length)
 {
   gint32 len = (length != -1) ? length + 1: strlen (val) + 1;
@@ -91,7 +67,7 @@ _bson_append_string_element (bson *b, guint8 type, const gchar *name,
 }
 
 static gboolean
-_bson_append_document_element (bson *b, guint8 type, const gchar *name,
+_bson_append_document_element (bson *b, bson_type type, const gchar *name,
 			       const bson *doc)
 {
   if (bson_size (doc) < 0)
@@ -105,7 +81,7 @@ _bson_append_document_element (bson *b, guint8 type, const gchar *name,
 }
 
 static inline gboolean
-_bson_append_int64_element (bson *b, guint8 type, const gchar *name,
+_bson_append_int64_element (bson *b, bson_type type, const gchar *name,
 			    gint64 i)
 {
   if (!_bson_append_element_header (b, type, name))
