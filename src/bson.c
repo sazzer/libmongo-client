@@ -133,6 +133,35 @@ bson_new_sized (gint32 size)
   return b;
 }
 
+bson *
+bson_new_from_data (const guint8 *data, gint32 size)
+{
+  bson *b;
+
+  if (!data || size <= 0)
+    return NULL;
+
+  b = g_try_new0 (bson, 1);
+  if (!b)
+    return NULL;
+
+  b->data = g_byte_array_sized_new (size + 1);
+  if (!b->data)
+    {
+      g_free (b);
+      return NULL;
+    }
+
+  b->data = g_byte_array_append (b->data, data, size);
+  if (!b->data)
+    {
+      g_free (b);
+      return NULL;
+    }
+
+  return b;
+}
+
 gboolean
 bson_finish (bson *b)
 {
