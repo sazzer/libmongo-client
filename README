@@ -1,0 +1,23 @@
+This is an alternative C driver for MongoDB, with slightly different
+goals than the official one.
+
+We're not so strict on dependencies (we're using glib), and the API is
+very different too.
+
+Apart from glib, there are no other hard dependencies. For the full
+test suite run, though, one will need PyMongo version 1.9 or
+later. Most of the test suite runs without it.
+
+The main purpose of this library is to provide a well maintained
+implementation, that suits a wider range of needs than the original:
+
+* Ability to easily construct mongodb commands, to be sent at a later
+  time (comes in handy when one is trying to write from a separate
+  thread).
+* C-like error handling. No toying around with exceptions.
+* Comprehensive test suite.
+* Strict error handling.
+
+Although the code is not based on any other driver, it is released
+under the same Apache License, version 2.0 (included as the file
+LICENSE).
