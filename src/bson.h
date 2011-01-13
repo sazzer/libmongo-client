@@ -33,6 +33,7 @@ typedef enum
 
 bson *bson_new (void);
 bson *bson_new_sized (gint32 size);
+bson *bson_new_from_data (const guint8 *data, gint32 size);
 gboolean bson_finish (bson *b);
 void bson_free (bson *b);
 
