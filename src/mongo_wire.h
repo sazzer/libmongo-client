@@ -7,8 +7,9 @@
 
 typedef struct _mongo_packet mongo_packet;
 
-gint32 mongo_wire_packet_get_header (mongo_packet *p, const guint8 **header);
-gint32 mongo_wire_packet_get_data (mongo_packet *p, const guint8 **data);
+gint32 mongo_wire_packet_get_header (const mongo_packet *p,
+				     const guint8 **header);
+gint32 mongo_wire_packet_get_data (const mongo_packet *p, const guint8 **data);
 
 void mongo_wire_packet_free (mongo_packet *p);
 
