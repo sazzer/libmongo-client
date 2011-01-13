@@ -4,9 +4,11 @@
 #include <glib.h>
 
 typedef struct _bson bson;
+typedef struct _bson_cursor bson_cursor;
 
 typedef enum
   {
+    BSON_TYPE_NONE = 0, /* Only used for errors */
     BSON_TYPE_DOUBLE = 0x01,
     BSON_TYPE_STRING,
     BSON_TYPE_DOCUMENT,
@@ -34,6 +36,9 @@ bson *bson_new_sized (gint32 size);
 gboolean bson_finish (bson *b);
 void bson_free (bson *b);
 
+gint32 bson_size (const bson *b);
+const guint8 *bson_data (const bson *b);
+
 gboolean bson_append_string (bson *b, const gchar *name, const gchar *val,
 			     gint32 length);
 gboolean bson_append_double (bson *b, const gchar *name, gdouble d);
@@ -53,7 +58,24 @@ gboolean bson_append_int32 (bson *b, const gchar *name, gint32 i);
 gboolean bson_append_timestamp (bson *b, const gchar *name, gint64 ts);
 gboolean bson_append_int64 (bson *b, const gchar *name, gint64 i);
 
-gint32 bson_size (const bson *b);
-const guint8 *bson_data (const bson *b);
+bson_cursor *bson_find (const bson *b, const gchar *name);
+
+bson_type bson_cursor_type (const bson_cursor *c);
+const gchar *bson_cursor_key (const bson_cursor *c);
+
+gboolean bson_cursor_get_string (const bson_cursor *c, const gchar **dest);
+gboolean bson_cursor_get_double (const bson_cursor *c, gdouble *dest);
+gboolean bson_cursor_get_document (const bson_cursor *c, bson **dest);
+gboolean bson_cursor_get_array (const bson_cursor *c, bson **dest);
+gboolean bson_cursor_get_oid (const bson_cursor *c, const guint8 **dest);
+gboolean bson_cursor_get_boolean (const bson_cursor *c, gboolean *dest);
+gboolean bson_cursor_get_utc_datetime (const bson_cursor *c, gint64 *dest);
+gboolean bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
+				const gchar **options);
+gboolean bson_cursor_get_javascript (const bson_cursor *c, const gchar **dest);
+gboolean bson_cursor_get_symbol (const bson_cursor *c, const gchar **dest);
+gboolean bson_cursor_get_int32 (const bson_cursor *c, gint32 *dest);
+gboolean bson_cursor_get_timestamp (const bson_cursor *c, gint64 *dest);
+gboolean bson_cursor_get_int64 (const bson_cursor *c, gint64 *dest);
 
 #endif

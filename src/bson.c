@@ -9,6 +9,14 @@ struct _bson
   gboolean finished;
 };
 
+struct _bson_cursor
+{
+  const bson *obj;
+  const gchar *key;
+  gint32 pos;
+  gint32 value_pos;
+};
+
 #define DATA_OK(b) (b->data) ? TRUE : FALSE
 
 static inline gboolean
@@ -298,4 +306,258 @@ gboolean
 bson_append_int64 (bson *b, const gchar *name, gint64 i)
 {
   return _bson_append_int64_element (b, BSON_TYPE_INT64, name, i);
+}
+
+/*
+ * Find & retrieve data
+ */
+bson_cursor *
+bson_find (const bson *b, const gchar *name)
+{
+  gint32 pos = sizeof (guint32);
+  const guint8 *d;
+
+  if (bson_size (b) == -1)
+    return NULL;
+
+  d = bson_data (b);
+
+  while (pos < bson_size (b) - 1)
+    {
+      bson_type t = (bson_type) d[pos];
+      const gchar *key = (gchar *) &d[pos + 1];
+      gint32 value_pos = pos + strlen (key) + 2;
+
+      if (!strcmp (key, name))
+	{
+	  bson_cursor *c;
+
+	  c = (bson_cursor *)g_try_new0 (bson_cursor, 1);
+	  if (!c)
+	    return NULL;
+
+	  c->obj = b;
+	  c->key = key;
+	  c->pos = pos;
+	  c->value_pos = value_pos;
+
+	  return c;
+	}
+      pos = value_pos;
+
+      switch (t)
+	{
+	case BSON_TYPE_STRING:
+	case BSON_TYPE_JS_CODE:
+	case BSON_TYPE_SYMBOL:
+	case BSON_TYPE_JS_CODE_W_SCOPE:
+	  pos += (gint32)d[value_pos] + sizeof (gint32);
+	  break;
+	case BSON_TYPE_DOCUMENT:
+	case BSON_TYPE_ARRAY:
+	  pos += (gint32)d[value_pos];
+	  break;
+	case BSON_TYPE_DOUBLE:
+	  pos += sizeof (gdouble);
+	  break;
+	case BSON_TYPE_BINARY:
+	  pos += (gint32)d[value_pos] + 1;
+	  break;
+	case BSON_TYPE_OID:
+	  pos += 12;
+	  break;
+	case BSON_TYPE_BOOLEAN:
+	  pos += 1;
+	  break;
+	case BSON_TYPE_UTC_DATETIME:
+	case BSON_TYPE_TIMESTAMP:
+	case BSON_TYPE_INT64:
+	  pos += sizeof (gint64);
+	  break;
+	case BSON_TYPE_NULL:
+	  break;
+	case BSON_TYPE_REGEXP:
+	  /* FIXME: Add this */
+	  break;
+	case BSON_TYPE_INT32:
+	  pos += sizeof (gint32);
+	  break;
+	default:
+	  break;
+	}
+    }
+
+  return NULL;
+}
+
+bson_type
+bson_cursor_type (const bson_cursor *c)
+{
+  if (!c)
+    return BSON_TYPE_NONE;
+
+  return (bson_type)(bson_data (c->obj)[c->pos]);
+}
+
+const gchar *
+bson_cursor_key (const bson_cursor *c)
+{
+  if (!c)
+    return NULL;
+
+  return c->key;
+}
+
+#define BSON_CURSOR_CHECK_TYPE(c,type)		\
+  if (bson_cursor_type(c) != type)		\
+    return FALSE;
+
+gboolean
+bson_cursor_get_string (const bson_cursor *c, const gchar **dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_STRING);
+
+  *dest = (gchar *)(bson_data (c->obj) + c->value_pos + sizeof (gint32));
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_double (const bson_cursor *c, gdouble *dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_DOUBLE);
+
+  memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gdouble));
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_document (const bson_cursor *c, bson **dest)
+{
+  bson *b;
+  gint32 size;
+
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_DOCUMENT);
+
+  size = (gint32)(bson_data (c->obj)[c->value_pos]);
+  b = bson_new_sized (size);
+  b->data = g_byte_array_append (b->data,
+				 bson_data (c->obj) + c->value_pos +
+				 sizeof (gint32), size);
+  bson_finish (b);
+
+  *dest = b;
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_array (const bson_cursor *c, bson **dest)
+{
+  bson *b;
+  gint32 size;
+
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_ARRAY);
+
+  size = (gint32)(bson_data (c->obj)[c->value_pos]);
+  b = bson_new_sized (size);
+  b->data = g_byte_array_append (b->data,
+				 bson_data (c->obj) + c->value_pos +
+				 sizeof (gint32), size);
+  bson_finish (b);
+
+  *dest = b;
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_oid (const bson_cursor *c, const guint8 **dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_OID);
+
+  *dest = (guint8 *)(bson_data (c->obj) + c->value_pos);
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_boolean (const bson_cursor *c, gboolean *dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_BOOLEAN);
+
+  *dest = FALSE;
+  memcpy (dest, bson_data (c->obj) + c->value_pos, 1);
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_utc_datetime (const bson_cursor *c,
+			      gint64 *dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_UTC_DATETIME);
+
+  memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
+		       const gchar **options)
+{
+  return FALSE;
+}
+
+gboolean
+bson_cursor_get_javascript (const bson_cursor *c, const gchar **dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_JS_CODE);
+
+  *dest = (gchar *)(bson_data (c->obj) + c->value_pos + sizeof (gint32));
+
+  return TRUE;
+
+}
+
+gboolean
+bson_cursor_get_symbol (const bson_cursor *c, const gchar **dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_SYMBOL);
+
+  *dest = (gchar *)(bson_data (c->obj) + c->value_pos + sizeof (gint32));
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_int32 (const bson_cursor *c, gint32 *dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_INT32);
+
+  memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint32));
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_timestamp (const bson_cursor *c, gint64 *dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_TIMESTAMP);
+
+  memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_int64 (const bson_cursor *c, gint64 *dest)
+{
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_INT64);
+
+  memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
+
+  return TRUE;
 }
