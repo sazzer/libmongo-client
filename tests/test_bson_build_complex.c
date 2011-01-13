@@ -55,15 +55,15 @@ test_bson_complex_2 (void)
   bson_finish (comments);
 
   p1 = bson_new ();
+  bson_append_string (p1, "title", "Post #1", -1);
   bson_append_utc_datetime (p1, "date", 1294860709000);
   bson_append_array (p1, "comments", comments);
-  bson_append_string (p1, "title", "Post #1", -1);
   bson_finish (p1);
   bson_free (comments);
 
   p2 = bson_new ();
-  bson_append_utc_datetime (p2, "date", 1294860709000);
   bson_append_string (p2, "title", "Post #2", -1);
+  bson_append_utc_datetime (p2, "date", 1294860709000);
   bson_finish (p2);
 
   posts = bson_new ();
@@ -74,8 +74,8 @@ test_bson_complex_2 (void)
   bson_free (p2);
 
   d = bson_new ();
-  bson_append_array (d, "posts", posts);
   bson_append_document (d, "user", user);
+  bson_append_array (d, "posts", posts);
   bson_finish (d);
 
   bson_free (user);
