@@ -214,6 +214,7 @@ gboolean
 bson_append_binary (bson *b, const gchar *name, guint8 subtype,
 		    const guint8 *data, gint32 size)
 {
+  g_warning ("bson_append_binary not implemented yet");
   return FALSE;
 }
 
@@ -281,6 +282,7 @@ gboolean
 bson_append_javascript_w_scope (bson *b, const gchar *name, const gchar *js,
 				gint32 len, bson *doc)
 {
+  g_warning ("bson_append_javascript_w_scope not implemented yet");
   return FALSE;
 }
 
@@ -356,6 +358,7 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_NULL:
       return 0;
     case BSON_TYPE_REGEXP:
+      g_warning ("BSON_TYPE_REGEXP block size calculation is not implemented yet");
       return -1;
     case BSON_TYPE_INT32:
       return sizeof (gint32);
@@ -547,6 +550,7 @@ gboolean
 bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
 		       const gchar **options)
 {
+  g_warning ("bson_cursor_get_regex is not implemented yet");
   return FALSE;
 }
 
