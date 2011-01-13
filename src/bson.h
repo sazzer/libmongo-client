@@ -1,5 +1,5 @@
-#ifndef BALABIT_BSON_H
-#define BALABIT_BSON_H 1
+#ifndef LIBMONGO_CLIENT_BSON_H
+#define LIBMONGO_CLIENT_BSON_H 1
 
 #include <glib.h>
 
