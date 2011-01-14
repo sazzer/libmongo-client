@@ -10,16 +10,16 @@ except:
 
 def verify_bson (name, source, ok):
     if skip:
-        print "SKIP: %s" % name
+        print " ! %s" % name
         return
 
     d = BSON.encode (ok)
     s = BSON (source.rstrip ().decode ('string_escape'))
     s = BSON.encode (s.decode ())
     if s.decode () == d.decode ():
-        print "PASS: %s" % name
+        print " + %s" % name
     else:
-        print "FAIL: %s" % name
+        print " - %s" % name
         print "# source: %s" % s.decode ()
         print "# dest  : %s" % d.decode ()
         exit (1)
