@@ -5,12 +5,15 @@ check_PROGRAMS = test_bson_build_base test_bson_build_compound \
 	\
 	test_mongo_client \
 	\
+	test_oid \
+	\
 	test_invalid
 
 TESTS = run-tests.sh \
 	test_bson_reader_base test_bson_reader_iterator test_bson_from_data \
 	test_mongo_wire \
 	test_mongo_client \
+	test_oid \
 	test_invalid
 
 AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
@@ -30,6 +33,8 @@ test_bson_from_data_SOURCES = test_bson_from_data.c $(test_srcs)
 test_mongo_wire_SOURCES = test_mongo_wire.c $(test_srcs)
 
 test_mongo_client_SOURCES = test_mongo_client.c $(test_srcs)
+
+test_oid_SOURCES = test_oid.c $(test_srcs)
 
 test_invalid_SOURCES = test_invalid.c $(test_srcs)
 
