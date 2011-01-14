@@ -13,6 +13,7 @@ test_oid (void)
 
   TEST (mongo_util.oid);
   oid = mongo_util_oid_new (42);
+  g_assert (oid[11] == 42);
   g_free (oid);
   PASS ();
 }
