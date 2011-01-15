@@ -57,6 +57,14 @@ void mongo_disconnect (gint fd);
  */
 gboolean mongo_packet_send (gint fd, const mongo_packet *p);
 
+/** Receive a packet from MongoDB.
+ *
+ * @param fd is the file descriptor to receive the packet from.
+ *
+ * @returns A response packet, or NULL upon error.
+ */
+mongo_packet *mongo_packet_recv (gint fd);
+
 /** @} */
 
 #endif

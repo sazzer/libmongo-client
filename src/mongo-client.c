@@ -115,3 +115,50 @@ mongo_packet_send (gint fd, const mongo_packet *p)
 
   return TRUE;
 }
+
+mongo_packet *
+mongo_packet_recv (gint fd)
+{
+  mongo_packet *p;
+  guint8 *data;
+  guint32 size;
+  mongo_packet_header h;
+
+  if (fd < 0)
+    return NULL;
+
+  memset (&h, 0, sizeof (h));
+  if (recv (fd, &h, sizeof (mongo_packet_header), 0) !=
+      sizeof (mongo_packet_header))
+    {
+      return NULL;
+    }
+
+  p = mongo_wire_packet_new ();
+
+  if (!mongo_wire_packet_set_header (p, &h))
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  size = h.length - sizeof (mongo_packet_header);
+  data = g_try_new0 (guint8, size);
+  if (recv (fd, data, size, 0) != size)
+    {
+      g_free (data);
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  if (!mongo_wire_packet_set_data (p, data, size))
+    {
+      g_free (data);
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  g_free (data);
+
+  return p;
+}
