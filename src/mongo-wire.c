@@ -101,6 +101,8 @@ mongo_wire_packet_set_data (mongo_packet *p, const guint8 *data, gint32 size)
   if (!p->data)
     return FALSE;
 
+  p->header.length = sizeof (p->header) + size;
+
   return TRUE;
 }
 
