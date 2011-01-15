@@ -123,8 +123,30 @@ mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
  * responsibility of the caller to free the packet once it is not used
  * anymore.
  */
-mongo_packet * mongo_wire_cmd_insert (gint32 id, const gchar *ns,
-				      const bson *doc);
+mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
+				     const bson *doc);
+
+/** Construct a query command.
+ *
+ * @param id is the sequence id.
+ * @param ns is the namespace, the database and collection name
+ * concatenaded, and separated with a single dot.
+ * @param flags are the query options.
+ * @param skip is the number of documents to skip.
+ * @param ret is the number of documents to return.
+ * @param query is the query BSON object.
+ * @param sel is the (optional) selector BSON object indicating the
+ * fields to return. Passing NULL will return all fields.
+ *
+ * @returns A newly allocated packet, or NULL on error. It is the
+ * responsibility of the caller to free the packet once it is not used
+ * anymore.
+ *
+ * @todo The flags should be handled better.
+ */
+mongo_packet *mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
+				    gint32 skip, gint32 ret, const bson *query,
+				    const bson *sel);
 
 /** @} */
 /** @} */
