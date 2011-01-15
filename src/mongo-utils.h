@@ -19,6 +19,34 @@
 
 #include <glib.h>
 
+/** @defgroup mongo_util Mongo Utils
+ *
+ * Various utility functions related to MongoDB.
+ *
+ * @addtogroup mongo_util
+ * @{
+ */
+
+/** Generate a new ObjectID.
+ *
+ * Based on the current time, pid, machine ID and a supplied sequence
+ * number, generate a new ObjectID.
+ *
+ * The machine ID is generated upon first call, and is not changed
+ * thereafter. The time and PID are checked at every invocation
+ * however.
+ *
+ * @param seq is the sequence number to use.
+ *
+ * @note The ObjectID has space for only 24 bits of sequence bytes, so
+ * it should be noted that while @a seq is 32 bits wide, only 24 of
+ * that will be used.
+ *
+ * @returns A newly allocated ObjectID. Freeing it is the
+ * responsibility of the caller.
+ */
 guint8 *mongo_util_oid_new (gint32 seq);
+
+/** @} */
 
 #endif
