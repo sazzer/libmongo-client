@@ -35,20 +35,7 @@ static const gint32 zero = 0;
  */
 struct _mongo_packet
 {
-#pragma pack(1)
-  struct
-  {
-    gint32 length; /**< Full length of the packet, including the
-		       header. */
-    gint32 id; /**< Sequence ID, used when MongoDB responds to a
-		  command. */
-    gint32 resp_to; /**< ID the response is an answer to. Only sent
-		       by the MongoDB server, never set on
-		       client-side. */
-    gint32 opcode; /**< The opcode of the command. @see
-		      mongo_wire_opcode. <*/
-  } header;
-
+  mongo_packet_header header; /**< The packet header. */
   GByteArray *data; /**< The actual data of the packet. */
 };
 

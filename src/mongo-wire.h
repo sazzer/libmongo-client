@@ -39,6 +39,25 @@
  * @{
  */
 
+/** Mongo packet header.
+ *
+ * Every mongo packet has a header like this. Normally, one does not
+ * need to touch it, though.
+ */
+#pragma pack(1)
+typedef struct
+{
+  gint32 length; /**< Full length of the packet, including the
+		    header. */
+  gint32 id; /**< Sequence ID, used when MongoDB responds to a
+		command. */
+  gint32 resp_to; /**< ID the response is an answer to. Only sent by
+		     the MongoDB server, never set on client-side. */
+  gint32 opcode; /**< The opcode of the command. @see
+		    mongo_wire_opcode. <*/
+} mongo_packet_header;
+
+
 /** An opaque Mongo Packet on the wire.
  *
  * This structure contains the binary data that can be written
