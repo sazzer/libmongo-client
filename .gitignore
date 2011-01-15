@@ -14,3 +14,5 @@ ltmain.sh
 m4/
 missing
 tests/*.ok
+docs/
+b/

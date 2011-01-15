@@ -20,33 +20,50 @@
 #include "bson.h"
 #include "mongo-wire.h"
 
+/** @file src/mongo-wire.c
+ * Implementation of the MongoDB Wire Protocol.
+ */
+
+/** @internal Constant zero value. */
 static const gint32 zero = 0;
 
+/** @internal A MongoDB command, as it appears on the wire.
+ *
+ * For the sake of clarity, and sanity of the library, the header and
+ * data parts are stored separately, and as such, will need to be sent
+ * separately aswell.
+ */
 struct _mongo_packet
 {
 #pragma pack(1)
   struct
   {
-    gint32 length;
-    gint32 id;
-    gint32 resp_to;
-    gint32 opcode;
+    gint32 length; /**< Full length of the packet, including the
+		       header. */
+    gint32 id; /**< Sequence ID, used when MongoDB responds to a
+		  command. */
+    gint32 resp_to; /**< ID the response is an answer to. Only sent
+		       by the MongoDB server, never set on
+		       client-side. */
+    gint32 opcode; /**< The opcode of the command. @see
+		      mongo_wire_opcode. <*/
   } header;
 
-  GByteArray *data;
+  GByteArray *data; /**< The actual data of the packet. */
 };
 
+/** @internal Mongo command opcodes. */
 typedef enum
   {
-    OP_REPLY = 1,
-    OP_MSG = 1000,
-    OP_UPDATE = 2001,
-    OP_INSERT = 2002,
-    OP_RESERVED = 2003,
-    OP_QUERY = 2004,
-    OP_GET_MORE = 2005,
-    OP_DELETE = 2006,
-    OP_KILL_CURSORS = 2007
+    OP_REPLY = 1, /**< Message is a reply. Only sent by the server. */
+    OP_MSG = 1000, /**< Message is a generic message. */
+    OP_UPDATE = 2001, /**< Message is an update command. */
+    OP_INSERT = 2002, /**< Message is an insert command. */
+    OP_RESERVED = 2003, /**< Reserved and unused. */
+    OP_QUERY = 2004, /**< Message is a query command. */
+    OP_GET_MORE = 2005, /**< Message is a get more command. */
+    OP_DELETE = 2006, /**< Message is a delete command. */
+    OP_KILL_CURSORS = 2007 /**< Message is a kill cursors command. */
   } mongo_wire_opcode;
 
 gint32
@@ -141,4 +158,3 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *doc)
 
   return p;
 }
-
