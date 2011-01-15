@@ -9,22 +9,20 @@ dump_bson (bson *b)
 {
   gboolean r;
 
-  r = test_bson_dump (b);
+  r = dump_data (bson_data (b), bson_size (b));
   bson_free (b);
   return r;
 }
 
 gboolean
-test_bson_dump (bson *b)
+dump_data (const guint8 *d, gint32 size)
 {
   gint32 i;
-  const guint8 *d;
 
-  d = bson_data (b);
-  if (!d)
+  if (!d || size <= 0)
     return FALSE;
 
-  for (i = 0; i < bson_size (b); i++)
+  for (i = 0; i < size; i++)
     {
       if (isprint (d[i]))
 	switch (d[i])
