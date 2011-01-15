@@ -1,5 +1,6 @@
 #include <glib.h>
 
+#include "test.h"
 #include "bson.h"
 #include "mongo-wire.h"
 #include "test-generator.h"
@@ -22,6 +23,8 @@ test_mongo_wire_update (void)
   bson_cursor *c;
   gint32 pos;
 
+  TEST (mongo_wire.update);
+
   sel = bson_new ();
   g_assert (bson_append_null (sel, "_id"));
   bson_finish (sel);
@@ -36,6 +39,7 @@ test_mongo_wire_update (void)
   g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
   g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
 
+  /* pos = zero + collection_name + NULL + flags */
   pos = sizeof (gint32) + strlen ("test.libmongo") + 1 + sizeof (gint32);
   g_assert ((sel = bson_new_from_data (data + pos, (gint32)data[pos] - 1)));
   bson_finish (sel);
@@ -57,12 +61,53 @@ test_mongo_wire_update (void)
 
   g_free (c);
   bson_free (upd);
+
+  PASS ();
+}
+
+void
+test_mongo_wire_insert ()
+{
+  bson *ins;
+  mongo_packet *p;
+
+  const guint8 *hdr, *data;
+  gint32 hdr_size, data_size;
+
+  bson_cursor *c;
+  gint32 pos;
+
+  TEST (mongo_wire.insert);
+
+  ins = test_bson_generate_nested ();
+  g_assert ((p = mongo_wire_cmd_insert (1, "test.libmongo", ins)));
+  bson_free (ins);
+
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
+  g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
+
+  /* pos = zero + collection_name + NULL */
+  pos = sizeof (gint32) + strlen ("test.libmongo") + 1;
+  g_assert ((ins = bson_new_from_data (data + pos, (gint32)data[pos] - 1)));
+  bson_finish (ins);
+
+  g_assert ((c = bson_find (ins, "user")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOCUMENT);
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_ARRAY);
+  g_assert (!bson_cursor_next (c));
+
+  g_free (c);
+  bson_free (ins);
+
+  PASS ();
 }
 
 int
 main (void)
 {
   test_mongo_wire_update ();
+  test_mongo_wire_insert ();
 
   return 0;
 }
