@@ -147,6 +147,11 @@ test_invalid_mongo_wire (void)
   g_assert ((p = mongo_wire_cmd_insert (1, "test.ns", data)));
   mongo_wire_packet_free (p);
   PASS ();
+
+  TEST (mongo_wire_packet_new);
+  g_assert ((p = mongo_wire_packet_new ()));
+  mongo_wire_packet_free (p);
+  PASS ();
 }
 
 int
