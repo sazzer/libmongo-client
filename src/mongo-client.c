@@ -101,7 +101,8 @@ mongo_packet_send (gint fd, const mongo_packet *p)
   if (fd < 0 || !p)
     return FALSE;
 
-  hdr_size = mongo_wire_packet_get_header (p, &hdr);
+  hdr_size =
+    mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr);
   data_size = mongo_wire_packet_get_data (p, &data);
 
   if (hdr_size == -1 || data_size == -1)
