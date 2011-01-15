@@ -57,7 +57,6 @@ typedef struct
 		    mongo_wire_opcode. <*/
 } mongo_packet_header;
 
-
 /** An opaque Mongo Packet on the wire.
  *
  * This structure contains the binary data that can be written
@@ -67,7 +66,7 @@ typedef struct _mongo_packet mongo_packet;
 
 /** Get the header data of a packet.
  *
- * Retrieve the raw binary blog of the mongo packet's header.
+ * Retrieve the mongo packet's header data.
  *
  * @param p is the packet which header we seek.
  * @param header is a pointer to a variable which will hold the data.
@@ -78,10 +77,24 @@ typedef struct _mongo_packet mongo_packet;
  * @returns The size of the header, or -1 on error.
  */
 gint32 mongo_wire_packet_get_header (const mongo_packet *p,
-				     const guint8 **header);
+				     const mongo_packet_header **header);
+/** Set the header data of a packet.
+ *
+ * Override the mongo packet's header data.
+ *
+ * @note No sanity checks are done, use this function with great care.
+ *
+ * @param p is the packet whose header we want to override.
+ * @param header is the header structure to use.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_wire_packet_set_header (mongo_packet *p,
+				       const mongo_packet_header *header);
+
 /** Get the data part of a packet.
  *
- * Retrieve the raw binary blog of the mongo packet's data.
+ * Retrieve the raw binary blob of the mongo packet's data.
  *
  * @param p is the packet which header we seek.
  * @param data is a pointer to a variable which will hold the data.
@@ -92,6 +105,23 @@ gint32 mongo_wire_packet_get_header (const mongo_packet *p,
  * @returns The size of the data, or -1 on error.
  */
 gint32 mongo_wire_packet_get_data (const mongo_packet *p, const guint8 **data);
+/** Set the data part of a packet.
+ *
+ * Overrides the data part of a packet, adjusting the packet length in
+ * the header too.
+ *
+ * @note No sanity checks are performed on the data, it is the
+ * caller's responsibility to supply valid information.
+ *
+ * @param p is the packet whose data is to be set.
+ * @param data is the data to set.
+ * @param size is the size of the data.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_wire_packet_set_data (mongo_packet *p, const guint8 *data,
+				     gint32 size);
+
 /** Free up a mongo packet.
  *
  * @param p is the packet to free.

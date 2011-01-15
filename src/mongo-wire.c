@@ -54,13 +54,29 @@ typedef enum
   } mongo_wire_opcode;
 
 gint32
-mongo_wire_packet_get_header (const mongo_packet *p, const guint8 **header)
+mongo_wire_packet_get_header (const mongo_packet *p,
+			      const mongo_packet_header **header)
 {
   if (!p || !header)
     return -1;
 
-  *header = (const guint8 *)&p->header;
+  *header = &p->header;
   return sizeof (p->header);
+}
+
+gboolean
+mongo_wire_packet_set_header (mongo_packet *p,
+			      const mongo_packet_header *header)
+{
+  if (!p || !header)
+    return FALSE;
+
+  p->header.length = header->length;
+  p->header.id = header->id;
+  p->header.resp_to = header->resp_to;
+  p->header.opcode = header->opcode;
+
+  return TRUE;
 }
 
 gint32
@@ -71,6 +87,21 @@ mongo_wire_packet_get_data (const mongo_packet *p, const guint8 **data)
 
   *data = (const guint8 *)p->data->data;
   return p->data->len;
+}
+
+gboolean
+mongo_wire_packet_set_data (mongo_packet *p, const guint8 *data, gint32 size)
+{
+  if (!p || !data || size <= 0)
+    return FALSE;
+
+  g_byte_array_free (p->data, TRUE);
+  p->data = g_byte_array_sized_new (size);
+  p->data = g_byte_array_append (p->data, data, size);
+  if (!p->data)
+    return FALSE;
+
+  return TRUE;
 }
 
 void
@@ -146,9 +177,10 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *doc)
   return p;
 }
 
-mongo_packet *mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
-				    gint32 skip, gint32 ret, const bson *query,
-				    const bson *sel)
+mongo_packet *
+mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
+		      gint32 skip, gint32 ret, const bson *query,
+		      const bson *sel)
 {
   mongo_packet *p;
   gint32 size, tmp;

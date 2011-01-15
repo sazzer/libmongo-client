@@ -36,7 +36,7 @@ test_mongo_wire_update (void)
   bson_free (sel);
   bson_free (upd);
 
-  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr)), !=, -1);
   g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
 
   /* pos = zero + collection_name + NULL + flags */
@@ -83,7 +83,7 @@ test_mongo_wire_insert ()
   g_assert ((p = mongo_wire_cmd_insert (1, "test.libmongo", ins)));
   bson_free (ins);
 
-  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr)), !=, -1);
   g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
 
   /* pos = zero + collection_name + NULL */
@@ -123,7 +123,7 @@ test_mongo_wire_query ()
   bson_free (q);
   bson_free (s);
 
-  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr)), !=, -1);
   g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
 
   /* pos = zero + collection_name + NULL + skip + ret */
