@@ -14,27 +14,52 @@
  * limitations under the License.
  */
 
+/** @file src/bson.c
+ * Implementation of the #BSON API.
+ */
+
 #include <glib.h>
 #include <string.h>
 
 #include "bson.h"
 
+/** @internal BSON structure.
+ */
 struct _bson
 {
-  GByteArray *data;
-  gboolean finished;
+  GByteArray *data; /**< The actual data of the BSON object. */
+  gboolean finished; /**< Flag to indicate whether the object is open
+			or finished. */
 };
 
+/** @internal BSON cursor structure.
+ */
 struct _bson_cursor
 {
-  const bson *obj;
-  const gchar *key;
-  gint32 pos;
-  gint32 value_pos;
+  const bson *obj; /**< The BSON object this is a cursor for. */
+  const gchar *key; /**< Pointer within the BSON object to the
+		       current key. */
+  gint32 pos; /**< Position within the BSON object, pointing at the
+		 element type. */
+  gint32 value_pos; /**< The start of the value within the BSON
+		       object, pointing right after the end of the
+		       key. */
 };
 
+/** @internal Convenience macro to check data integrity.
+ *
+ * This macro is used whenever we want to make sure that memory
+ * allocation did not fail, and our data member is still intact.
+ */
 #define DATA_OK(b) (b->data) ? TRUE : FALSE
 
+/** @internal Append a byte to a BSON stream.
+ *
+ * @param b is the BSON stream to append to.
+ * @param byte is the byte to append.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
 static inline gboolean
 _bson_append_byte (bson *b, const guint8 byte)
 {
@@ -42,6 +67,13 @@ _bson_append_byte (bson *b, const guint8 byte)
   return DATA_OK (b);
 }
 
+/** @internal Append a 32-bit integer to a BSON stream.
+ *
+ * @param b is the BSON stream to append to.
+ * @param i is the integer to append.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
 static inline gboolean
 _bson_append_int32 (bson *b, const gint32 i)
 {
@@ -49,6 +81,13 @@ _bson_append_int32 (bson *b, const gint32 i)
   return DATA_OK (b);
 }
 
+/** @internal Append a 64-bit integer to a BSON stream.
+ *
+ * @param b is the BSON stream to append to.
+ * @param i is the integer to append.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
 static inline gboolean
 _bson_append_int64 (bson *b, const gint64 i)
 {
@@ -56,6 +95,23 @@ _bson_append_int64 (bson *b, const gint64 i)
   return DATA_OK (b);
 }
 
+/** @internal Append an element header to a BSON stream.
+ *
+ * The element header is a single byte, signaling the type of the
+ * element, followed by a NULL-terminated C string: the key (element)
+ * name.
+ *
+ * @param b is the BSON object to append to.
+ * @param type is the element type to append.
+ * @param name is the key name.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ *
+ * @note If the append fails mid-way, the data size is not rolled
+ * back, thus if this function fails, the object MUST be treated as
+ * invalid, and freed at the first opportunity, never accessed or
+ * written to.
+ */
 static inline gboolean
 _bson_append_element_header (bson *b, bson_type type, const gchar *name)
 {
@@ -74,6 +130,23 @@ _bson_append_element_header (bson *b, bson_type type, const gchar *name)
   return DATA_OK (b);
 }
 
+/** @internal Append a string-like element to a BSON object.
+ *
+ * There are a few string-like elements in the BSON spec that differ
+ * only in type, not in structure. This convenience function is used
+ * to append them with the appropriate type.
+ *
+ * @param b is the BSON object to append to.
+ * @param type is the string-like type to append.
+ * @param name is the key name.
+ * @param val is the value to append.
+ * @param length is the length of the value.
+ *
+ * @note Passing @a -1 as length will use the full length of @a
+ * val.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
 gboolean
 _bson_append_string_element (bson *b, bson_type type, const gchar *name,
 			     const gchar *val, gint32 length)
@@ -98,6 +171,23 @@ _bson_append_string_element (bson *b, bson_type type, const gchar *name,
   return _bson_append_byte (b, 0);
 }
 
+/** @internal Append a document-like element to a BSON object.
+ *
+ * Arrays and documents are both similar, and differ very little:
+ * different type, and arrays have restrictions on key names (which
+ * are not enforced by this library).
+ *
+ * This convenience function can append both types.
+ *
+ * @param b is the BSON object to append to.
+ * @param type is the document-like type to append.
+ * @param name is the key name.
+ * @param doc is the document-like object to append.
+ *
+ * @note The @a doc must be a finished BSON object.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
 static gboolean
 _bson_append_document_element (bson *b, bson_type type, const gchar *name,
 			       const bson *doc)
@@ -112,6 +202,15 @@ _bson_append_document_element (bson *b, bson_type type, const gchar *name,
   return DATA_OK (b);
 }
 
+/** @internal Append a 64-bit integer to a BSON object.
+ *
+ * @param b is the BSON object to append to.
+ * @param type is the int64-like type to append.
+ * @param name is the key name.
+ * @param i is the 64-bit value to append.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
 static inline gboolean
 _bson_append_int64_element (bson *b, bson_type type, const gchar *name,
 			    gint64 i)
@@ -121,7 +220,6 @@ _bson_append_int64_element (bson *b, bson_type type, const gchar *name,
 
   return _bson_append_int64 (b, GINT64_TO_LE (i));
 }
-
 
 /********************
  * Public interface *
@@ -276,14 +374,6 @@ bson_append_array (bson *b, const gchar *name, const bson *array)
 }
 
 gboolean
-bson_append_binary (bson *b, const gchar *name, guint8 subtype,
-		    const guint8 *data, gint32 size)
-{
-  g_warning ("bson_append_binary not implemented yet");
-  return FALSE;
-}
-
-gboolean
 bson_append_oid (bson *b, const gchar *name, const guint8 *oid)
 {
   if (!oid)
@@ -350,14 +440,6 @@ bson_append_symbol (bson *b, const gchar *name, const gchar *symbol,
 }
 
 gboolean
-bson_append_javascript_w_scope (bson *b, const gchar *name, const gchar *js,
-				gint32 len, bson *doc)
-{
-  g_warning ("bson_append_javascript_w_scope not implemented yet");
-  return FALSE;
-}
-
-gboolean
 bson_append_int32 (bson *b, const gchar *name, gint32 i)
 {
   if (!_bson_append_element_header (b, BSON_TYPE_INT32, name))
@@ -401,6 +483,20 @@ bson_cursor_new (const bson *b)
   return c;
 }
 
+/** @internal Figure out the block size of a given type.
+ *
+ * Provided a #bson_type and some raw data, figures out the length of
+ * the block, counted from rigth after the element name's position.
+ *
+ * @param type is the type of object we need the size for.
+ * @param data is the raw data (starting right after the element's
+ * name).
+ *
+ * @returns The size of the block, or -1 on error.
+ *
+ * @todo Figuring out the size of a regexp block is not implemented
+ * yet.
+ */
 static gint32
 _bson_get_block_size (bson_type type, const guint8 *data)
 {
@@ -521,6 +617,11 @@ bson_cursor_key (const bson_cursor *c)
   return c->key;
 }
 
+/** @internal Convenience macro to verify a cursor's type.
+ *
+ * Verifies that the cursor's type is the same as the type requested
+ * by the caller, and returns FALSE if there is a mismatch.
+ */
 #define BSON_CURSOR_CHECK_TYPE(c,type)		\
   if (bson_cursor_type(c) != type)		\
     return FALSE;
@@ -638,6 +739,7 @@ bson_cursor_get_utc_datetime (const bson_cursor *c,
   return TRUE;
 }
 
+/** @todo Not implemented yet! */
 gboolean
 bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
 		       const gchar **options)
