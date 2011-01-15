@@ -17,7 +17,8 @@ test_mongo_wire_update (void)
   bson *sel, *upd;
   mongo_packet *p;
 
-  const guint8 *hdr, *data;
+  const mongo_packet_header *hdr;
+  const guint8 *data;
   gint32 hdr_size, data_size;
 
   bson_cursor *c;
@@ -36,8 +37,13 @@ test_mongo_wire_update (void)
   bson_free (sel);
   bson_free (upd);
 
-  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr)), !=, -1);
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
   g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
+
+  g_assert_cmpint (hdr->length, ==,
+		   sizeof (mongo_packet_header) + data_size);
+  g_assert_cmpint (hdr->id, ==, 1);
+  g_assert_cmpint (hdr->resp_to, ==, 0);
 
   /* pos = zero + collection_name + NULL + flags */
   pos = sizeof (gint32) + strlen ("test.libmongo") + 1 + sizeof (gint32);
@@ -71,7 +77,8 @@ test_mongo_wire_insert ()
   bson *ins;
   mongo_packet *p;
 
-  const guint8 *hdr, *data;
+  const mongo_packet_header *hdr;
+  const guint8 *data;
   gint32 hdr_size, data_size;
 
   bson_cursor *c;
@@ -83,8 +90,13 @@ test_mongo_wire_insert ()
   g_assert ((p = mongo_wire_cmd_insert (1, "test.libmongo", ins)));
   bson_free (ins);
 
-  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr)), !=, -1);
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
   g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
+
+  g_assert_cmpint (hdr->length, ==,
+		   sizeof (mongo_packet_header) + data_size);
+  g_assert_cmpint (hdr->id, ==, 1);
+  g_assert_cmpint (hdr->resp_to, ==, 0);
 
   /* pos = zero + collection_name + NULL */
   pos = sizeof (gint32) + strlen ("test.libmongo") + 1;
@@ -109,7 +121,8 @@ test_mongo_wire_query ()
   bson *q, *s;
   mongo_packet *p;
 
-  const guint8 *hdr, *data;
+  const mongo_packet_header *hdr;
+  const guint8 *data;
   gint32 hdr_size, data_size;
 
   bson_cursor *c;
@@ -123,8 +136,13 @@ test_mongo_wire_query ()
   bson_free (q);
   bson_free (s);
 
-  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr)), !=, -1);
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
   g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
+
+  g_assert_cmpint (hdr->length, ==,
+		   sizeof (mongo_packet_header) + data_size);
+  g_assert_cmpint (hdr->id, ==, 1);
+  g_assert_cmpint (hdr->resp_to, ==, 0);
 
   /* pos = zero + collection_name + NULL + skip + ret */
   pos = sizeof (gint32) + strlen ("test.libmongo") + 1 + sizeof (gint32) * 2;
@@ -154,7 +172,6 @@ test_mongo_wire_query ()
 
   PASS ();
 }
-
 
 int
 main (void)
