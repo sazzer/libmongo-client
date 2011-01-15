@@ -22,9 +22,41 @@
 
 #include <glib.h>
 
+/** @defgroup mongo_client Mongo Client
+ *
+ * @addtogroup mongo_client
+ * @{
+ */
+
+/** Connect to a MongoDB server.
+ *
+ * Connects to a single MongoDB server.
+ *
+ * @param host is the IP address of the server.
+ * @param port is the port to connect to.
+ *
+ * @note The @a host must be an IP address in dotted decimal form.
+ *
+ * @returns The file descriptor associated with the connection, or -1
+ * on error.
+ */
 gint mongo_connect (const char *host, int port);
+/** Disconnect from a MongoDB server.
+ *
+ * @param fd is the file descriptior associated with the connection.
+ */
 void mongo_disconnect (gint fd);
 
+/** Sends an assembled command packet to MongoDB.
+ *
+ * @param fd is the file descriptor to send the packet to.
+ * @param p is the packet to send.
+ *
+ * @returns TRUE on success, when the whole packet was sent, FALSE
+ * otherwise.
+ */
 gboolean mongo_packet_send (gint fd, const mongo_packet *p);
+
+/** @} */
 
 #endif
