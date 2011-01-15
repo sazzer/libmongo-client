@@ -64,6 +64,15 @@ typedef struct
  */
 typedef struct _mongo_packet mongo_packet;
 
+/** Create an empty packet.
+ *
+ * Creates an empty packet to be filled in later with
+ * mongo_wire_packet_set_header() and mongo_packet_set_data().
+ *
+ * @returns A newly allocated packet, or NULL on error.
+ */
+mongo_packet *mongo_wire_packet_new (void);
+
 /** Get the header data of a packet.
  *
  * Retrieve the mongo packet's header data.

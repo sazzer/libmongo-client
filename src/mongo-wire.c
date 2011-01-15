@@ -53,6 +53,14 @@ typedef enum
     OP_KILL_CURSORS = 2007 /**< Message is a kill cursors command. */
   } mongo_wire_opcode;
 
+mongo_packet *
+mongo_wire_packet_new (void)
+{
+  mongo_packet *p;
+
+  return (mongo_packet *)g_try_new0 (mongo_packet, 1);
+}
+
 gint32
 mongo_wire_packet_get_header (const mongo_packet *p,
 			      const mongo_packet_header **header)
@@ -95,7 +103,8 @@ mongo_wire_packet_set_data (mongo_packet *p, const guint8 *data, gint32 size)
   if (!p || !data || size <= 0)
     return FALSE;
 
-  g_byte_array_free (p->data, TRUE);
+  if (p->data)
+    g_byte_array_free (p->data, TRUE);
   p->data = g_byte_array_sized_new (size);
   p->data = g_byte_array_append (p->data, data, size);
   if (!p->data)
@@ -112,7 +121,8 @@ mongo_wire_packet_free (mongo_packet *p)
   if (!p)
     return;
 
-  g_byte_array_free (p->data, TRUE);
+  if (p->data)
+    g_byte_array_free (p->data, TRUE);
   g_free (p);
 }
 
