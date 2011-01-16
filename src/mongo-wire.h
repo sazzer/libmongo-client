@@ -175,14 +175,15 @@ mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
  * @param id is the sequence id.
  * @param ns is the namespace, the database and collection name
  * concatenaded, and separated with a single dot.
- * @param doc is the BSON document to insert.
+ * @param docs are the BSON documents to insert. One must close the
+ * list with a NULL value.
  *
  * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
  * anymore.
  */
 mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
-				     const bson *doc);
+				     const bson *docs, ...);
 
 /** Construct a query command.
  *

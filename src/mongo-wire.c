@@ -168,14 +168,16 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
 }
 
 mongo_packet *
-mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *doc)
+mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *docs, ...)
 {
   mongo_packet *p;
+  va_list ap;
+  bson *d;
 
-  if (!ns || !doc)
+  if (!ns || !docs)
     return NULL;
 
-  if (bson_size (doc) < 0)
+  if (bson_size (docs) < 0)
     return NULL;
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
@@ -185,10 +187,29 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *doc)
   p->header.opcode = GINT32_TO_LE (OP_INSERT);
 
   p->data = g_byte_array_sized_new
-    (sizeof (gint32) + strlen (ns) + 1 + bson_size (doc));
+    (sizeof (gint32) + strlen (ns) + 1 + bson_size (docs));
   p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
   p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
-  p->data = g_byte_array_append (p->data, bson_data (doc), bson_size (doc));
+  p->data = g_byte_array_append (p->data, bson_data (docs), bson_size (docs));
+  if (!p->data)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  va_start (ap, docs);
+  while ((d = (bson *)va_arg (ap, gpointer)))
+    {
+      if (bson_size (d) < 0)
+	{
+	  mongo_wire_packet_free (p);
+	  return NULL;
+	}
+
+      p->data = g_byte_array_append (p->data, bson_data (d), bson_size (d));
+    }
+  va_end (ap);
+
   if (!p->data)
     {
       mongo_wire_packet_free (p);

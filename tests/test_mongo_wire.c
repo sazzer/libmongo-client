@@ -87,7 +87,7 @@ test_mongo_wire_insert ()
   TEST (mongo_wire.insert);
 
   ins = test_bson_generate_nested ();
-  g_assert ((p = mongo_wire_cmd_insert (1, "test.libmongo", ins)));
+  g_assert ((p = mongo_wire_cmd_insert (1, "test.libmongo", ins, NULL)));
   bson_free (ins);
 
   g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
