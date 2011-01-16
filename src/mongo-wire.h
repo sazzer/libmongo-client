@@ -56,6 +56,7 @@ typedef struct
   gint32 opcode; /**< The opcode of the command. @see
 		    mongo_wire_opcode. <*/
 } mongo_packet_header;
+#pragma pack()
 
 /** An opaque Mongo Packet on the wire.
  *
@@ -140,6 +141,72 @@ gboolean mongo_wire_packet_set_data (mongo_packet *p, const guint8 *data,
 void mongo_wire_packet_free (mongo_packet *p);
 
 /** @} */
+
+/** @defgroup mongo_wire_reply Reply handling
+ *
+ * @addtogroup mongo_wire_reply
+ * @{
+ */
+
+/** Mongo reply packet header.
+ */
+#pragma pack(1)
+typedef struct
+{
+  gint32 flags; /**< Response flags. @todo Handle these. */
+  gint64 cursor_id; /**< Cursor ID, in case the client needs to do
+		       get_more requests. */
+  gint32 start; /**< Starting position of the reply within the
+		   cursor. */
+  gint32 returned; /**< Number of documents returned in the reply. */
+} mongo_reply_packet_header;
+#pragma pack()
+
+/** Get the header of a reply packet.
+ *
+ * @param p is the packet to retrieve the reply header from.
+ * @param hdr is a pointer to a variable where the reply header will
+ * be stored.
+ *
+ * @note It is the responsibility of the caller to allocate space for
+ * the header.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_wire_reply_packet_get_header (const mongo_packet *p,
+					     mongo_reply_packet_header *hdr);
+/** Get the full data part of a reply packet.
+ *
+ * The result will include the full, unparsed data part of the reply.
+ *
+ * @param p is the packet to retrieve the data from.
+ * @param data is a pointer to a variable where the replys data can be
+ * stored.
+ *
+ * @note The @a data variable will point to an internal structure,
+ * which must not be freed or modified.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_wire_reply_packet_get_data (const mongo_packet *p,
+					   const guint8 **data);
+/** Get the Nth document from a reply packet.
+ *
+ * @param p is the packet to retrieve a document from.
+ * @param n is the number of the document to retrieve.
+ * @param doc is a pointer to a variable to hold the BSON document.
+ *
+ * @note The @a doc variable will be a newly allocated object, it is
+ * the responsibility of the caller to free it once it is not needed
+ * anymore.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_wire_reply_packet_get_nth_document (const mongo_packet *p,
+						   gint32 n,
+						   bson **doc);
+
+/** @}*/
 
 /** @defgroup mongo_wire_cmd Commands
  *

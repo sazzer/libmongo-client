@@ -157,12 +157,75 @@ test_mongo_client_recv_custom (void)
   PASS ();
 }
 
+void
+test_mongo_client_reply_parse (void)
+{
+  bson *cmd;
+  mongo_packet *p;
+  int fd;
+  const mongo_packet_header *h;
+  const guint8 *data;
+  guint pos;
+  gint32 data_size;
+  bson_cursor *c;
+
+  gdouble ok;
+  const gchar *nonce;
+
+  mongo_reply_packet_header rh;
+
+  TEST (mongo_client.reply_parse);
+  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (fd < 0)
+    SKIP ();
+
+  cmd = bson_new ();
+  bson_append_int32 (cmd, "getnonce", 1);
+  bson_finish (cmd);
+
+  p = mongo_wire_cmd_custom (1, "test", cmd);
+  g_assert (mongo_packet_send (fd, p));
+  mongo_wire_packet_free (p);
+  bson_free (cmd);
+
+  g_assert ((p = mongo_packet_recv (fd)) != NULL);
+
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 1);
+
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &cmd));
+  bson_finish (cmd);
+
+  g_assert ((c = bson_find (cmd, "ok")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
+  g_assert (bson_cursor_get_double (c, &ok));
+  g_assert (ok == 1);
+  g_free (c);
+
+  g_assert ((c = bson_find (cmd, "nonce")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
+  g_assert (bson_cursor_get_string (c, &nonce));
+  printf ("   # nonce: %s\n", nonce);
+  g_free (c);
+
+  bson_free (cmd);
+
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 2, &cmd) == FALSE);
+
+  mongo_wire_packet_free (p);
+
+  PASS ();
+}
+
 int
 main (void)
 {
   test_mongo_client ();
   test_mongo_client_recv ();
   test_mongo_client_recv_custom ();
+  test_mongo_client_reply_parse ();
 
   return 0;
 }

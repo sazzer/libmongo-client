@@ -427,3 +427,85 @@ mongo_wire_cmd_custom (gint32 id, const gchar *db, const bson *command)
   g_free (ns);
   return p;
 }
+
+gboolean
+mongo_wire_reply_packet_get_header (const mongo_packet *p,
+				    mongo_reply_packet_header *hdr)
+{
+  mongo_reply_packet_header h;
+  const guint8 *data;
+
+  if (!p || !hdr)
+    return FALSE;
+
+  if (p->header.opcode != OP_REPLY)
+    return FALSE;
+
+  if (mongo_wire_packet_get_data (p, &data) == -1)
+    return FALSE;
+
+  memcpy (&h, data, sizeof (mongo_reply_packet_header));
+
+  hdr->flags = GINT32_FROM_LE (h.flags);
+  hdr->cursor_id = GINT64_FROM_LE (h.cursor_id);
+  hdr->start = GINT32_FROM_LE (h.start);
+  hdr->returned = GINT32_FROM_LE (h.returned);
+
+  return TRUE;
+}
+
+gboolean
+mongo_wire_reply_packet_get_data (const mongo_packet *p,
+				  const guint8 **data)
+{
+  const guint8 *d;
+
+  if (!p || !data)
+    return FALSE;
+
+  if (p->header.opcode != OP_REPLY)
+    return FALSE;
+
+  if (mongo_wire_packet_get_data (p, &d) == -1)
+    return FALSE;
+
+  *data = d + sizeof (mongo_reply_packet_header);
+  return TRUE;
+}
+
+gboolean
+mongo_wire_reply_packet_get_nth_document (const mongo_packet *p,
+					  gint32 n,
+					  bson **doc)
+{
+  const guint8 *d;
+  bson *b;
+  mongo_reply_packet_header h;
+  gint32 i;
+  gint32 pos = 0;
+
+  if (!p || !doc || n <= 0)
+    return FALSE;
+
+  if (p->header.opcode != OP_REPLY)
+    return FALSE;
+
+  if (!mongo_wire_reply_packet_get_header (p, &h))
+    return FALSE;
+
+  if (h.returned < n)
+    return FALSE;
+
+  if (!mongo_wire_reply_packet_get_data (p, &d))
+    return FALSE;
+
+  for (i = 1; i < n; i++)
+    pos += (guint32)d[0];
+
+  b = bson_new_from_data (d + pos, (guint32)d[pos] - 1);
+  if (!b)
+    return FALSE;
+
+  *doc = b;
+  return TRUE;
+}
