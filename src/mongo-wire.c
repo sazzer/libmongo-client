@@ -139,7 +139,7 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
 		       const bson *selector, const bson *update)
 {
   mongo_packet *p;
-  gint32 t_flags;
+  gint32 t_flags = GINT32_TO_LE (flags);
   gint nslen;
 
   if (!ns || !selector || !update)
