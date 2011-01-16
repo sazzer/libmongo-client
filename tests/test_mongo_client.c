@@ -12,11 +12,11 @@ test_mongo_client (void)
 {
   bson *sel, *upd;
   mongo_packet *p;
-  int fd;
+  mongo_connection *conn;
 
   TEST (mongo_client.connect);
-  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (fd < 0)
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
     SKIP ();
   PASS ();
 
@@ -32,11 +32,11 @@ test_mongo_client (void)
   bson_free (upd);
 
   TEST (mongo_client.packet_send);
-  g_assert (mongo_packet_send (fd, p));
+  g_assert (mongo_packet_send (conn, p));
   PASS ();
 
   TEST (mongo_client.disconnect);
-  mongo_disconnect (fd);
+  mongo_disconnect (conn);
   PASS ();
 }
 
@@ -45,7 +45,7 @@ test_mongo_client_recv (void)
 {
   bson *q;
   mongo_packet *p;
-  int fd;
+  mongo_connection *conn;
   mongo_packet_header h;
   const guint8 *data;
   guint pos;
@@ -53,8 +53,8 @@ test_mongo_client_recv (void)
   bson_cursor *c;
 
   TEST (mongo_client.recv);
-  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (fd < 0)
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
     SKIP ();
 
   q = bson_new ();
@@ -62,7 +62,7 @@ test_mongo_client_recv (void)
   bson_finish (q);
 
   p = mongo_wire_cmd_insert (1, "test.libmongo", q);
-  g_assert (mongo_packet_send (fd, p));
+  g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
 
   p = mongo_wire_cmd_query (1, "test.libmongo", 0, 0, 1, q,
@@ -70,11 +70,11 @@ test_mongo_client_recv (void)
   g_assert (mongo_wire_packet_get_header (p, &h));
   g_assert ((data_size = mongo_wire_packet_get_data (p, &data)) != -1);
 
-  g_assert (mongo_packet_send (fd, p));
+  g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (q);
 
-  g_assert ((p = mongo_packet_recv (fd)) != NULL);
+  g_assert ((p = mongo_packet_recv (conn)) != NULL);
 
   g_assert_cmpint (mongo_wire_packet_get_header (p, &h), !=, -1);
   g_assert_cmpint (mongo_wire_packet_get_data (p, &data), !=, -1);
@@ -93,6 +93,7 @@ test_mongo_client_recv (void)
   bson_free (q);
 
   mongo_wire_packet_free (p);
+  mongo_disconnect (conn);
 
   PASS ();
 }
@@ -102,7 +103,7 @@ test_mongo_client_recv_custom (void)
 {
   bson *cmd;
   mongo_packet *p;
-  int fd;
+  mongo_connection *conn;
   mongo_packet_header h;
   const guint8 *data;
   guint pos;
@@ -112,8 +113,8 @@ test_mongo_client_recv_custom (void)
   const gchar *nonce;
 
   TEST (mongo_client.recv.custom);
-  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (fd < 0)
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
     SKIP ();
 
   cmd = bson_new ();
@@ -121,11 +122,11 @@ test_mongo_client_recv_custom (void)
   bson_finish (cmd);
 
   p = mongo_wire_cmd_custom (1, "test", cmd);
-  g_assert (mongo_packet_send (fd, p));
+  g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);
 
-  g_assert ((p = mongo_packet_recv (fd)) != NULL);
+  g_assert ((p = mongo_packet_recv (conn)) != NULL);
 
   g_assert (mongo_wire_packet_get_header (p, &h));
   g_assert_cmpint (mongo_wire_packet_get_data (p, &data), !=, -1);
@@ -152,6 +153,7 @@ test_mongo_client_recv_custom (void)
 
   bson_free (cmd);
   mongo_wire_packet_free (p);
+  mongo_disconnect (conn);
 
   PASS ();
 }
@@ -161,7 +163,7 @@ test_mongo_client_reply_parse (void)
 {
   bson *cmd;
   mongo_packet *p;
-  int fd;
+  mongo_connection *conn;
   bson_cursor *c;
 
   gdouble ok;
@@ -170,8 +172,8 @@ test_mongo_client_reply_parse (void)
   mongo_reply_packet_header rh;
 
   TEST (mongo_client.reply_parse);
-  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (fd < 0)
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
     SKIP ();
 
   cmd = bson_new ();
@@ -179,11 +181,11 @@ test_mongo_client_reply_parse (void)
   bson_finish (cmd);
 
   p = mongo_wire_cmd_custom (1, "test", cmd);
-  g_assert (mongo_packet_send (fd, p));
+  g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);
 
-  g_assert ((p = mongo_packet_recv (fd)) != NULL);
+  g_assert ((p = mongo_packet_recv (conn)) != NULL);
 
   g_assert (mongo_wire_reply_packet_get_header (p, &rh));
 
@@ -210,7 +212,7 @@ test_mongo_client_reply_parse (void)
   g_assert (mongo_wire_reply_packet_get_nth_document (p, 2, &cmd) == FALSE);
 
   mongo_wire_packet_free (p);
-
+  mongo_disconnect (conn);
   PASS ();
 }
 

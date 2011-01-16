@@ -28,6 +28,10 @@
  * @{
  */
 
+/** An opaque mongo connection object.
+ */
+typedef struct _mongo_connection mongo_connection;
+
 /** Connect to a MongoDB server.
  *
  * Connects to a single MongoDB server.
@@ -37,33 +41,36 @@
  *
  * @note The @a host must be an IP address in dotted decimal form.
  *
- * @returns The file descriptor associated with the connection, or -1
- * on error.
+ * @returns A newly allocated mongo_connection object or NULL on
+ * error. It is the responsibility of the caller to free it once it is
+ * not used anymore.
  */
-gint mongo_connect (const char *host, int port);
+mongo_connection *mongo_connect (const char *host, int port);
 /** Disconnect from a MongoDB server.
  *
- * @param fd is the file descriptior associated with the connection.
+ * @param conn is the connection object to disconnect from.
+ *
+ * @note This also frees up the object.
  */
-void mongo_disconnect (gint fd);
+void mongo_disconnect (mongo_connection *conn);
 
 /** Sends an assembled command packet to MongoDB.
  *
- * @param fd is the file descriptor to send the packet to.
+ * @param conn is the connection to use for sending.
  * @param p is the packet to send.
  *
  * @returns TRUE on success, when the whole packet was sent, FALSE
  * otherwise.
  */
-gboolean mongo_packet_send (gint fd, const mongo_packet *p);
+gboolean mongo_packet_send (mongo_connection *conn, const mongo_packet *p);
 
 /** Receive a packet from MongoDB.
  *
- * @param fd is the file descriptor to receive the packet from.
+ * @param conn is the connection to use for receiving.
  *
  * @returns A response packet, or NULL upon error.
  */
-mongo_packet *mongo_packet_recv (gint fd);
+mongo_packet *mongo_packet_recv (mongo_connection *conn);
 
 /** @} */
 
