@@ -16,6 +16,7 @@
 
 #include <glib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "bson.h"
 #include "mongo-wire.h"
@@ -140,6 +141,8 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
     return NULL;
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
   p->header.id = id;
   p->header.opcode = GINT32_TO_LE (OP_UPDATE);
 
@@ -154,7 +157,10 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
   p->data = g_byte_array_append (p->data, bson_data (update),
 				 bson_size (update));
   if (!p->data)
-    return NULL;
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
 
   p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
 
@@ -162,27 +168,53 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
 }
 
 mongo_packet *
-mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *doc)
+mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *docs, ...)
 {
   mongo_packet *p;
+  va_list ap;
+  bson *d;
 
-  if (!ns || !doc)
+  if (!ns || !docs)
     return NULL;
 
-  if (bson_size (doc) < 0)
+  if (bson_size (docs) < 0)
     return NULL;
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
   p->header.id = id;
   p->header.opcode = GINT32_TO_LE (OP_INSERT);
 
   p->data = g_byte_array_sized_new
-    (sizeof (gint32) + strlen (ns) + 1 + bson_size (doc));
+    (sizeof (gint32) + strlen (ns) + 1 + bson_size (docs));
   p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
   p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
-  p->data = g_byte_array_append (p->data, bson_data (doc), bson_size (doc));
+  p->data = g_byte_array_append (p->data, bson_data (docs), bson_size (docs));
   if (!p->data)
-    return NULL;
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  va_start (ap, docs);
+  while ((d = (bson *)va_arg (ap, gpointer)))
+    {
+      if (bson_size (d) < 0)
+	{
+	  mongo_wire_packet_free (p);
+	  return NULL;
+	}
+
+      p->data = g_byte_array_append (p->data, bson_data (d), bson_size (d));
+    }
+  va_end (ap);
+
+  if (!p->data)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
 
   p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
 
@@ -204,6 +236,8 @@ mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
     return NULL;
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
   p->header.id = id;
   p->header.opcode = GINT32_TO_LE (OP_QUERY);
 
@@ -225,7 +259,139 @@ mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
   if (sel)
     p->data = g_byte_array_append (p->data, bson_data (sel), bson_size (sel));
   if (!p->data)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
+
+  return p;
+}
+
+mongo_packet *
+mongo_wire_cmd_get_more (gint32 id, const gchar *ns,
+			 gint32 ret, gint64 cursor_id)
+{
+  mongo_packet *p;
+  gint32 t_ret;
+  gint64 t_cid;
+  gint32 size;
+
+  if (!ns)
     return NULL;
+
+  p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
+
+  p->header.id = id;
+  p->header.opcode = GINT32_TO_LE (OP_GET_MORE);
+
+  t_ret = GINT32_TO_LE (ret);
+  t_cid = GINT64_TO_LE (cursor_id);
+
+  size = sizeof (gint32) + strlen (ns) + 1 + sizeof (gint32) +
+    sizeof (gint64);
+
+  p->data = g_byte_array_sized_new (size);
+  p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
+  p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_ret, sizeof (t_ret));
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_cid, sizeof (t_cid));
+  if (!p->data)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
+
+  return p;
+}
+
+mongo_packet *
+mongo_wire_cmd_delete (gint32 id, const gchar *ns,
+		       gint32 flags, const bson *sel)
+{
+  mongo_packet *p;
+  gint32 size;
+
+  if (!ns || !sel)
+    return NULL;
+
+  if (bson_size (sel) < 0)
+    return NULL;
+
+  p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
+
+  p->header.id = id;
+  p->header.opcode = GINT32_TO_LE (OP_DELETE);
+
+  size = sizeof (gint32) + strlen (ns) + 1 + sizeof (gint32) +
+    bson_size (sel);
+
+  p->data = g_byte_array_sized_new (size);
+  p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
+  p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
+  p->data = g_byte_array_append (p->data, (guint8 *)&flags, sizeof (flags));
+  p->data = g_byte_array_append (p->data, bson_data (sel), bson_size (sel));
+  if (!p->data)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
+
+  return p;
+}
+
+mongo_packet *
+mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
+			     gint64 cursor_ids, ...)
+{
+  mongo_packet *p;
+  gint32 size, i, t_n;
+  gint64 t_cid;
+  va_list ap;
+
+  if (n <= 0)
+    return NULL;
+
+  p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
+
+  p->header.id = id;
+  p->header.opcode = GINT32_TO_LE (OP_KILL_CURSORS);
+
+  t_n = GINT32_TO_LE (n);
+  t_cid = GINT64_TO_LE (cursor_ids);
+  size = sizeof (gint32) + sizeof (gint32) + sizeof (gint64) * n;
+
+  p->data = g_byte_array_sized_new (size);
+  p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_n, sizeof (n));
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_cid, sizeof (cursor_ids));
+
+  va_start (ap, cursor_ids);
+  for (i = 1; i < n; i++)
+    {
+      t_cid = va_arg (ap, gint64);
+      t_cid = GINT64_TO_LE (t_cid);
+      p->data = g_byte_array_append (p->data, (guint8 *)&t_cid,
+				     sizeof (t_cid));
+    }
+  va_end (ap);
+
+  if (!p->data)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
 
   p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
 

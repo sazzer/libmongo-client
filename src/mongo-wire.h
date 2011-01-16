@@ -175,14 +175,15 @@ mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
  * @param id is the sequence id.
  * @param ns is the namespace, the database and collection name
  * concatenaded, and separated with a single dot.
- * @param doc is the BSON document to insert.
+ * @param docs are the BSON documents to insert. One must close the
+ * list with a NULL value.
  *
  * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
  * anymore.
  */
 mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
-				     const bson *doc);
+				     const bson *docs, ...);
 
 /** Construct a query command.
  *
@@ -205,6 +206,53 @@ mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
 mongo_packet *mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
 				    gint32 skip, gint32 ret, const bson *query,
 				    const bson *sel);
+
+/** Construct a get more command.
+ *
+ * @param id is the sequence id.
+ * @param ns is the namespace, the database and collection name
+ * concatenaded, and separated with a single dot.
+ * @param ret is the number of documents to return.
+ * @param cursor_id is the ID of the cursor to use.
+ *
+ * @returns A newly allocated packet, or NULL on error. It is the
+ * responsibility of the caller to free the packet once it is not used
+ * anymore.
+ */
+mongo_packet *mongo_wire_cmd_get_more (gint32 id, const gchar *ns,
+				       gint32 ret, gint64 cursor_id);
+
+/** Construct a delete command.
+ *
+ * @param id is the sequence id.
+ * @param ns is the namespace, the database and collection name
+ * concatenaded, and separated with a single dot.
+ * @param flags are the delete options.
+ * @param sel is the BSON object to use as a selector.
+ *
+ * @returns A newly allocated packet, or NULL on error. It is the
+ * responsibility of the caller to free the packet once it is not used
+ * anymore.
+ *
+ * @todo flags should be easier to handle.
+ */
+mongo_packet *mongo_wire_cmd_delete (gint32 id, const gchar *ns,
+				     gint32 flags, const bson *sel);
+
+/** Construct a kill cursors command.
+ *
+ * @param id is the sequence id.
+ * @param n is the number of cursors to delete.
+ * @param cursor_ids are the ids of the cursors to delete.
+ *
+ * @note One must supply exaclty @a n number of cursor IDs.
+ *
+ * @returns A newly allocated packet, or NULL on error. It is the
+ * responsibility of the caller to free the packet once it is not used
+ * anymore.
+ */
+mongo_packet *mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
+					   gint64 cursor_ids, ...);
 
 /** @} */
 /** @} */

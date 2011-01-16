@@ -141,10 +141,10 @@ test_invalid_mongo_wire (void)
   PASS ();
 
   TEST (mongo_wire_cmd_insert);
-  g_assert (mongo_wire_cmd_insert (1, NULL, NULL) == NULL);
-  g_assert (mongo_wire_cmd_insert (1, NULL, data) == NULL);
-  g_assert (mongo_wire_cmd_insert (1, "test.ns", u) == NULL);
-  g_assert ((p = mongo_wire_cmd_insert (1, "test.ns", data)));
+  g_assert (mongo_wire_cmd_insert (1, NULL, NULL, NULL) == NULL);
+  g_assert (mongo_wire_cmd_insert (1, NULL, data, NULL) == NULL);
+  g_assert (mongo_wire_cmd_insert (1, "test.ns", u, NULL) == NULL);
+  g_assert ((p = mongo_wire_cmd_insert (1, "test.ns", data, NULL)));
   mongo_wire_packet_free (p);
   PASS ();
 
