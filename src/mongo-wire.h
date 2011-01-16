@@ -145,12 +145,27 @@ void mongo_wire_packet_free (mongo_packet *p);
  * @{
  */
 
+/** Flags the server can set in replies. */
+enum
+  {
+    /** Set when get_more is called but the cursor id is invalid. */
+    MONGO_REPLY_FLAG_NO_CURSOR = 0x1,
+    /** Set when the query failed. */
+    MONGO_REPLY_FLAG_QUERY_FAIL = 0x2,
+    /** Set when the server suppots the AwaitData query option.
+     * If not set, the client should sleep a little between get_more
+     * calls on a tailable cursor. On Mongo >= 1.6, this flag is
+     * always set.
+     */
+    MONGO_REPLY_FLAG_AWAITCAPABLE = 0x8,
+  };
+
 /** Mongo reply packet header.
  */
 #pragma pack(1)
 typedef struct
 {
-  gint32 flags; /**< Response flags. @todo Handle these. */
+  gint32 flags; /**< Response flags. */
   gint64 cursor_id; /**< Cursor ID, in case the client needs to do
 		       get_more requests. */
   gint32 start; /**< Starting position of the reply within the
@@ -215,21 +230,32 @@ gboolean mongo_wire_reply_packet_get_nth_document (const mongo_packet *p,
  * @{
  */
 
+/** Flags available for the update command.
+ * @see mongo_wire_cmd_update().
+ */
+enum
+  {
+    /** When set, inserts if no matching document was found. */
+    MONGO_WIRE_FLAG_UPDATE_UPSERT = 0x1,
+    /** When set, all matching documents will be updated, not just
+	the first. */
+    MONGO_WIRE_FLAG_UPDATE_MULTI = 0x2,
+  };
+
 /** Construct an update command.
  *
  * @param id is the sequence id.
  * @param ns is the namespace, the database and collection name
  * concatenated, and separated with a single dot.
- * @param flags are the flags for the update command.
+ * @param flags are the flags for the update command. Available flags
+ * are #MONGO_WIRE_FLAG_UPDATE_UPSERT and
+ * #MONGO_WIRE_FLAG_UPDATE_MULTI.
  * @param selector is the BSON document that will act as the selector.
  * @param update is the BSON document that contains the updated values.
  *
  * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
  * anymore.
- *
- * @todo The flags should be handled better, we should have an enum
- * for them, whose values can be OR'd together.
  */
 mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
 				     gint32 flags, const bson *selector,
@@ -249,12 +275,38 @@ mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
 mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
 				     const bson *docs, ...);
 
+/** Flags available for the query command.
+ * @see mongo_wire_cmd_query().
+ */
+enum
+  {
+    /** Set the TailableCursor flag on the query. */
+    MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR = 0x02,
+    /** Allow queries made against a replica slave. */
+    MONGO_WIRE_FLAG_QUERY_SLAVE_OK = 0x04,
+    /** Disable cursor timeout. */
+    MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT = 0x0f,
+    /** Block if at the end of the data block, awaiting data.
+     * Use only witj #MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR!
+     */
+    MONGO_WIRE_FLAG_QUERY_AWAIT_DATA = 0x20,
+    /** Stream the data down full blast in multiple packages.
+     * When set, the client is not allowed not to read all the data,
+     * unless it closes connection.
+     */
+    MONGO_WIRE_FLAG_QUERY_EXHAUST = 0x40
+  };
+
 /** Construct a query command.
  *
  * @param id is the sequence id.
  * @param ns is the namespace, the database and collection name
  * concatenaded, and separated with a single dot.
- * @param flags are the query options.
+ * @param flags are the query options. Available flags are:
+ * #MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR,
+ * #MONGO_WIRE_FLAG_QUERY_SLAVE_OK,
+ * #MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT,
+ * #MONGO_WIRE_FLAG_QUERY_AWAIT_DATA, #MONGO_WIRE_FLAG_QUERY_EXHAUST.
  * @param skip is the number of documents to skip.
  * @param ret is the number of documents to return.
  * @param query is the query BSON object.
@@ -264,8 +316,6 @@ mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
  * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
  * anymore.
- *
- * @todo The flags should be handled better.
  */
 mongo_packet *mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
 				    gint32 skip, gint32 ret, const bson *query,
@@ -286,19 +336,26 @@ mongo_packet *mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
 mongo_packet *mongo_wire_cmd_get_more (gint32 id, const gchar *ns,
 				       gint32 ret, gint64 cursor_id);
 
+/** Flags available for the delete command.
+ */
+enum
+  {
+    /** Only remove the first match. */
+    MONGO_WIRE_FLAG_DELETE_SINGLE = 0x1
+  };
+
 /** Construct a delete command.
  *
  * @param id is the sequence id.
  * @param ns is the namespace, the database and collection name
  * concatenaded, and separated with a single dot.
- * @param flags are the delete options.
+ * @param flags are the delete options. The only available flag is
+ * MONGO_WIRE_FLAG_DELETE_SINGLE.
  * @param sel is the BSON object to use as a selector.
  *
  * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
  * anymore.
- *
- * @todo flags should be easier to handle.
  */
 mongo_packet *mongo_wire_cmd_delete (gint32 id, const gchar *ns,
 				     gint32 flags, const bson *sel);
