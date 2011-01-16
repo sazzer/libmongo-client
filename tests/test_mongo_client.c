@@ -97,11 +97,72 @@ test_mongo_client_recv (void)
   PASS ();
 }
 
+void
+test_mongo_client_recv_custom (void)
+{
+  bson *cmd;
+  mongo_packet *p;
+  int fd;
+  const mongo_packet_header *h;
+  const guint8 *data;
+  guint pos;
+  gint32 data_size;
+  bson_cursor *c;
+
+  gdouble ok;
+  const gchar *nonce;
+
+  TEST (mongo_client.recv.custom);
+  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (fd < 0)
+    SKIP ();
+
+  cmd = bson_new ();
+  bson_append_int32 (cmd, "getnonce", 1);
+  bson_finish (cmd);
+
+  p = mongo_wire_cmd_custom (1, "test", cmd);
+  g_assert (mongo_packet_send (fd, p));
+  mongo_wire_packet_free (p);
+  bson_free (cmd);
+
+  g_assert ((p = mongo_packet_recv (fd)) != NULL);
+
+  g_assert_cmpint (mongo_wire_packet_get_header (p, &h), !=, -1);
+  g_assert_cmpint (mongo_wire_packet_get_data (p, &data), !=, -1);
+
+  pos = sizeof (gint32) /* resp. flags */ +
+    sizeof (gint64) /* cursor ID */ +
+    sizeof (gint32) /* starting from */ +
+    sizeof (gint32); /* returned */
+
+  g_assert ((cmd = bson_new_from_data (data + pos, (gint32)data[pos] - 1)));
+  bson_finish (cmd);
+
+  g_assert ((c = bson_find (cmd, "ok")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
+  g_assert (bson_cursor_get_double (c, &ok));
+  g_assert (ok == 1);
+  g_free (c);
+
+  g_assert ((c = bson_find (cmd, "nonce")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
+  g_assert (bson_cursor_get_string (c, &nonce));
+  printf ("   # nonce: %s\n", nonce);
+  g_free (c);
+
+  bson_free (cmd);
+  mongo_wire_packet_free (p);
+
+  PASS ();
+}
+
 int
 main (void)
 {
   test_mongo_client ();
   test_mongo_client_recv ();
+  test_mongo_client_recv_custom ();
 
   return 0;
 }
