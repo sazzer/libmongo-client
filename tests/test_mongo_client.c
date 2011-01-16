@@ -46,7 +46,7 @@ test_mongo_client_recv (void)
   bson *q;
   mongo_packet *p;
   int fd;
-  const mongo_packet_header *h;
+  mongo_packet_header h;
   const guint8 *data;
   guint pos;
   gint32 data_size;
@@ -67,7 +67,7 @@ test_mongo_client_recv (void)
 
   p = mongo_wire_cmd_query (1, "test.libmongo", 0, 0, 1, q,
 			    NULL);
-  g_assert_cmpint (mongo_wire_packet_get_header (p, &h), !=, -1);
+  g_assert (mongo_wire_packet_get_header (p, &h));
   g_assert ((data_size = mongo_wire_packet_get_data (p, &data)) != -1);
 
   g_assert (mongo_packet_send (fd, p));
@@ -103,10 +103,9 @@ test_mongo_client_recv_custom (void)
   bson *cmd;
   mongo_packet *p;
   int fd;
-  const mongo_packet_header *h;
+  mongo_packet_header h;
   const guint8 *data;
   guint pos;
-  gint32 data_size;
   bson_cursor *c;
 
   gdouble ok;
@@ -128,7 +127,7 @@ test_mongo_client_recv_custom (void)
 
   g_assert ((p = mongo_packet_recv (fd)) != NULL);
 
-  g_assert_cmpint (mongo_wire_packet_get_header (p, &h), !=, -1);
+  g_assert (mongo_wire_packet_get_header (p, &h));
   g_assert_cmpint (mongo_wire_packet_get_data (p, &data), !=, -1);
 
   pos = sizeof (gint32) /* resp. flags */ +
@@ -163,10 +162,6 @@ test_mongo_client_reply_parse (void)
   bson *cmd;
   mongo_packet *p;
   int fd;
-  const mongo_packet_header *h;
-  const guint8 *data;
-  guint pos;
-  gint32 data_size;
   bson_cursor *c;
 
   gdouble ok;

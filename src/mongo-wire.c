@@ -57,20 +57,22 @@ typedef enum
 mongo_packet *
 mongo_wire_packet_new (void)
 {
-  mongo_packet *p;
-
   return (mongo_packet *)g_try_new0 (mongo_packet, 1);
 }
 
-gint32
+gboolean
 mongo_wire_packet_get_header (const mongo_packet *p,
-			      const mongo_packet_header **header)
+			      mongo_packet_header *header)
 {
   if (!p || !header)
-    return -1;
+    return FALSE;
 
-  *header = &p->header;
-  return sizeof (p->header);
+  header->length = GINT32_FROM_LE (p->header.length);
+  header->id = GINT32_FROM_LE (p->header.id);
+  header->resp_to = GINT32_FROM_LE (p->header.resp_to);
+  header->opcode = GINT32_FROM_LE (p->header.opcode);
+
+  return TRUE;
 }
 
 gboolean
@@ -80,10 +82,10 @@ mongo_wire_packet_set_header (mongo_packet *p,
   if (!p || !header)
     return FALSE;
 
-  p->header.length = header->length;
-  p->header.id = header->id;
-  p->header.resp_to = header->resp_to;
-  p->header.opcode = header->opcode;
+  p->header.length = GINT32_TO_LE (header->length);
+  p->header.id = GINT32_TO_LE (header->id);
+  p->header.resp_to = GINT32_TO_LE (header->resp_to);
+  p->header.opcode = GINT32_TO_LE (header->opcode);
 
   return TRUE;
 }
@@ -132,6 +134,7 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
 		       const bson *selector, const bson *update)
 {
   mongo_packet *p;
+  gint32 t_flags;
 
   if (!ns || !selector || !update)
     return NULL;
@@ -151,7 +154,8 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
      sizeof (gint32) + strlen (ns) + 1 + sizeof (flags));
   p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
   p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
-  p->data = g_byte_array_append (p->data, (guint8 *)&flags, sizeof (flags));
+  t_flags = GINT32_TO_LE (flags);
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_flags, sizeof (flags));
   p->data = g_byte_array_append (p->data, bson_data (selector),
 				 bson_size (selector));
   p->data = g_byte_array_append (p->data, bson_data (update),
@@ -248,7 +252,8 @@ mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
     size += bson_size (sel);
 
   p->data = g_byte_array_sized_new (size);
-  p->data = g_byte_array_append (p->data, (guint8 *)&flags, sizeof (flags));
+  tmp = GINT32_TO_LE (flags);
+  p->data = g_byte_array_append (p->data, (guint8 *)&tmp, sizeof (flags));
   p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
   tmp = GINT32_TO_LE (skip);
   p->data = g_byte_array_append (p->data, (guint8 *)&tmp, sizeof (tmp));
@@ -315,7 +320,7 @@ mongo_wire_cmd_delete (gint32 id, const gchar *ns,
 		       gint32 flags, const bson *sel)
 {
   mongo_packet *p;
-  gint32 size;
+  gint32 size, t_flags;
 
   if (!ns || !sel)
     return NULL;
@@ -336,7 +341,8 @@ mongo_wire_cmd_delete (gint32 id, const gchar *ns,
   p->data = g_byte_array_sized_new (size);
   p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
   p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
-  p->data = g_byte_array_append (p->data, (guint8 *)&flags, sizeof (flags));
+  t_flags = GINT32_TO_LE (flags);
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_flags, sizeof (flags));
   p->data = g_byte_array_append (p->data, bson_data (sel), bson_size (sel));
   if (!p->data)
     {
@@ -500,9 +506,9 @@ mongo_wire_reply_packet_get_nth_document (const mongo_packet *p,
     return FALSE;
 
   for (i = 1; i < n; i++)
-    pos += (guint32)d[0];
+    pos += GINT32_FROM_LE ((guint32)d[0]);
 
-  b = bson_new_from_data (d + pos, (guint32)d[pos] - 1);
+  b = bson_new_from_data (d + pos, GINT32_FROM_LE ((guint32)d[pos]) - 1);
   if (!b)
     return FALSE;
 

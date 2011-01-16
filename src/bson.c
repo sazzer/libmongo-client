@@ -506,14 +506,14 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_JS_CODE:
     case BSON_TYPE_SYMBOL:
     case BSON_TYPE_JS_CODE_W_SCOPE:
-      return (gint32)data[0] + sizeof (gint32);
+      return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32);
     case BSON_TYPE_DOCUMENT:
     case BSON_TYPE_ARRAY:
-      return(gint32)data[0];
+      return GINT32_FROM_LE ((gint32)data[0]);
     case BSON_TYPE_DOUBLE:
       return sizeof (gdouble);
     case BSON_TYPE_BINARY:
-      return (gint32)data[0] + 1;
+      return GINT32_FROM_LE ((gint32)data[0]) + 1;
     case BSON_TYPE_OID:
       return 12;
     case BSON_TYPE_BOOLEAN:
@@ -663,7 +663,7 @@ bson_cursor_get_document (const bson_cursor *c, bson **dest)
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_DOCUMENT);
 
-  size = (gint32)(bson_data (c->obj)[c->value_pos]);
+  size = GINT32_FROM_LE ((gint32)(bson_data (c->obj)[c->value_pos]));
   b = bson_new_sized (size);
   b->data = g_byte_array_append (b->data,
 				 bson_data (c->obj) + c->value_pos +
@@ -686,7 +686,7 @@ bson_cursor_get_array (const bson_cursor *c, bson **dest)
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_ARRAY);
 
-  size = (gint32)(bson_data (c->obj)[c->value_pos]);
+  size = GINT32_FROM_LE ((gint32)(bson_data (c->obj)[c->value_pos]));
   b = bson_new_sized (size);
   b->data = g_byte_array_append (b->data,
 				 bson_data (c->obj) + c->value_pos +
@@ -735,6 +735,7 @@ bson_cursor_get_utc_datetime (const bson_cursor *c,
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_UTC_DATETIME);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
+  *dest = GINT64_FROM_LE (*dest);
 
   return TRUE;
 }
@@ -788,6 +789,7 @@ bson_cursor_get_int32 (const bson_cursor *c, gint32 *dest)
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_INT32);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint32));
+  *dest = GINT32_FROM_LE (*dest);
 
   return TRUE;
 }
@@ -801,6 +803,7 @@ bson_cursor_get_timestamp (const bson_cursor *c, gint64 *dest)
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_TIMESTAMP);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
+  *dest = GINT64_FROM_LE (*dest);
 
   return TRUE;
 }
@@ -814,6 +817,7 @@ bson_cursor_get_int64 (const bson_cursor *c, gint64 *dest)
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_INT64);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gint64));
+  *dest = GINT64_FROM_LE (*dest);
 
   return TRUE;
 }

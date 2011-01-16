@@ -81,13 +81,12 @@ mongo_packet *mongo_wire_packet_new (void);
  * @param p is the packet which header we seek.
  * @param header is a pointer to a variable which will hold the data.
  *
- * @note The @a header parameter will point to an internal structure,
- * which shall not be freed or written to.
+ * @note Allocating the @a header is the responsibility of the caller.
  *
- * @returns The size of the header, or -1 on error.
+ * @returns TRUE on success, FALSE otherwise.
  */
-gint32 mongo_wire_packet_get_header (const mongo_packet *p,
-				     const mongo_packet_header **header);
+gboolean mongo_wire_packet_get_header (const mongo_packet *p,
+				       mongo_packet_header *header);
 /** Set the header data of a packet.
  *
  * Override the mongo packet's header data.
