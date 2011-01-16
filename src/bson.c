@@ -330,6 +330,17 @@ bson_data (const bson *b)
     return NULL;
 }
 
+gboolean
+bson_reset (bson *b)
+{
+  if (!b)
+    return FALSE;
+
+  b->finished = FALSE;
+  g_byte_array_set_size (b->data, 0);
+  return _bson_append_int32 (b, 0);
+}
+
 void
 bson_free (bson *b)
 {

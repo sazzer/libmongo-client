@@ -158,6 +158,18 @@ bson *bson_new_from_data (const guint8 *data, gint32 size);
  */
 gboolean bson_finish (bson *b);
 
+/** Reset a BSON object.
+ *
+ * Resetting a BSON object clears the finished status, and sets its
+ * size to zero. Resetting is most useful when wants to keep the
+ * already allocated memory around for reuse.
+ *
+ * @param b is the BSON object to reset.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean bson_reset (bson *b);
+
 /** Free the memory associated with a BSON object.
  *
  * Frees up all memory associated with a BSON object. The variable
