@@ -231,3 +231,41 @@ mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
 
   return p;
 }
+
+mongo_packet *
+mongo_wire_cmd_get_more (gint32 id, const gchar *ns,
+			 gint32 ret, gint64 cursor_id)
+{
+  mongo_packet *p;
+  gint32 t_ret;
+  gint64 t_cid;
+  gint32 size;
+
+  if (!ns)
+    return NULL;
+
+  p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
+
+  p->header.id = id;
+  p->header.opcode = GINT32_TO_LE (OP_GET_MORE);
+
+  t_ret = GINT32_TO_LE (ret);
+  t_cid = GINT64_TO_LE (cursor_id);
+
+  size = sizeof (gint32) + strlen (ns) + 1 + sizeof (gint32) +
+    sizeof (gint64);
+
+  p->data = g_byte_array_sized_new (size);
+  p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
+  p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_ret, sizeof (t_ret));
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_cid, sizeof (t_cid));
+  if (!p->data)
+    return NULL;
+
+  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
+
+  return p;
+}
