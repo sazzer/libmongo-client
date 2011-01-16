@@ -23,23 +23,20 @@
 #include <unistd.h>
 
 static guint32 machine_id = 0;
+static gint16 pid = 0;
 
-guint8 *
-mongo_util_oid_new (gint32 seq)
+void
+mongo_util_oid_init (gint32 mid)
 {
-  guint8 *oid;
-  time_t t = GINT32_TO_BE (time (NULL));
-  pid_t pid = getpid ();
-  gint16 short_pid;
-  gint32 mid;
-  gint32 tmp = GINT32_TO_BE (seq);
+  pid_t p = getpid ();
 
-  if (!machine_id)
+  if (mid == 0)
     {
-      srand (t);
+      srand (time (NULL));
       machine_id = rand ();
     }
-  mid = machine_id;
+  else
+    machine_id = mid;
 
   /*
    * If our pid has more than 16 bits, let half the bits modulate the
@@ -47,11 +44,24 @@ mongo_util_oid_new (gint32 seq)
    */
   if (sizeof (pid_t) > 2)
     {
-      mid ^= pid >> 16;
+      machine_id ^= pid >> 16;
     }
-  short_pid = (gint16)pid;
+  pid = (gint16)p;
+}
+
+guint8 *
+mongo_util_oid_new_with_time (gint32 ts, gint32 seq)
+{
+  guint8 *oid;
+  time_t t = GINT32_TO_BE (ts);
+  gint32 tmp = GINT32_TO_BE (seq);
+
+  if (machine_id == 0 || pid == 0)
+    return NULL;
 
   oid = (guint8 *)g_try_new0 (guint8, 12);
+  if (!oid)
+    return NULL;
 
   /* Sequence number, last 3 bytes
    * For simplicity's sake, we put this in first, and overwrite the
@@ -61,9 +71,15 @@ mongo_util_oid_new (gint32 seq)
   /* First four bytes: the time, BE byte order */
   memcpy (oid, &t, 4);
   /* Machine ID, byte order doesn't matter, 3 bytes */
-  memcpy (oid + 4, &mid, 3);
+  memcpy (oid + 4, &machine_id, 3);
   /* PID, byte order doesn't matter, 2 bytes */
-  memcpy (oid + 4 + 3, &short_pid, 2);
+  memcpy (oid + 4 + 3, &pid, 2);
 
   return oid;
+}
+
+guint8 *
+mongo_util_oid_new (gint32 seq)
+{
+  return mongo_util_oid_new_with_time (time (NULL), seq);
 }
