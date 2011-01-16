@@ -25,7 +25,7 @@ static gchar *current_test = NULL;
     return;					\
   }
 
-gboolean test_bson_dump (bson *b);
+gboolean dump_data (const guint8 *d, gint32 size);
 gboolean dump_bson (bson *b);
 
 #endif
