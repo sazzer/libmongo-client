@@ -269,3 +269,40 @@ mongo_wire_cmd_get_more (gint32 id, const gchar *ns,
 
   return p;
 }
+
+mongo_packet *
+mongo_wire_cmd_delete (gint32 id, const gchar *ns,
+		       gint32 flags, const bson *sel)
+{
+  mongo_packet *p;
+  gint32 size;
+
+  if (!ns || !sel)
+    return NULL;
+
+  if (bson_size (sel) < 0)
+    return NULL;
+
+  p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
+
+  p->header.id = id;
+  p->header.opcode = GINT32_TO_LE (OP_DELETE);
+
+  size = sizeof (gint32) + strlen (ns) + 1 + sizeof (gint32) +
+    bson_size (sel);
+
+  p->data = g_byte_array_sized_new (size);
+  p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
+  p->data = g_byte_array_append (p->data, (guint8 *)ns, strlen (ns) + 1);
+  p->data = g_byte_array_append (p->data, (guint8 *)&flags, sizeof (flags));
+  p->data = g_byte_array_append (p->data, bson_data (sel), bson_size (sel));
+  if (!p->data)
+    return NULL;
+
+  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
+
+  return p;
+}
+

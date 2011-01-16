@@ -221,6 +221,23 @@ mongo_packet *mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
 mongo_packet *mongo_wire_cmd_get_more (gint32 id, const gchar *ns,
 				       gint32 ret, gint64 cursor_id);
 
+/** Construct a delete command.
+ *
+ * @param id is the sequence id.
+ * @param ns is the namespace, the database and collection name
+ * concatenaded, and separated with a single dot.
+ * @param flags are the delete options.
+ * @param sel is the BSON object to use as a selector.
+ *
+ * @returns A newly allocated packet, or NULL on error. It is the
+ * responsibility of the caller to free the packet once it is not used
+ * anymore.
+ *
+ * @todo flags should be easier to handle.
+ */
+mongo_packet *mongo_wire_cmd_delete (gint32 id, const gchar *ns,
+				     gint32 flags, const bson *sel);
+
 /** @} */
 /** @} */
 #endif
