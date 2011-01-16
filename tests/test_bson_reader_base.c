@@ -143,7 +143,6 @@ test_bson_reader_nested (void)
   PASS ();
 
   {
-    const char *s;
     bson_cursor *c2;
     bson *d;
 
