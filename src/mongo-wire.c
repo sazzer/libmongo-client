@@ -397,3 +397,33 @@ mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
 
   return p;
 }
+
+mongo_packet *
+mongo_wire_cmd_custom (gint32 id, const gchar *db, const bson *command)
+{
+  mongo_packet *p;
+  gchar *ns;
+  bson *empty;
+
+  if (!db || !command)
+    return NULL;
+
+  if (bson_size (command) < 0)
+    return NULL;
+
+  ns = g_strconcat (db, ".$cmd", NULL);
+  if (!ns)
+    return NULL;
+
+  empty = bson_new ();
+  if (!empty)
+    {
+      g_free (ns);
+      return NULL;
+    }
+  bson_finish (empty);
+
+  p = mongo_wire_cmd_query (id, ns, 0, 0, 1, command, empty);
+  g_free (ns);
+  return p;
+}

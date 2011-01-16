@@ -254,6 +254,22 @@ mongo_packet *mongo_wire_cmd_delete (gint32 id, const gchar *ns,
 mongo_packet *mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
 					   gint64 cursor_ids, ...);
 
+/** Construct a custom command.
+ *
+ * Custom commands are queries run in the db.$cmd namespace. The
+ * commands themselves are queries, and as such, BSON objects.
+ *
+ * @param id is the sequence id.
+ * @param db is the database in which the command shall be run.
+ * @param command is the BSON object representing the command.
+ *
+ * @returns A newly allocated packet, or NULL on error. It is the
+ * responsibility of the caller to free the packet once it is not used
+ * anymore.
+ */
+mongo_packet *mongo_wire_cmd_custom (gint32 id, const gchar *db,
+				     const bson *command);
+
 /** @} */
 /** @} */
 #endif

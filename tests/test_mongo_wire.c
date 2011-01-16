@@ -370,6 +370,53 @@ test_mongo_wire_kill_cursors (void)
   PASS ();
 }
 
+void
+test_mongo_wire_custom ()
+{
+  bson *cmd;
+  mongo_packet *p;
+
+  const mongo_packet_header *hdr;
+  const guint8 *data;
+  gint32 hdr_size, data_size;
+
+  bson_cursor *c;
+  gint32 pos;
+
+  TEST (mongo_wire.custom);
+
+  cmd = bson_new ();
+  bson_append_int32 (cmd, "getnonce", 1);
+  bson_finish (cmd);
+
+  g_assert ((p = mongo_wire_cmd_custom (1, "test", cmd)));
+  bson_free (cmd);
+
+  g_assert_cmpint ((hdr_size = mongo_wire_packet_get_header (p, &hdr)), !=, -1);
+  g_assert_cmpint ((data_size = mongo_wire_packet_get_data (p, &data)), !=, -1);
+
+  g_assert_cmpint (hdr->length, ==,
+		   sizeof (mongo_packet_header) + data_size);
+  g_assert_cmpint (hdr->id, ==, 1);
+  g_assert_cmpint (hdr->resp_to, ==, 0);
+
+  /* pos = zero + collection_name + NULL + skip + ret */
+  pos = sizeof (gint32) + strlen ("test.$cmd") + 1 + sizeof (gint32) * 2;
+  g_assert ((cmd = bson_new_from_data (data + pos, (gint32)data[pos] - 1)));
+  bson_finish (cmd);
+
+  g_assert ((c = bson_find (cmd, "getnonce")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_INT32);
+  g_assert (!bson_cursor_next (c));
+
+  g_free (c);
+  bson_free (cmd);
+  mongo_wire_packet_free (p);
+
+  PASS ();
+}
+
+
 int
 main (void)
 {
@@ -380,6 +427,8 @@ main (void)
   test_mongo_wire_get_more ();
   test_mongo_wire_delete ();
   test_mongo_wire_kill_cursors ();
+
+  test_mongo_wire_custom ();
 
   return 0;
 }
