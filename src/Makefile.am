@@ -6,4 +6,10 @@ libmongo_client_la_SOURCES = \
 	bson.c bson.h \
 	mongo-wire.c mongo-wire.h \
 	mongo-client.c mongo-client.h \
-	mongo-utils.c mongo-utils.h
+	mongo-utils.c mongo-utils.h \
+	mongo.h
+
+libmongo_client_includedir = $(includedir)/mongo-client
+libmongo_client_include_HEADERS = \
+	bson.h mongo-wire.h mongo-client.h \
+	mongo-utils.h mongo.h
