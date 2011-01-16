@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <fcntl.h>
@@ -115,6 +116,7 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   const guint8 *data;
   gint32 data_size;
   mongo_packet_header h;
+  struct iovec iov[2];
 
   if (!conn || !p)
     return FALSE;
@@ -129,9 +131,12 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   if (data_size == -1)
     return FALSE;
 
-  if (send (conn->fd, &h, sizeof (h), 0) != sizeof (h))
-    return FALSE;
-  if (send (conn->fd, data, data_size, 0) != data_size)
+  iov[0].iov_base = &h;
+  iov[0].iov_len = sizeof (h);
+  iov[1].iov_base = (guint8 *)data;
+  iov[1].iov_len = data_size;
+
+  if (writev (conn->fd, iov, 2) != sizeof (h) + data_size)
     return FALSE;
 
   return TRUE;
