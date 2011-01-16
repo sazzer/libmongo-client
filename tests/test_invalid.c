@@ -125,7 +125,7 @@ test_invalid_mongo_wire (void)
   PASS ();
 
   TEST (mongo_wire_packet_get_parts);
-  g_assert_cmpint (mongo_wire_packet_get_header (NULL, NULL), ==, -1);
+  g_assert_cmpint (mongo_wire_packet_get_header (NULL, NULL), ==, FALSE);
   g_assert_cmpint (mongo_wire_packet_get_data (NULL, NULL), ==, -1);
   PASS ();
 

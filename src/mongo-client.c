@@ -95,20 +95,22 @@ mongo_disconnect (gint fd)
 gboolean
 mongo_packet_send (gint fd, const mongo_packet *p)
 {
-  const guint8 *hdr, *data;
-  gint32 hdr_size, data_size;
+  const guint8 *data;
+  gint32 data_size;
+  mongo_packet_header h;
 
   if (fd < 0 || !p)
     return FALSE;
 
-  hdr_size =
-    mongo_wire_packet_get_header (p, (const mongo_packet_header **)&hdr);
-  data_size = mongo_wire_packet_get_data (p, &data);
-
-  if (hdr_size == -1 || data_size == -1)
+  if (!mongo_wire_packet_get_header (p, &h))
     return FALSE;
 
-  if (send (fd, hdr, hdr_size, 0) != hdr_size)
+  data_size = mongo_wire_packet_get_data (p, &data);
+
+  if (data_size == -1)
+    return FALSE;
+
+  if (send (fd, &h, sizeof (h), 0) != sizeof (h))
     return FALSE;
   if (send (fd, data, data_size, 0) != data_size)
     return FALSE;
@@ -133,6 +135,11 @@ mongo_packet_recv (gint fd)
     {
       return NULL;
     }
+
+  h.length = GINT32_FROM_LE (h.length);
+  h.id = GINT32_FROM_LE (h.id);
+  h.resp_to = GINT32_FROM_LE (h.resp_to);
+  h.opcode = GINT32_FROM_LE (h.opcode);
 
   p = mongo_wire_packet_new ();
 
