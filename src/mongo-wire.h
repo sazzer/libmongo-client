@@ -44,7 +44,6 @@
  * Every mongo packet has a header like this. Normally, one does not
  * need to touch it, though.
  */
-#pragma pack(1)
 typedef struct
 {
   gint32 length; /**< Full length of the packet, including the
@@ -56,7 +55,6 @@ typedef struct
   gint32 opcode; /**< The opcode of the command. @see
 		    mongo_wire_opcode. <*/
 } mongo_packet_header;
-#pragma pack()
 
 /** An opaque Mongo Packet on the wire.
  *
