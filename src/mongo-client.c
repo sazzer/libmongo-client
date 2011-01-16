@@ -31,6 +31,12 @@
 
 static const int one = 1;
 
+/** @internal Mongo Connection state object. */
+struct _mongo_connection
+{
+  gint fd; /**< The file descriptor associated with the connection. */
+};
+
 static int
 unset_nonblock (int fd)
 {
@@ -50,12 +56,13 @@ unset_nonblock (int fd)
   return 0;
 }
 
-gint
+mongo_connection *
 mongo_connect (const char *host, int port)
 {
   struct sockaddr_in sa;
   socklen_t addrsize;
   int fd;
+  mongo_connection *c;
 
   memset (&sa, 0, sizeof (sa));
   sa.sin_family = AF_INET;
@@ -65,12 +72,12 @@ mongo_connect (const char *host, int port)
 
   fd = socket (AF_INET, SOCK_STREAM, 0);
   if (fd < 0)
-    return -1;
+    return NULL;
 
   if (connect (fd, (struct sockaddr *)&sa, addrsize))
     {
       close (fd);
-      return -1;
+      return NULL;
     }
 
   setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, (char *)&one, sizeof (one));
@@ -78,28 +85,40 @@ mongo_connect (const char *host, int port)
   if (unset_nonblock (fd))
     {
       close (fd);
-      return -1;
+      return NULL;
     }
 
-  return fd;
+  c = (mongo_connection *)g_try_new0 (mongo_connection, 1);
+  if (!c)
+    return NULL;
+
+  c->fd = fd;
+
+  return c;
 }
 
 void
-mongo_disconnect (gint fd)
+mongo_disconnect (mongo_connection *conn)
 {
-  if (fd < 0)
+  if (!conn)
     return;
-  close (fd);
+
+  if (conn->fd >= 0)
+    close (conn->fd);
+
+  g_free (conn);
 }
 
 gboolean
-mongo_packet_send (gint fd, const mongo_packet *p)
+mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
 {
   const guint8 *data;
   gint32 data_size;
   mongo_packet_header h;
 
-  if (fd < 0 || !p)
+  if (!conn || !p)
+    return FALSE;
+  if (conn->fd < 0)
     return FALSE;
 
   if (!mongo_wire_packet_get_header (p, &h))
@@ -110,27 +129,27 @@ mongo_packet_send (gint fd, const mongo_packet *p)
   if (data_size == -1)
     return FALSE;
 
-  if (send (fd, &h, sizeof (h), 0) != sizeof (h))
+  if (send (conn->fd, &h, sizeof (h), 0) != sizeof (h))
     return FALSE;
-  if (send (fd, data, data_size, 0) != data_size)
+  if (send (conn->fd, data, data_size, 0) != data_size)
     return FALSE;
 
   return TRUE;
 }
 
 mongo_packet *
-mongo_packet_recv (gint fd)
+mongo_packet_recv (mongo_connection *conn)
 {
   mongo_packet *p;
   guint8 *data;
   guint32 size;
   mongo_packet_header h;
 
-  if (fd < 0)
+  if (!conn || conn->fd < 0)
     return NULL;
 
   memset (&h, 0, sizeof (h));
-  if (recv (fd, &h, sizeof (mongo_packet_header), 0) !=
+  if (recv (conn->fd, &h, sizeof (mongo_packet_header), 0) !=
       sizeof (mongo_packet_header))
     {
       return NULL;
@@ -151,7 +170,7 @@ mongo_packet_recv (gint fd)
 
   size = h.length - sizeof (mongo_packet_header);
   data = g_try_new0 (guint8, size);
-  if (recv (fd, data, size, 0) != size)
+  if (recv (conn->fd, data, size, 0) != size)
     {
       g_free (data);
       mongo_wire_packet_free (p);
