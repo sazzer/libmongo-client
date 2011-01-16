@@ -16,6 +16,7 @@
 
 #include <glib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "bson.h"
 #include "mongo-wire.h"
@@ -306,3 +307,48 @@ mongo_wire_cmd_delete (gint32 id, const gchar *ns,
   return p;
 }
 
+mongo_packet *
+mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
+			     gint64 cursor_ids, ...)
+{
+  mongo_packet *p;
+  gint32 size, i, t_n;
+  gint64 t_cid;
+  va_list ap;
+
+  if (n <= 0)
+    return NULL;
+
+  p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  if (!p)
+    return NULL;
+
+  p->header.id = id;
+  p->header.opcode = GINT32_TO_LE (OP_KILL_CURSORS);
+
+  t_n = GINT32_TO_LE (n);
+  t_cid = GINT64_TO_LE (cursor_ids);
+  size = sizeof (gint32) + sizeof (gint32) + sizeof (gint64) * n;
+
+  p->data = g_byte_array_sized_new (size);
+  p->data = g_byte_array_append (p->data, (guint8 *)&zero, sizeof (zero));
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_n, sizeof (n));
+  p->data = g_byte_array_append (p->data, (guint8 *)&t_cid, sizeof (cursor_ids));
+
+  va_start (ap, cursor_ids);
+  for (i = 1; i < n; i++)
+    {
+      t_cid = va_arg (ap, gint64);
+      t_cid = GINT64_TO_LE (t_cid);
+      p->data = g_byte_array_append (p->data, (guint8 *)&t_cid,
+				     sizeof (t_cid));
+    }
+  va_end (ap);
+
+  if (!p->data)
+    return NULL;
+
+  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data->len);
+
+  return p;
+}
