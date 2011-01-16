@@ -15,7 +15,7 @@ test_mongo_client (void)
   int fd;
 
   TEST (mongo_client.connect);
-  fd = mongo_connect ("127.0.0.1", 27017);
+  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
   if (fd < 0)
     SKIP ();
   PASS ();
@@ -53,7 +53,7 @@ test_mongo_client_recv (void)
   bson_cursor *c;
 
   TEST (mongo_client.recv);
-  fd = mongo_connect ("127.0.0.1", 27017);
+  fd = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
   if (fd < 0)
     SKIP ();
 
