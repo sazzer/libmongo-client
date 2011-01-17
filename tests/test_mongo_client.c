@@ -61,7 +61,7 @@ test_mongo_client_recv (void)
   bson_append_string (q, "recv", "oh, yes!", -1);
   bson_finish (q);
 
-  p = mongo_wire_cmd_insert (1, "test.libmongo", q);
+  p = mongo_wire_cmd_insert (1, "test.libmongo", q, NULL);
   g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
 

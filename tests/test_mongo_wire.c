@@ -195,7 +195,7 @@ test_mongo_wire_setters (void)
   n = test_bson_generate_nested ();
   f = test_bson_generate_flat ();
 
-  g_assert ((p = mongo_wire_cmd_insert (1, "test.libmongo", n)));
+  g_assert ((p = mongo_wire_cmd_insert (1, "test.libmongo", n, NULL)));
   bson_free (n);
 
   g_assert (mongo_wire_packet_get_header (p, &rhdr));
