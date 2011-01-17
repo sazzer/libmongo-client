@@ -15,7 +15,7 @@
  */
 
 /** @file src/bson.c
- * Implementation of the #BSON API.
+ * Implementation of the BSON API.
  */
 
 #include <glib.h>
