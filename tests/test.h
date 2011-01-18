@@ -14,6 +14,16 @@ static gchar *current_test = NULL;
 #define TEST_SERVER_PORT 27017
 #endif
 
+#ifndef TEST_SERVER_DB
+#define TEST_SERVER_DB "test"
+#endif
+
+#ifndef TEST_SERVER_COLLECTION
+#define TEST_SERVER_COLLECTION "libmongo"
+#endif
+
+#define TEST_SERVER_NS TEST_SERVER_DB "." TEST_SERVER_COLLECTION
+
 #define TEST(s) current_test = #s
 #define PASS()					\
   {						\
