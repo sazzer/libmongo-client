@@ -38,4 +38,3 @@ test_oid_SOURCES = test_oid.c $(test_srcs)
 
 test_invalid_SOURCES = test_invalid.c $(test_srcs)
 
-run-tests.sh: ${check_PROGRAMS} verify-bson.py
