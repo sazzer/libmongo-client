@@ -385,6 +385,26 @@ bson_append_array (bson *b, const gchar *name, const bson *array)
 }
 
 gboolean
+bson_append_binary (bson *b, const gchar *name, bson_binary_subtype subtype,
+		    gint32 size, const gpointer data)
+{
+  if (!data || !size)
+    return FALSE;
+
+  if (!_bson_append_element_header (b, BSON_TYPE_BINARY, name))
+    return FALSE;
+
+  if (!_bson_append_int32 (b, size))
+    return FALSE;
+
+  if (!_bson_append_byte (b, (guint8)subtype))
+    return FALSE;
+
+  b->data = g_byte_array_append (b->data, data, size);
+  return DATA_OK (b);
+}
+
+gboolean
 bson_append_oid (bson *b, const gchar *name, const guint8 *oid)
 {
   if (!oid)
@@ -523,7 +543,8 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_DOUBLE:
       return sizeof (gdouble);
     case BSON_TYPE_BINARY:
-      return GINT32_FROM_LE ((gint32)data[0]) + 1;
+      return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32) +
+	sizeof (guint8);
     case BSON_TYPE_OID:
       return 12;
     case BSON_TYPE_BOOLEAN:
@@ -704,6 +725,24 @@ bson_cursor_get_array (const bson_cursor *c, bson **dest)
   bson_finish (b);
 
   *dest = b;
+
+  return TRUE;
+}
+
+gboolean
+bson_cursor_get_binary (const bson_cursor *c,
+			bson_binary_subtype *subtype,
+			gint32 *size, const guint8 **data)
+{
+  if (!subtype || !size || !data)
+    return FALSE;
+
+  BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_BINARY);
+
+  *size = GINT32_FROM_LE ((gint32)(bson_data (c->obj)[c->value_pos]));
+  *subtype = (bson_binary_subtype)(bson_data (c->obj)[c->value_pos +
+						      sizeof (gint32)]);
+  *data = (guint8 *)(bson_data (c->obj) + c->value_pos + sizeof (gint32) + 1);
 
   return TRUE;
 }

@@ -24,10 +24,8 @@
  * The types, functions and everything else within this module is
  * meant to allow one to work with BSON objects easily.
  *
- * @todo Adding BSON_TYPE_BINARY objects is not supported, nor is
- * retrieving data from such a type. Retrieving
- * BSON_TYPE_JS_CODE_W_SCOPE typed elements is also unimplemented at
- * this time.
+ * @todo Retrieving BSON_TYPE_JS_CODE_W_SCOPE typed elements is
+ * unimplemented at this time.
  *
  * @addtogroup bson
  * @{
@@ -85,6 +83,24 @@ typedef enum
     BSON_TYPE_MIN = 0xff,
     BSON_TYPE_MAX = 0x7f
   } bson_type;
+
+/** Supported BSON binary subtypes.
+ */
+typedef enum
+  {
+    BSON_BINARY_SUBTYPE_GENERIC = 0x00, /**< The Generic subtype, the
+					   default. */
+    BSON_BINARY_SUBTYPE_FUNCTION = 0x01, /**< Binary representation
+					    of a function. */
+    BSON_BINARY_SUBTYPE_BINARY = 0x02, /**< Obsolete, do not use. */
+    BSON_BINARY_SUBTYPE_UUID = 0x03, /**< Binary representation of an
+					UUID. */
+    BSON_BINARY_SUBTYPE_MD5 = 0x05, /**< Binary representation of an
+				       MD5 sum. */
+    BSON_BINARY_SUBTYPE_USER_DEFINED = 0x80 /**< User defined data,
+					       nothing's known about
+					       the structure. */
+  } bson_binary_subtype;
 
 /** @} */
 
@@ -268,6 +284,19 @@ gboolean bson_append_document (bson *b, const gchar *name, const bson *doc);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_array (bson *b, const gchar *name, const bson *array);
+/** Append a BSON binary blob to a BSON object.
+ *
+ * @param b is the BSON object to append to.
+ * @param name is the key name.
+ * @param subtype is the BSON binary subtype to use.
+ * @param size is the size of the blob.
+ * @param data is a pointer to the blob data.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean bson_append_binary (bson *b, const gchar *name,
+			     bson_binary_subtype subtype, gint32 size,
+			     const gpointer data);
 /** Append an ObjectID to a BSON object.
  *
  * ObjectIDs are 12 byte values, the first four being a timestamp in
@@ -495,6 +524,21 @@ gboolean bson_cursor_get_document (const bson_cursor *c, bson **dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_array (const bson_cursor *c, bson **dest);
+/** Get the value stored at the cursor, as binary data.
+ *
+ * @param c is the cursor pointing at the appropriate element.
+ * @param subtype is a pointer to store the binary subtype at.
+ * @param size is a pointer to store the size at.
+ * @param data is a pointer to where the data shall be stored.
+ *
+ * @note The @a data pointer will be pointing to an internal
+ * structure, it must not be freed or modified.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean bson_cursor_get_binary (const bson_cursor *c,
+				 bson_binary_subtype *subtype,
+				 gint32 *size, const guint8 **data);
 /** Get the value stored at the cursor, as an ObjectID.
  *
  * @param c is the cursor pointing at the appropriate element.
