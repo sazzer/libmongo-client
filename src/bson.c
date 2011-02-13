@@ -523,7 +523,8 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_DOUBLE:
       return sizeof (gdouble);
     case BSON_TYPE_BINARY:
-      return GINT32_FROM_LE ((gint32)data[0]) + 1;
+      return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32) +
+	sizeof (guint8);
     case BSON_TYPE_OID:
       return 12;
     case BSON_TYPE_BOOLEAN:
