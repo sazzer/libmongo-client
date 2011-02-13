@@ -1,6 +1,6 @@
 #! /usr/bin/python
 from datetime import datetime
-import sys
+import sys, re
 
 skip = False
 try:
@@ -24,6 +24,22 @@ def verify_bson (name, source, ok):
         print "# dest  : %s" % d.decode ()
         exit (1)
 
+def verify_regexp (name, source, ok):
+    if skip:
+        print " ! %s" % name
+        return
+
+    s = BSON (source.rstrip ().decode ('string_escape'))
+    s = BSON.encode (s.decode ())
+    sr = s.decode ()['regexp']
+    if sr.pattern == ok.pattern and sr.flags == ok.flags:
+        print " + %s" % name
+    else:
+        print " - %s" % name
+        print "# source: %s" % sr.pattern
+        print "# dest  : %s" % ok.pattern
+        exit (1)
+        
 def bson_build_base (f):
     verify_bson ("bson_empty", f.readline (), {})
     verify_bson ("bson_string", f.readline (),
@@ -42,6 +58,8 @@ def bson_build_base (f):
                  {"int32": 1984})
     verify_bson ("bson_int64", f.readline (),
                  {"int64": 9876543210})
+    verify_regexp ("bson_regexp", f.readline (),
+                   re.compile ("foo.*bar", re.I))
     if f.readline () != '':
         print "FAIL: garbage after tests"
         exit (1)

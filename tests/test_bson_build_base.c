@@ -118,6 +118,18 @@ test_bson_int64 (void)
   return dump_bson (b);
 }
 
+gboolean
+test_bson_regexp (void)
+{
+  bson *b;
+
+  b = bson_new ();
+  g_assert (bson_append_regex (b, "regexp", "foo.*bar", "i"));
+  bson_finish (b);
+
+  return dump_bson (b);
+}
+
 int
 main (void)
 {
@@ -130,6 +142,7 @@ main (void)
   g_assert (test_bson_null ());
   g_assert (test_bson_int32 ());
   g_assert (test_bson_int64 ());
+  g_assert (test_bson_regexp ());
 
   return 0;
 }
