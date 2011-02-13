@@ -245,14 +245,14 @@ test_bson_reader_binary (void)
   bson *b;
   bson_cursor *c;
   const guint8 *binary;
-  guint32 size;
+  gint32 size;
   bson_binary_subtype subtype;
 
   b = bson_new ();
   g_assert (bson_append_binary (b, "binary0", BSON_BINARY_SUBTYPE_GENERIC,
-				7, "foo\0bar"));
+				7, (guint8 *)"foo\0bar"));
   g_assert (bson_append_binary (b, "binary2", BSON_BINARY_SUBTYPE_BINARY,
-				11, "\0\0\0\7foo\0bar"));
+				11, (guint8 *)"\0\0\0\7foo\0bar"));
   bson_finish (b);
 
   TEST(bson_reader_binary.0);

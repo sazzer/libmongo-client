@@ -386,7 +386,7 @@ bson_append_array (bson *b, const gchar *name, const bson *array)
 
 gboolean
 bson_append_binary (bson *b, const gchar *name, bson_binary_subtype subtype,
-		    gint32 size, const gpointer data)
+		    gint32 size, const guint8 *data)
 {
   if (!data || !size)
     return FALSE;

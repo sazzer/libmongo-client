@@ -137,7 +137,7 @@ test_bson_binary0 (void)
 
   b = bson_new ();
   g_assert (bson_append_binary (b, "binary0", BSON_BINARY_SUBTYPE_GENERIC,
-				7, "foo\0bar"));
+				7, (guint8 *)"foo\0bar"));
   bson_finish (b);
 
   return dump_bson (b);
@@ -150,7 +150,7 @@ test_bson_binary2 (void)
 
   b = bson_new ();
   g_assert (bson_append_binary (b, "binary2", BSON_BINARY_SUBTYPE_BINARY,
-				11, "\0\0\0\7foo\0bar"));
+				11, (guint8 *)"\0\0\0\7foo\0bar"));
   bson_finish (b);
 
   return dump_bson (b);
