@@ -5,6 +5,7 @@ import sys, re
 skip = False
 try:
     from bson import BSON
+    from bson.binary import Binary
 except:
     skip = True
 
@@ -60,6 +61,10 @@ def bson_build_base (f):
                  {"int64": 9876543210})
     verify_regexp ("bson_regexp", f.readline (),
                    re.compile ("foo.*bar", re.I))
+    verify_bson ("bson_binary_0", f.readline (),
+                 {"binary0": Binary ("foo\x00bar", 0)})
+    verify_bson ("bson_binary_2", f.readline (),
+                 {"binary2": Binary ("foo\x00bar", 2)})
     if f.readline () != '':
         print "FAIL: garbage after tests"
         exit (1)
