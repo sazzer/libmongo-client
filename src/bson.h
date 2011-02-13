@@ -247,6 +247,7 @@ const guint8 *bson_data (const bson *b);
  */
 gboolean bson_append_string (bson *b, const gchar *name, const gchar *val,
 			     gint32 length);
+
 /** Append a double to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -256,6 +257,7 @@ gboolean bson_append_string (bson *b, const gchar *name, const gchar *val,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_double (bson *b, const gchar *name, gdouble d);
+
 /** Append a BSON document to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -267,6 +269,7 @@ gboolean bson_append_double (bson *b, const gchar *name, gdouble d);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_document (bson *b, const gchar *name, const bson *doc);
+
 /** Append a BSON array to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -284,6 +287,7 @@ gboolean bson_append_document (bson *b, const gchar *name, const bson *doc);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_array (bson *b, const gchar *name, const bson *array);
+
 /** Append a BSON binary blob to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -297,6 +301,7 @@ gboolean bson_append_array (bson *b, const gchar *name, const bson *array);
 gboolean bson_append_binary (bson *b, const gchar *name,
 			     bson_binary_subtype subtype, gint32 size,
 			     const gpointer data);
+
 /** Append an ObjectID to a BSON object.
  *
  * ObjectIDs are 12 byte values, the first four being a timestamp in
@@ -314,6 +319,7 @@ gboolean bson_append_binary (bson *b, const gchar *name,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_oid (bson *b, const gchar *name, const guint8 *oid);
+
 /** Append a boolean to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -323,6 +329,7 @@ gboolean bson_append_oid (bson *b, const gchar *name, const guint8 *oid);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_boolean (bson *b, const gchar *name, gboolean value);
+
 /** Append an UTC datetime to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -333,6 +340,7 @@ gboolean bson_append_boolean (bson *b, const gchar *name, gboolean value);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_utc_datetime (bson *b, const gchar *name, gint64 ts);
+
 /** Append a NULL value to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -341,6 +349,7 @@ gboolean bson_append_utc_datetime (bson *b, const gchar *name, gint64 ts);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_null (bson *b, const gchar *name);
+
 /** Append a regexp object to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -353,6 +362,7 @@ gboolean bson_append_null (bson *b, const gchar *name);
  */
 gboolean bson_append_regex (bson *b, const gchar *name, const gchar *regexp,
 			    const gchar *options);
+
 /** Append Javascript code to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -365,6 +375,7 @@ gboolean bson_append_regex (bson *b, const gchar *name, const gchar *regexp,
  */
 gboolean bson_append_javascript (bson *b, const gchar *name, const gchar *js,
 				 gint32 len);
+
 /** Append a symbol to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -377,6 +388,7 @@ gboolean bson_append_javascript (bson *b, const gchar *name, const gchar *js,
  */
 gboolean bson_append_symbol (bson *b, const gchar *name, const gchar *symbol,
 			     gint32 len);
+
 /** Append a 32-bit integer to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -386,6 +398,7 @@ gboolean bson_append_symbol (bson *b, const gchar *name, const gchar *symbol,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_int32 (bson *b, const gchar *name, gint32 i);
+
 /** Append a timestamp to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -399,6 +412,7 @@ gboolean bson_append_int32 (bson *b, const gchar *name, gint32 i);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_timestamp (bson *b, const gchar *name, gint64 ts);
+
 /** Append a 64-bit integer to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -441,6 +455,7 @@ gboolean bson_append_int64 (bson *b, const gchar *name, gint64 i);
  * @returns A newly allocated cursor, or NULL on error.
  */
 bson_cursor *bson_cursor_new (const bson *b);
+
 /** Create a new cursor positioned at a given key.
  *
  * Creates a new cursor, and positions it to the supplied key within
@@ -468,6 +483,7 @@ gboolean bson_cursor_next (bson_cursor *c);
  * @returns The type of the element, or #BSON_TYPE_NONE on error.
  */
 bson_type bson_cursor_type (const bson_cursor *c);
+
 /** Determine the name of the current elements key.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -491,6 +507,7 @@ const gchar *bson_cursor_key (const bson_cursor *c);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_string (const bson_cursor *c, const gchar **dest);
+
 /** Get the value stored at the cursor, as a double.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -500,6 +517,7 @@ gboolean bson_cursor_get_string (const bson_cursor *c, const gchar **dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_double (const bson_cursor *c, gdouble *dest);
+
 /** Get the value stored at the cursor, as a BSON document.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -512,6 +530,7 @@ gboolean bson_cursor_get_double (const bson_cursor *c, gdouble *dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_document (const bson_cursor *c, bson **dest);
+
 /** Get the value stored at the cursor, as a BSON array.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -524,6 +543,7 @@ gboolean bson_cursor_get_document (const bson_cursor *c, bson **dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_array (const bson_cursor *c, bson **dest);
+
 /** Get the value stored at the cursor, as binary data.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -539,6 +559,7 @@ gboolean bson_cursor_get_array (const bson_cursor *c, bson **dest);
 gboolean bson_cursor_get_binary (const bson_cursor *c,
 				 bson_binary_subtype *subtype,
 				 gint32 *size, const guint8 **data);
+
 /** Get the value stored at the cursor, as an ObjectID.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -551,6 +572,7 @@ gboolean bson_cursor_get_binary (const bson_cursor *c,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_oid (const bson_cursor *c, const guint8 **dest);
+
 /** Get the value stored at the cursor, as a boolean.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -559,8 +581,8 @@ gboolean bson_cursor_get_oid (const bson_cursor *c, const guint8 **dest);
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-
 gboolean bson_cursor_get_boolean (const bson_cursor *c, gboolean *dest);
+
 /** Get the value stored at the cursor, as an UTC datetime.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -569,8 +591,8 @@ gboolean bson_cursor_get_boolean (const bson_cursor *c, gboolean *dest);
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-
 gboolean bson_cursor_get_utc_datetime (const bson_cursor *c, gint64 *dest);
+
 /** Get the value stored at the cursor, as a regexp.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -587,6 +609,7 @@ gboolean bson_cursor_get_utc_datetime (const bson_cursor *c, gint64 *dest);
  */
 gboolean bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
 				const gchar **options);
+
 /** Get the value stored at the cursor, as javascript code.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -599,6 +622,7 @@ gboolean bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_javascript (const bson_cursor *c, const gchar **dest);
+
 /** Get the value stored at the cursor, as a symbol.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -611,6 +635,7 @@ gboolean bson_cursor_get_javascript (const bson_cursor *c, const gchar **dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_symbol (const bson_cursor *c, const gchar **dest);
+
 /** Get the value stored at the cursor, as a 32-bit integer.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -620,6 +645,7 @@ gboolean bson_cursor_get_symbol (const bson_cursor *c, const gchar **dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_int32 (const bson_cursor *c, gint32 *dest);
+
 /** Get the value stored at the cursor, as a timestamp.
  *
  * @param c is the cursor pointing at the appropriate element.
@@ -629,6 +655,7 @@ gboolean bson_cursor_get_int32 (const bson_cursor *c, gint32 *dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_timestamp (const bson_cursor *c, gint64 *dest);
+
 /** Get the value stored at the cursor, as a 64-bit integer.
  *
  * @param c is the cursor pointing at the appropriate element.

@@ -85,6 +85,7 @@ mongo_packet *mongo_wire_packet_new (void);
  */
 gboolean mongo_wire_packet_get_header (const mongo_packet *p,
 				       mongo_packet_header *header);
+
 /** Set the header data of a packet.
  *
  * Override the mongo packet's header data.
@@ -112,6 +113,7 @@ gboolean mongo_wire_packet_set_header (mongo_packet *p,
  * @returns The size of the data, or -1 on error.
  */
 gint32 mongo_wire_packet_get_data (const mongo_packet *p, const guint8 **data);
+
 /** Set the data part of a packet.
  *
  * Overrides the data part of a packet, adjusting the packet length in
@@ -187,6 +189,7 @@ typedef struct
  */
 gboolean mongo_wire_reply_packet_get_header (const mongo_packet *p,
 					     mongo_reply_packet_header *hdr);
+
 /** Get the full data part of a reply packet.
  *
  * The result will include the full, unparsed data part of the reply.
@@ -202,6 +205,7 @@ gboolean mongo_wire_reply_packet_get_header (const mongo_packet *p,
  */
 gboolean mongo_wire_reply_packet_get_data (const mongo_packet *p,
 					   const guint8 **data);
+
 /** Get the Nth document from a reply packet.
  *
  * @param p is the packet to retrieve a document from.
@@ -260,6 +264,7 @@ enum
 mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
 				     gint32 flags, const bson *selector,
 				     const bson *update);
+
 /** Construct an insert command.
  *
  * @param id is the sequence id.

@@ -46,6 +46,7 @@ typedef struct _mongo_connection mongo_connection;
  * not used anymore.
  */
 mongo_connection *mongo_connect (const char *host, int port);
+
 /** Disconnect from a MongoDB server.
  *
  * @param conn is the connection object to disconnect from.
