@@ -504,13 +504,12 @@ bson_cursor_new (const bson *b)
  * name).
  *
  * @returns The size of the block, or -1 on error.
- *
- * @todo Figuring out the size of a regexp block is not implemented
- * yet.
  */
 static gint32
 _bson_get_block_size (bson_type type, const guint8 *data)
 {
+  glong l;
+
   switch (type)
     {
     case BSON_TYPE_STRING:
@@ -536,8 +535,8 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_NULL:
       return 0;
     case BSON_TYPE_REGEXP:
-      g_warning ("BSON_TYPE_REGEXP block size calculation is not implemented yet");
-      return -1;
+      l = strlen((gchar *)data);
+      return l + strlen((gchar *)(data + l + 1)) + 2;
     case BSON_TYPE_INT32:
       return sizeof (gint32);
     default:
@@ -751,7 +750,6 @@ bson_cursor_get_utc_datetime (const bson_cursor *c,
   return TRUE;
 }
 
-/** @todo Not implemented yet! */
 gboolean
 bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
 		       const gchar **options)
@@ -761,8 +759,10 @@ bson_cursor_get_regex (const bson_cursor *c, const gchar **regex,
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_REGEXP);
 
-  g_warning ("bson_cursor_get_regex is not implemented yet");
-  return FALSE;
+  *regex = (gchar *)(bson_data (c->obj) + c->value_pos);
+  *options = (gchar *)(*regex + strlen(*regex) + 1);
+
+  return TRUE;
 }
 
 gboolean

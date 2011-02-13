@@ -25,7 +25,7 @@
  * meant to allow one to work with BSON objects easily.
  *
  * @todo Adding BSON_TYPE_BINARY objects is not supported, nor is
- * retrieving data from such a type. Retrieving BSON_TYPE_REGEXP and
+ * retrieving data from such a type. Retrieving
  * BSON_TYPE_JS_CODE_W_SCOPE typed elements is also unimplemented at
  * this time.
  *
