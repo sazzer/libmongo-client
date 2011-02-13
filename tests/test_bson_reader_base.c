@@ -206,9 +206,43 @@ test_bson_reader_nested (void)
   return TRUE;
 }
 
+static gboolean
+test_bson_reader_regexp (void)
+{
+  bson *b;
+  bson_cursor *c;
+  const gchar *regexp, *flags, *str;
+
+  b = bson_new ();
+  g_assert (bson_append_string (b, "string1", "test1", -1));
+  g_assert (bson_append_regex (b, "regexp", "foo.*bar", "i"));
+  g_assert (bson_append_string (b, "string2", "test2", -1));
+  bson_finish (b);
+
+  TEST(bson_reader_regexp.seek);
+  g_assert ((c = bson_find (b, "string2")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
+  g_assert (bson_cursor_get_string (c, &str));
+  g_assert_cmpstr (str, ==, "test2");
+  g_free (c);
+  PASS ();
+
+  TEST(bson_reader_regexp.read);
+  g_assert ((c = bson_find (b, "regexp")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_REGEXP);
+  g_assert (bson_cursor_get_regex (c, &regexp, &flags));
+  g_assert_cmpstr (regexp, ==, "foo.*bar");
+  g_assert_cmpstr (flags, ==, "i");
+  g_free (c);
+  PASS ();
+
+  return TRUE;
+}
+
 int
 main (void)
 {
   g_assert (test_bson_reader_flat ());
   g_assert (test_bson_reader_nested ());
+  g_assert (test_bson_reader_regexp ());
 }
