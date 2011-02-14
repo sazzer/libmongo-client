@@ -292,7 +292,7 @@ enum
     /** Disable cursor timeout. */
     MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT = 0x0f,
     /** Block if at the end of the data block, awaiting data.
-     * Use only witj #MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR!
+     * Use only with #MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR!
      */
     MONGO_WIRE_FLAG_QUERY_AWAIT_DATA = 0x20,
     /** Stream the data down full blast in multiple packages.
