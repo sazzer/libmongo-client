@@ -332,6 +332,52 @@ test_mongo_client_cursors (void)
   PASS ();
 }
 
+void
+test_mongo_client_delete (void)
+{
+  bson *b;
+  mongo_packet *p;
+  mongo_connection *conn;
+
+  mongo_reply_packet_header rh;
+
+  TEST (mongo_client.delete);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
+    SKIP ();
+
+  b = bson_new ();
+  bson_finish (b);
+
+  p = mongo_wire_cmd_delete (1, TEST_SERVER_NS, 0, b);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+
+  /* Righ, so everything should be deleted now.
+   * Lets verify!
+   */
+  p = mongo_wire_cmd_query (2, TEST_SERVER_NS, 0, 0, 1,
+			    b, NULL);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+  p = mongo_packet_recv (conn);
+
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert (rh.flags & MONGO_REPLY_FLAG_AWAITCAPABLE);
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL));
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_NO_CURSOR));
+
+  g_assert_cmpint (rh.cursor_id, ==, 0);
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 0);
+
+  mongo_wire_packet_free (p);
+  bson_free (b);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
 int
 main (void)
 {
@@ -340,6 +386,7 @@ main (void)
   test_mongo_client_recv_custom ();
   test_mongo_client_reply_parse ();
   test_mongo_client_cursors ();
+  test_mongo_client_delete ();
 
   return 0;
 }
