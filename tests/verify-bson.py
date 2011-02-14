@@ -8,6 +8,9 @@ try:
     from bson.binary import Binary
 except:
     skip = True
+    class Binary:
+        def __init__ (*args, **kwargs):
+            pass
 
 def verify_bson (name, source, ok):
     if skip:
