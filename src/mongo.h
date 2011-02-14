@@ -31,7 +31,7 @@
  * @section Structure
  *
  * The library can be split into four major parts:
- *   - bson: The low-level BSON implementation. @see bson
+ *   - bson: The low-level BSON implementation. @see bson_mod
  *   - mongo-wire: Functions to construct packets that can be sent
  *     later. @see mongo_wire
  *   - mongo-client: The high-level API that deals with the

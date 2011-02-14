@@ -19,7 +19,7 @@
 
 #include <glib.h>
 
-/** @defgroup bson BSON
+/** @defgroup bson_mod BSON
  *
  * The types, functions and everything else within this module is
  * meant to allow one to work with BSON objects easily.
@@ -27,7 +27,7 @@
  * @todo Retrieving BSON_TYPE_JS_CODE_W_SCOPE typed elements is
  * unimplemented at this time.
  *
- * @addtogroup bson
+ * @addtogroup bson_mod
  * @{
  */
 
