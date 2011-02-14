@@ -286,20 +286,20 @@ mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
 enum
   {
     /** Set the TailableCursor flag on the query. */
-    MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR = 0x02,
+    MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR = 2 << 1,
     /** Allow queries made against a replica slave. */
-    MONGO_WIRE_FLAG_QUERY_SLAVE_OK = 0x04,
+    MONGO_WIRE_FLAG_QUERY_SLAVE_OK = 2 << 2,
     /** Disable cursor timeout. */
-    MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT = 0x0f,
+    MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT = 2 << 4,
     /** Block if at the end of the data block, awaiting data.
      * Use only with #MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR!
      */
-    MONGO_WIRE_FLAG_QUERY_AWAIT_DATA = 0x20,
+    MONGO_WIRE_FLAG_QUERY_AWAIT_DATA = 2 << 5,
     /** Stream the data down full blast in multiple packages.
      * When set, the client is not allowed not to read all the data,
      * unless it closes connection.
      */
-    MONGO_WIRE_FLAG_QUERY_EXHAUST = 0x40
+    MONGO_WIRE_FLAG_QUERY_EXHAUST = 2 << 6
   };
 
 /** Construct a query command.
