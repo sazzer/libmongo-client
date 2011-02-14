@@ -18,6 +18,7 @@ dnl ***************************************************************************
 dnl Initial setup
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION, no-define)
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AM_CONFIG_HEADER(config.h)
 
 dnl ***************************************************************************
