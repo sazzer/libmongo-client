@@ -378,6 +378,65 @@ test_mongo_client_delete (void)
   PASS ();
 }
 
+void
+test_mongo_client_drop (void)
+{
+  bson *cmd, *res;
+  mongo_packet *p;
+  mongo_connection *conn;
+
+  mongo_reply_packet_header rh;
+  bson_cursor *c;
+
+  gdouble d;
+  const gchar *s;
+
+  TEST (mongo_client.drop);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
+    SKIP ();
+
+  cmd = bson_new ();
+  bson_append_string (cmd, "drop", TEST_SERVER_COLLECTION, -1);
+  bson_finish (cmd);
+
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+  bson_free (cmd);
+
+  p = mongo_packet_recv (conn);
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+
+  g_assert (rh.flags & MONGO_REPLY_FLAG_AWAITCAPABLE);
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL));
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_NO_CURSOR));
+
+  g_assert_cmpint (rh.cursor_id, ==, 0);
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 1);
+
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &res));
+  bson_finish (res);
+
+  g_assert ((c = bson_find (res, "ok")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
+  g_assert (bson_cursor_get_double (c, &d));
+  g_assert (d == 1);
+  g_free (c);
+
+  g_assert ((c = bson_find (res, "msg")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
+  g_assert (bson_cursor_get_string (c, &s));
+  g_assert_cmpstr (s, ==, "indexes dropped for collection");
+  g_free (c);
+
+  mongo_wire_packet_free (p);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
 int
 main (void)
 {
@@ -387,6 +446,7 @@ main (void)
   test_mongo_client_reply_parse ();
   test_mongo_client_cursors ();
   test_mongo_client_delete ();
+  test_mongo_client_drop ();
 
   return 0;
 }
