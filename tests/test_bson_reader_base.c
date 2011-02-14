@@ -250,15 +250,15 @@ test_bson_reader_binary (void)
 
   b = bson_new ();
   g_assert (bson_append_binary (b, "binary0", BSON_BINARY_SUBTYPE_GENERIC,
-				7, (guint8 *)"foo\0bar"));
+				(guint8 *)"foo\0bar", 7));
   g_assert (bson_append_binary (b, "binary2", BSON_BINARY_SUBTYPE_BINARY,
-				11, (guint8 *)"\0\0\0\7foo\0bar"));
+				(guint8 *)"\0\0\0\7foo\0bar", 11));
   bson_finish (b);
 
   TEST(bson_reader_binary.0);
   g_assert ((c = bson_find (b, "binary0")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_BINARY);
-  g_assert (bson_cursor_get_binary (c, &subtype, &size, &binary));
+  g_assert (bson_cursor_get_binary (c, &subtype, &binary, &size));
   g_assert_cmpint (subtype, ==, BSON_BINARY_SUBTYPE_GENERIC);
   g_assert_cmpint (size, ==, 7);
   g_assert (!memcmp (binary, "foo\0bar", 7));
@@ -268,7 +268,7 @@ test_bson_reader_binary (void)
   TEST(bson_reader_binary.2);
   g_assert ((c = bson_find (b, "binary2")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_BINARY);
-  g_assert (bson_cursor_get_binary (c, &subtype, &size, &binary));
+  g_assert (bson_cursor_get_binary (c, &subtype, &binary, &size));
   g_assert_cmpint (subtype, ==, BSON_BINARY_SUBTYPE_BINARY);
   g_assert_cmpint (size, ==, 11);
   g_assert (!memcmp (binary, "\0\0\0\7foo\0bar", 11));

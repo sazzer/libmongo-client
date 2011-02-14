@@ -293,14 +293,14 @@ gboolean bson_append_array (bson *b, const gchar *name, const bson *array);
  * @param b is the BSON object to append to.
  * @param name is the key name.
  * @param subtype is the BSON binary subtype to use.
- * @param size is the size of the blob.
  * @param data is a pointer to the blob data.
+ * @param size is the size of the blob.
  *
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_append_binary (bson *b, const gchar *name,
-			     bson_binary_subtype subtype, gint32 size,
-			     const guint8 *data);
+			     bson_binary_subtype subtype,
+			     const guint8 *data, gint32 size);
 
 /** Append an ObjectID to a BSON object.
  *
@@ -548,8 +548,8 @@ gboolean bson_cursor_get_array (const bson_cursor *c, bson **dest);
  *
  * @param c is the cursor pointing at the appropriate element.
  * @param subtype is a pointer to store the binary subtype at.
- * @param size is a pointer to store the size at.
  * @param data is a pointer to where the data shall be stored.
+ * @param size is a pointer to store the size at.
  *
  * @note The @a data pointer will be pointing to an internal
  * structure, it must not be freed or modified.
@@ -558,7 +558,7 @@ gboolean bson_cursor_get_array (const bson_cursor *c, bson **dest);
  */
 gboolean bson_cursor_get_binary (const bson_cursor *c,
 				 bson_binary_subtype *subtype,
-				 gint32 *size, const guint8 **data);
+				 const guint8 **data, gint32 *size);
 
 /** Get the value stored at the cursor, as an ObjectID.
  *

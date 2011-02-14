@@ -386,7 +386,7 @@ bson_append_array (bson *b, const gchar *name, const bson *array)
 
 gboolean
 bson_append_binary (bson *b, const gchar *name, bson_binary_subtype subtype,
-		    gint32 size, const guint8 *data)
+		    const guint8 *data, gint32 size)
 {
   if (!data || !size)
     return FALSE;
@@ -732,7 +732,7 @@ bson_cursor_get_array (const bson_cursor *c, bson **dest)
 gboolean
 bson_cursor_get_binary (const bson_cursor *c,
 			bson_binary_subtype *subtype,
-			gint32 *size, const guint8 **data)
+			const guint8 **data, gint32 *size)
 {
   if (!subtype || !size || !data)
     return FALSE;
