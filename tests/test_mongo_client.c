@@ -3,6 +3,7 @@
 
 #include "mongo-client.h"
 #include "mongo-wire.h"
+#include "mongo-utils.h"
 #include "bson.h"
 
 #include <glib.h>
@@ -216,6 +217,226 @@ test_mongo_client_reply_parse (void)
   PASS ();
 }
 
+void
+test_mongo_client_cursors (void)
+{
+  bson *doc;
+  mongo_packet *p;
+  mongo_connection *conn;
+  bson_cursor *c;
+  guint8 *oid;
+  gint seq;
+
+  mongo_reply_packet_header rh;
+  const gchar *s;
+  guint64 cid;
+  gint32 i;
+
+  TEST (mongo_client.cursors);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
+    SKIP ();
+
+  mongo_util_oid_init (0);
+
+  /* Insert 30 documents... */
+  for (seq = 1; seq <= 30; seq++)
+    {
+      doc = bson_new ();
+      oid = mongo_util_oid_new (seq);
+      bson_append_oid (doc, "_id", oid);
+      g_free (oid);
+      bson_append_string (doc, "str", "string1", -1);
+      bson_append_int32 (doc, "seq", seq);
+      bson_finish (doc);
+
+      p = mongo_wire_cmd_insert (seq, TEST_SERVER_NS, doc, NULL);
+      bson_free (doc);
+
+      g_assert (mongo_packet_send (conn, p));
+      mongo_wire_packet_free (p);
+    }
+
+  /* Construct a query to retrieve them... */
+  doc = bson_new ();
+  bson_append_string (doc, "str", "string1", -1);
+  bson_finish (doc);
+
+  p = mongo_wire_cmd_query (40, TEST_SERVER_NS,
+			    MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT,
+			    0, 2, doc, NULL);
+  bson_free (doc);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+
+  p = mongo_packet_recv (conn);
+
+  /* Verify the headers */
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert (rh.flags & MONGO_REPLY_FLAG_AWAITCAPABLE);
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_NO_CURSOR));
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL));
+
+  g_assert_cmpint (rh.cursor_id, !=, 0);
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 2);
+
+  /* Verify the data */
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &doc));
+  bson_finish (doc);
+  g_assert ((c = bson_find (doc, "str")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
+  g_assert (bson_cursor_get_string (c, &s));
+  g_assert_cmpstr (s, ==, "string1");
+  g_free (c);
+  bson_free (doc);
+
+  cid = rh.cursor_id;
+  mongo_wire_packet_free (p);
+
+  /* Get more data... */
+  p = mongo_wire_cmd_get_more (41, TEST_SERVER_NS, 4, cid);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+
+  p = mongo_packet_recv (conn);
+
+  /* Verify second batch of headers */
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert (rh.flags & MONGO_REPLY_FLAG_AWAITCAPABLE);
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_NO_CURSOR));
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL));
+
+  g_assert_cmpint (rh.cursor_id, !=, 0);
+  g_assert_cmpint (rh.cursor_id, ==, cid);
+  g_assert_cmpint (rh.start, ==, 2);
+  g_assert_cmpint (rh.returned, ==, 4);
+
+  /* Verify second batch of documents */
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 4, &doc));
+  bson_finish (doc);
+  g_assert ((c = bson_find (doc, "seq")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_INT32);
+  g_assert (bson_cursor_get_int32 (c, &i));
+  g_assert_cmpint (i, ==, 6);
+  g_free (c);
+  bson_free (doc);
+  mongo_wire_packet_free (p);
+
+  /* Kill cursors */
+  p = mongo_wire_cmd_kill_cursors (42, 1, cid);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
+void
+test_mongo_client_delete (void)
+{
+  bson *b;
+  mongo_packet *p;
+  mongo_connection *conn;
+
+  mongo_reply_packet_header rh;
+
+  TEST (mongo_client.delete);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
+    SKIP ();
+
+  b = bson_new ();
+  bson_finish (b);
+
+  p = mongo_wire_cmd_delete (1, TEST_SERVER_NS, 0, b);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+
+  /* Righ, so everything should be deleted now.
+   * Lets verify!
+   */
+  p = mongo_wire_cmd_query (2, TEST_SERVER_NS, 0, 0, 1,
+			    b, NULL);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+  p = mongo_packet_recv (conn);
+
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert (rh.flags & MONGO_REPLY_FLAG_AWAITCAPABLE);
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL));
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_NO_CURSOR));
+
+  g_assert_cmpint (rh.cursor_id, ==, 0);
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 0);
+
+  mongo_wire_packet_free (p);
+  bson_free (b);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
+void
+test_mongo_client_drop (void)
+{
+  bson *cmd, *res;
+  mongo_packet *p;
+  mongo_connection *conn;
+
+  mongo_reply_packet_header rh;
+  bson_cursor *c;
+
+  gdouble d;
+  const gchar *s;
+
+  TEST (mongo_client.drop);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
+    SKIP ();
+
+  cmd = bson_new ();
+  bson_append_string (cmd, "drop", TEST_SERVER_COLLECTION, -1);
+  bson_finish (cmd);
+
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  g_assert (mongo_packet_send (conn, p));
+  mongo_wire_packet_free (p);
+  bson_free (cmd);
+
+  p = mongo_packet_recv (conn);
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+
+  g_assert (rh.flags & MONGO_REPLY_FLAG_AWAITCAPABLE);
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL));
+  g_assert (!(rh.flags & MONGO_REPLY_FLAG_NO_CURSOR));
+
+  g_assert_cmpint (rh.cursor_id, ==, 0);
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 1);
+
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &res));
+  bson_finish (res);
+
+  g_assert ((c = bson_find (res, "ok")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
+  g_assert (bson_cursor_get_double (c, &d));
+  g_assert (d == 1);
+  g_free (c);
+
+  g_assert ((c = bson_find (res, "msg")));
+  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
+  g_assert (bson_cursor_get_string (c, &s));
+  g_assert_cmpstr (s, ==, "indexes dropped for collection");
+  g_free (c);
+
+  mongo_wire_packet_free (p);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
 int
 main (void)
 {
@@ -223,6 +444,9 @@ main (void)
   test_mongo_client_recv ();
   test_mongo_client_recv_custom ();
   test_mongo_client_reply_parse ();
+  test_mongo_client_cursors ();
+  test_mongo_client_delete ();
+  test_mongo_client_drop ();
 
   return 0;
 }
