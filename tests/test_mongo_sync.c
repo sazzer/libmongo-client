@@ -399,13 +399,38 @@ test_mongo_sync_cmd_get_last_error (void)
 void
 test_mongo_sync_connect (void)
 {
-  mongo_connection *conn;
+  mongo_connection *conn, *o;
 
   TEST (mongo_sync.connect.ipv4);
   g_assert ((conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT)) != NULL);
   g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
   mongo_disconnect (conn);
   PASS ();
+
+  TEST (mongo_sync.connect.to_master.self);
+  g_assert ((conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT)) != NULL);
+  o = conn;
+  g_assert ((conn = mongo_connect_to_master (conn)) != NULL);
+  g_assert (o == conn);
+  mongo_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_sync.connect.to_master.via_arbiter);
+  conn = mongo_connect (TEST_ARBITER_IP, TEST_ARBITER_PORT);
+  if (conn)
+    {
+      o = conn;
+      g_assert ((conn = mongo_connect_to_master (conn)) != NULL);
+      g_assert (o != conn);
+      g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
+      mongo_disconnect (conn);
+      PASS ();
+    }
+  else
+    {
+      printf ("# %s\n", strerror (errno));
+      SKIP ("Connecting via arbiter failed, but it's optional.");
+    }
 
   TEST (mongo_sync.connect.by_host);
   g_assert ((conn = mongo_connect (TEST_SERVER_HOST, TEST_SERVER_PORT)) != NULL);
@@ -464,7 +489,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (13);
+  do_plan (15);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();

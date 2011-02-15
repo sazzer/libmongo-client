@@ -17,6 +17,7 @@
 #include "mongo-client.h"
 #include "bson.h"
 #include "mongo-wire.h"
+#include "mongo-sync.h"
 
 #include <glib.h>
 
@@ -30,6 +31,7 @@
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 static const int one = 1;
 
@@ -219,4 +221,107 @@ mongo_connection_get_requestid (const mongo_connection *conn)
   if (!conn)
     return -1;
   return conn->request_id;
+}
+
+mongo_connection *
+mongo_connect_to_master (mongo_connection *conn)
+{
+  bson *cmd, *res;
+  mongo_packet *p;
+  bson_cursor *c;
+  gboolean b;
+  const gchar *primary;
+  const gchar *port_s;
+  gchar *host, *ep = NULL;
+  glong port;
+  mongo_connection *nc;
+
+  if (!conn)
+    return NULL;
+
+  /* Verify if we're master */
+  cmd = bson_new ();
+  bson_append_int32 (cmd, "ismaster", 1);
+  bson_finish (cmd);
+
+  p = mongo_sync_cmd_custom (conn, "system", cmd);
+  bson_free (cmd);
+  if (!p)
+    {
+      mongo_wire_packet_free (p);
+      mongo_disconnect (conn);
+      return NULL;
+    }
+
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &res))
+    {
+      mongo_wire_packet_free (p);
+      mongo_disconnect (conn);
+      return NULL;
+    }
+  mongo_wire_packet_free (p);
+  bson_finish (res);
+
+  c = bson_find (res, "ismaster");
+  if (!bson_cursor_get_boolean (c, &b))
+    {
+      g_free (c);
+      bson_free (res);
+      mongo_disconnect (conn);
+      return NULL;
+    }
+
+  if (b)
+    {
+      /* We're the master already, awesome! */
+      g_free (c);
+      bson_free (res);
+      return conn;
+    }
+  g_free (c);
+
+  /* Oh blast, we're not the master. Grab it from the primary key! */
+  c = bson_find (res, "primary");
+  if (!bson_cursor_get_string (c, &primary))
+    {
+      g_free (c);
+      bson_free (res);
+      mongo_disconnect (conn);
+      return NULL;
+    }
+  g_free (c);
+
+  /* Split up to host:port */
+  port_s = g_strrstr (primary, ":");
+  if (!port_s)
+    {
+      bson_free (res);
+      mongo_disconnect (conn);
+      return NULL;
+    }
+  port_s++;
+  host = g_strndup (primary, port_s - primary - 1);
+
+  port = strtol (port_s, &ep, 10);
+  if (port == LONG_MIN || port == LONG_MAX)
+    {
+      g_free (host);
+      bson_free (res);
+      mongo_disconnect (conn);
+      return NULL;
+    }
+  if (ep && *ep)
+    {
+      g_free (host);
+      bson_free (res);
+      mongo_disconnect (conn);
+      return NULL;
+    }
+  bson_free (res);
+
+  nc = mongo_connect (host, port);
+  g_free (host);
+  mongo_disconnect (conn);
+
+  return nc;
 }

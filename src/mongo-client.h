@@ -47,6 +47,21 @@ typedef struct _mongo_connection mongo_connection;
  */
 mongo_connection *mongo_connect (const char *host, int port);
 
+/** Attempt to connect to the master of a replica set.
+ *
+ * Given an existing connection, this will determine the master node,
+ * and attempt to connect there.
+ *
+ * @param conn is an existing MongoDB connection.
+ *
+ * @returns A mongo_collection object, or NULL if the reconnect fails
+ * for one reason or the other.
+ *
+ * @note If the existing connection is not the master, it will be
+ * destroyed, whether the connection to the new master suceeds or not.
+ */
+mongo_connection *mongo_connect_to_master (mongo_connection *conn);
+
 /** Disconnect from a MongoDB server.
  *
  * @param conn is the connection object to disconnect from.

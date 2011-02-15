@@ -24,6 +24,14 @@ static gint current_test_no __attribute__((unused)) = 0;
 #define TEST_SERVER_PORT 27017
 #endif
 
+#ifndef TEST_ARBITER_IP
+#define TEST_ARBITER_IP "127.0.0.1"
+#endif
+
+#ifndef TEST_ARBITER_PORT
+#define TEST_ARBITER_PORT 30000
+#endif
+
 #ifndef TEST_SERVER_DB
 #define TEST_SERVER_DB "test"
 #endif
