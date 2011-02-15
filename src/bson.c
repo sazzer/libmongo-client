@@ -769,6 +769,9 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_INT64:
       return sizeof (gint64);
     case BSON_TYPE_NULL:
+    case BSON_TYPE_UNDEFINED:
+    case BSON_TYPE_MIN:
+    case BSON_TYPE_MAX:
       return 0;
     case BSON_TYPE_REGEXP:
       l = strlen((gchar *)data);
@@ -777,6 +780,7 @@ _bson_get_block_size (bson_type type, const guint8 *data)
       return sizeof (gint32);
     case BSON_TYPE_DBPOINTER:
       return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32) + 12;
+    case BSON_TYPE_NONE:
     default:
       return -1;
     }
