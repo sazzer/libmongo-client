@@ -293,3 +293,72 @@ mongo_sync_cmd_custom (mongo_connection *conn,
 
   return p;
 }
+
+gdouble
+mongo_sync_cmd_count (mongo_connection *conn,
+		      const gchar *db, const gchar *coll,
+		      const bson *query)
+{
+  mongo_packet *p;
+  bson *cmd;
+  bson_cursor *c;
+  gdouble d;
+
+  if (!conn)
+    return -1;
+
+  cmd = bson_new_sized (bson_size (query) + 32);
+  bson_append_string (cmd, "count", coll, -1);
+  if (query)
+    bson_append_document (cmd, "query", query);
+  bson_finish (cmd);
+
+  p = mongo_sync_cmd_custom (conn, db, cmd);
+  bson_free (cmd);
+  if (!p)
+    return -1;
+
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &cmd))
+    {
+      mongo_wire_packet_free (p);
+      return -1;
+    }
+  mongo_wire_packet_free (p);
+  bson_finish (cmd);
+
+  c = bson_find (cmd, "ok");
+  if (!c)
+    {
+      bson_free (cmd);
+      return -1;
+    }
+  if (!bson_cursor_get_double (c, &d))
+    {
+      bson_free (cmd);
+      g_free (c);
+      return -1;
+    }
+  g_free (c);
+  if (d != 1)
+    {
+      bson_free (cmd);
+      return -1;
+    }
+
+  c = bson_find (cmd, "n");
+  if (!c)
+    {
+      bson_free (cmd);
+      return -1;
+    }
+  if (!bson_cursor_get_double (c, &d))
+    {
+      bson_free (cmd);
+      g_free (c);
+      return -1;
+    }
+  g_free (c);
+  bson_free (cmd);
+
+  return d;
+}

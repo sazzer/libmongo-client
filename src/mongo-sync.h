@@ -151,6 +151,10 @@ mongo_packet *mongo_sync_cmd_custom (mongo_connection *conn,
 				     const gchar *db,
 				     const bson *command);
 
+gdouble mongo_sync_cmd_count (mongo_connection *conn,
+			      const gchar *db, const gchar *coll,
+			      const bson *query);
+
 /** @} */
 
 #endif
