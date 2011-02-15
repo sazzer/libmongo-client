@@ -9,17 +9,23 @@ check_PROGRAMS = test_bson_build_base test_bson_build_compound \
 	\
 	test_invalid
 
-TESTS = run-tests.sh \
-	test_bson_reader_base test_bson_reader_iterator test_bson_from_data \
-	test_mongo_wire \
-	test_mongo_client \
-	test_oid \
-	test_invalid
+HARNESS_TESTS = ${srcdir}/verify-bson-wrapper.sh \
+		./test_bson_reader_base ./test_bson_reader_iterator ./test_bson_from_data \
+		./test_mongo_wire \
+		./test_mongo_client \
+		./test_oid \
+		./test_invalid
+
+check: check-am
+	${MAKE} ${AM_MAKEFLAGS} check-HARNESS
+
+check-HARNESS: ${srcdir}/verify-bson-wrapper.sh
+	srcdir=${srcdir} prove -e '' ${PROVE_OPTIONS} ${HARNESS_TESTS}
 
 AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
 
-EXTRA_DIST = verify-bson.py run-tests.sh
+EXTRA_DIST = verify-bson.py verify-bson-wrapper.sh
 
 test_srcs = test.c test.h test-generator.c test-generator.h
 

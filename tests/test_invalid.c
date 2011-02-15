@@ -157,6 +157,8 @@ test_invalid_mongo_wire (void)
 int
 main (void)
 {
+  PLAN (1, 18);
+
   test_invalid_bson_null ();
   test_invalid_bson_cursor ();
   test_invalid_mongo_wire ();

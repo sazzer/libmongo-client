@@ -3,8 +3,10 @@
 
 #include "bson.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 static gchar *current_test = NULL;
+static gint current_test_no = 0;
 
 #ifndef TEST_SERVER_IP
 #define TEST_SERVER_IP "127.0.0.1"
@@ -24,23 +26,25 @@ static gchar *current_test = NULL;
 
 #define TEST_SERVER_NS TEST_SERVER_DB "." TEST_SERVER_COLLECTION
 
-#define TEST(s) current_test = #s
+#define PLAN(b,e) {				\
+    printf ("%d..%d\n", b, e);			\
+  }
+
+#define TEST(s)					\
+  {						\
+    current_test = #s;				\
+    current_test_no++;				\
+    printf ("# %s\n", current_test);		\
+  }
 #define PASS()					\
   {						\
-    printf (" + %s\n", current_test);		\
+    printf ("ok %d\n", current_test_no);	\
     current_test = NULL;			\
   }
-#define FAIL()					\
+#define SKIP_ALL(s)				\
   {						\
-    printf (" - %s\n", current_test);		\
-    current_test = NULL;			\
-    abort ();					\
-  }
-#define SKIP()					\
-  {						\
-    printf (" ! %s, skipped\n", current_test);	\
-    current_test = NULL;			\
-    return;					\
+    printf ("1..0 # SKIP %s\n", s);		\
+    exit (0);					\
   }
 
 gboolean dump_data (const guint8 *d, gint32 size);

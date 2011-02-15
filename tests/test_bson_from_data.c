@@ -48,6 +48,8 @@ test_bson_reset (void)
 int
 main (void)
 {
+  PLAN (1, 2);
+
   test_bson_from_data ();
   test_bson_reset ();
 

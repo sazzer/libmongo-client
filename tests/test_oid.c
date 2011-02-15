@@ -64,6 +64,8 @@ test_oid_ts (void)
 int
 main (void)
 {
+  PLAN (1, 5);
+
   test_oid_init ();
   test_oid ();
   test_oid_ts ();

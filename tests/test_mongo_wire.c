@@ -418,6 +418,8 @@ test_mongo_wire_custom ()
 int
 main (void)
 {
+  PLAN (1, 8);
+
   test_mongo_wire_update ();
   test_mongo_wire_insert ();
   test_mongo_wire_query ();

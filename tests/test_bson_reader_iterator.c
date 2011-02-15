@@ -128,6 +128,8 @@ test_bson_reader_iterate_nested (void)
 int
 main (void)
 {
+  PLAN (1, 13);
+
   g_assert (test_bson_reader_iterate_flat ());
   g_assert (test_bson_reader_iterate_nested ());
 }
