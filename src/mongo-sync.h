@@ -168,6 +168,19 @@ gdouble mongo_sync_cmd_count (mongo_connection *conn,
 			      const gchar *db, const gchar *coll,
 			      const bson *query);
 
+/** Send a drop() command to MongoDB.
+ *
+ * With this command, one can easily drop a collection.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the name of the database.
+ * @param coll is the name of the collection to drop.
+ *
+ * @returns TRUE if the collection was dropped, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_drop (mongo_connection *conn,
+			      const gchar *db, const gchar *coll);
+
 /** @} */
 
 #endif

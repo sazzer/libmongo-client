@@ -353,6 +353,24 @@ test_mongo_sync_cmd_count (void)
 }
 
 void
+test_mongo_sync_cmd_drop (void)
+{
+  mongo_connection *conn;
+
+  TEST (mongo_sync.cmd_drop);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_drop (conn, TEST_SERVER_DB,
+				 TEST_SERVER_COLLECTION));
+  g_assert (!mongo_sync_cmd_drop (conn, TEST_SERVER_DB,
+				  TEST_SERVER_COLLECTION));
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
+void
 do_plan (int max)
 {
   mongo_connection *conn;
@@ -370,7 +388,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (8);
+  do_plan (9);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
@@ -381,6 +399,7 @@ main (void)
   test_mongo_sync_cmd_custom ();
 
   test_mongo_sync_cmd_count ();
+  test_mongo_sync_cmd_drop ();
 
   return 0;
 }
