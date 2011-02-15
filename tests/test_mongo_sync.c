@@ -235,7 +235,6 @@ test_mongo_sync_cmd_kill_cursor (void)
   mongo_connection *conn;
   mongo_packet *p;
 
-  bson_cursor *c;
   mongo_reply_packet_header rh;
   gint32 i;
   gint64 cid;
