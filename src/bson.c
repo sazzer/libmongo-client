@@ -775,6 +775,8 @@ _bson_get_block_size (bson_type type, const guint8 *data)
       return l + strlen((gchar *)(data + l + 1)) + 2;
     case BSON_TYPE_INT32:
       return sizeof (gint32);
+    case BSON_TYPE_DBPOINTER:
+      return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32) + 12;
     default:
       return -1;
     }
