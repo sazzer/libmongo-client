@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -61,26 +62,38 @@ unset_nonblock (int fd)
 mongo_connection *
 mongo_connect (const char *host, int port)
 {
-  struct sockaddr_in sa;
-  socklen_t addrsize;
-  int fd;
+  struct addrinfo *res, *r;
+  struct addrinfo hints;
+  int e, fd = -1;
   mongo_connection *c;
+  gchar *port_s;
 
-  memset (&sa, 0, sizeof (sa));
-  sa.sin_family = AF_INET;
-  sa.sin_port = htons (port);
-  sa.sin_addr.s_addr = inet_addr (host);
-  addrsize = sizeof (sa);
+  memset (&hints, 0, sizeof (hints));
+  hints.ai_socktype = SOCK_STREAM;
 
-  fd = socket (AF_INET, SOCK_STREAM, 0);
-  if (fd < 0)
+#ifdef __linux__
+  hints.ai_flags = AI_ADDRCONFIG;
+#endif
+
+  port_s = g_strdup_printf ("%d", port);
+  e = getaddrinfo (host, port_s, &hints, & res);
+  g_free (port_s);
+
+  if (e != 0)
     return NULL;
 
-  if (connect (fd, (struct sockaddr *)&sa, addrsize))
+  for (r = res; r != NULL; r = r->ai_next)
     {
-      close (fd);
-      return NULL;
+      fd = socket (r->ai_family, r->ai_socktype, r->ai_protocol);
+      if (fd != -1 && connect (fd, r->ai_addr, r->ai_addrlen) == 0)
+	break;
+      if (fd != -1)
+	{
+	  close (fd);
+	  fd = -1;
+	}
     }
+  freeaddrinfo (res);
 
   setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, (char *)&one, sizeof (one));
 

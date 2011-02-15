@@ -12,6 +12,14 @@ static gint current_test_no __attribute__((unused)) = 0;
 #define TEST_SERVER_IP "127.0.0.1"
 #endif
 
+#ifndef TEST_SERVER_IPV6
+#define TEST_SERVER_IPV6 "::1"
+#endif
+
+#ifndef TEST_SERVER_HOST
+#define TEST_SERVER_HOST "localhost"
+#endif
+
 #ifndef TEST_SERVER_PORT
 #define TEST_SERVER_PORT 27017
 #endif
@@ -41,6 +49,12 @@ static gint current_test_no __attribute__((unused)) = 0;
     printf ("ok %d\n", current_test_no);	\
     current_test = NULL;			\
   }
+#define SKIP(s)						\
+  {							\
+    printf ("ok %d # SKIP %s\n", current_test_no, s);	\
+    current_test = NULL;				\
+  }
+
 #define SKIP_ALL(s)				\
   {						\
     printf ("1..0 # SKIP %s\n", s);		\
