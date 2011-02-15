@@ -99,6 +99,7 @@ test_mongo_sync_cmd_query (void)
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 1984);
   bson_free (doc);
+  g_free (c);
 
   mongo_wire_packet_free (p);
 
@@ -116,6 +117,7 @@ void do_plan (int max)
 	      TEST_SERVER_IP);
 
   PLAN (1, max);
+  mongo_disconnect (conn);
 }
 
 int
