@@ -107,6 +107,80 @@ test_mongo_sync_cmd_query (void)
   PASS ();
 }
 
+void
+test_mongo_sync_cmd_get_more (void)
+{
+  bson *doc, *sel;
+  mongo_connection *conn;
+  mongo_packet *p;
+
+  bson_cursor *c;
+  mongo_reply_packet_header rh;
+  gint32 i;
+  gint64 cid;
+
+  TEST (mongo_sync.cmd_get_more);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  g_assert (conn);
+
+  doc = bson_new ();
+  for (i = 1; i <= 30; i++)
+    {
+      bson_reset (doc);
+      bson_append_int32 (doc, "int32", 1984);
+      bson_append_int32 (doc, "seq", i);
+      bson_append_boolean (doc, "get_more_test", TRUE);
+      bson_finish (doc);
+      g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
+    }
+  bson_free (doc);
+  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 30);
+
+  sel = bson_new ();
+  bson_append_boolean (sel, "get_more_test", TRUE);
+  bson_finish (sel);
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS,
+				       MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT,
+				       0, 2, sel, NULL)) != NULL);
+  bson_free (sel);
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert_cmpint (rh.cursor_id, !=, 0);
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 2);
+
+  cid = rh.cursor_id;
+
+  mongo_wire_packet_free (p);
+
+  g_assert ((p = mongo_sync_cmd_get_more
+	     (conn, TEST_SERVER_NS, 4, cid)) != NULL);
+
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert_cmpint (rh.cursor_id, ==, cid);
+  g_assert_cmpint (rh.start, ==, 2);
+  g_assert_cmpint (rh.returned, ==, 4);
+
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &doc));
+  bson_finish (doc);
+
+  g_assert ((c = bson_find (doc, "int32")));
+  g_assert (bson_cursor_get_int32 (c, &i));
+  g_assert_cmpint (i, ==, 1984);
+  g_free (c);
+
+  g_assert ((c = bson_find (doc, "seq")));
+  g_assert (bson_cursor_get_int32 (c, &i));
+  g_assert_cmpint (i, ==, 3);
+  g_free (c);
+
+  bson_free (doc);
+
+  mongo_wire_packet_free (p);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
 void do_plan (int max)
 {
   mongo_connection *conn;
@@ -124,11 +198,12 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (3);
+  do_plan (4);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
   test_mongo_sync_cmd_query ();
+  test_mongo_sync_cmd_get_more ();
 
   return 0;
 }

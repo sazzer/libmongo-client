@@ -92,6 +92,22 @@ mongo_packet *mongo_sync_cmd_query (mongo_connection *conn,
 				    gint32 skip, gint32 ret, const bson *query,
 				    const bson *sel);
 
+/** Send a get more command to MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param ns is the namespace, the database and collection name
+ * concatenaded, and separated with a single dot.
+ * @param ret is the number of documents to return.
+ * @param cursor_id is the ID of the cursor to use.
+ *
+ * @returns A newly allocated reply packet, or NULL on error. It is
+ * the responsibility of the caller to free the packet once it is not
+ * used anymore.
+ */
+mongo_packet *mongo_sync_cmd_get_more (mongo_connection *conn,
+				       const gchar *ns,
+				       gint32 ret, gint64 cursor_id);
+
 /** @} */
 
 #endif

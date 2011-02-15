@@ -127,3 +127,61 @@ mongo_sync_cmd_query (mongo_connection *conn,
 
   return p;
 }
+
+mongo_packet *
+mongo_sync_cmd_get_more (mongo_connection *conn,
+			 const gchar *ns,
+			 gint32 ret, gint64 cursor_id)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  mongo_packet_header h;
+  mongo_reply_packet_header rh;
+
+  if (!conn)
+    return NULL;
+
+  rid = mongo_connection_get_requestid (conn) + 1;
+
+  p = mongo_wire_cmd_get_more (rid, ns, ret, cursor_id);
+  if (!p)
+    return NULL;
+
+  if (!mongo_packet_send (conn, p))
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+  mongo_wire_packet_free (p);
+
+  p = mongo_packet_recv (conn);
+  if (!p)
+    return NULL;
+
+  if (!mongo_wire_packet_get_header (p, &h))
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  if (h.resp_to != rid)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  if (!mongo_wire_reply_packet_get_header (p, &rh))
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  if (rh.flags & MONGO_REPLY_FLAG_NO_CURSOR)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  return p;
+}
