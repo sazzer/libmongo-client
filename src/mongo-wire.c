@@ -467,6 +467,7 @@ mongo_wire_cmd_custom (gint32 id, const gchar *db, const bson *command)
 
   p = mongo_wire_cmd_query (id, ns, 0, 0, 1, command, empty);
   g_free (ns);
+  bson_free (empty);
   return p;
 }
 
