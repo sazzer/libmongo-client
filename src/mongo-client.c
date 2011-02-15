@@ -95,6 +95,9 @@ mongo_connect (const char *host, int port)
     }
   freeaddrinfo (res);
 
+  if (fd == -1)
+    return NULL;
+
   setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, (char *)&one, sizeof (one));
 
   if (unset_nonblock (fd))
