@@ -430,7 +430,8 @@ test_mongo_client_drop (void)
   PASS ();
 }
 
-void do_plan (int max)
+void
+do_plan (int max)
 {
   mongo_connection *conn;
 
