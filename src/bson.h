@@ -24,8 +24,8 @@
  * The types, functions and everything else within this module is
  * meant to allow one to work with BSON objects easily.
  *
- * @todo Retrieving BSON_TYPE_JS_CODE_W_SCOPE typed elements is
- * unimplemented at this time.
+ * @todo Retrieving BSON_TYPE_JS_CODE_W_SCOPE and BSON_TYPE_DBPOINTER
+ * typed elements is unimplemented at this time.
  *
  * @addtogroup bson_mod
  * @{
