@@ -151,6 +151,19 @@ mongo_packet *mongo_sync_cmd_custom (mongo_connection *conn,
 				     const gchar *db,
 				     const bson *command);
 
+/** Send a count() command to MongoDB.
+ *
+ * The count command is an efficient way to count tha available
+ * documents matching a selector.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the name of the database.
+ * @param coll is the name of the collection.
+ * @param query is the optional selector (NULL will count all
+ * documents within the collection).
+ *
+ * @returns The number of matching documents, or -1 on error.
+ */
 gdouble mongo_sync_cmd_count (mongo_connection *conn,
 			      const gchar *db, const gchar *coll,
 			      const bson *query);
