@@ -7,69 +7,66 @@ try:
     from bson import BSON
     from bson.binary import Binary
 except:
-    skip = True
-    class Binary:
-        def __init__ (*args, **kwargs):
-            pass
+    print "1..0 # SKIP PyMongo version is too old"
+    exit (1)
 
-def verify_bson (name, source, ok):
+def verify_bson (name, source, ok, no):
+    print "# %s" % name
     if skip:
-        print " ! %s" % name
+        print "ok %d - # SKIP " % no
         return
 
     d = BSON.encode (ok)
     s = BSON (source.rstrip ().decode ('string_escape'))
     s = BSON.encode (s.decode ())
     if s.decode () == d.decode ():
-        print " + %s" % name
+        print "ok %d" % no
     else:
-        print " - %s" % name
-        print "# source: %s" % s.decode ()
-        print "# dest  : %s" % d.decode ()
-        exit (1)
+        print "# source: %s; dest: %s" % (s.decode (), d.decode ())
+        print "not ok %d" % no
 
-def verify_regexp (name, source, ok):
+def verify_regexp (name, source, ok, no):
+    print "# %s" % name
     if skip:
-        print " ! %s" % name
+        print "ok %d # skipped" % no
         return
 
     s = BSON (source.rstrip ().decode ('string_escape'))
     s = BSON.encode (s.decode ())
     sr = s.decode ()['regexp']
     if sr.pattern == ok.pattern and sr.flags == ok.flags:
-        print " + %s" % name
+        print "ok %s" % no
     else:
-        print " - %s" % name
-        print "# source: %s" % sr.pattern
-        print "# dest  : %s" % ok.pattern
-        exit (1)
+        print "# source: %s; dest: %s" % (sr.pattern, ok.pattern)
+        print "not ok %s" % no
         
 def bson_build_base (f):
-    verify_bson ("bson_empty", f.readline (), {})
+    verify_bson ("bson_empty", f.readline (), {}, 1)
     verify_bson ("bson_string", f.readline (),
-                 {"hello": "world"})
+                 {"hello": "world"}, 2)
     verify_bson ("bson_string_len", f.readline (),
-                 {"goodbye": "cruel world"})
+                 {"goodbye": "cruel world"}, 3)
     verify_bson ("bson_double", f.readline (),
-                 {"double": 3.14})
+                 {"double": 3.14}, 4)
     verify_bson ("bson_boolean", f.readline (),
-                 {"TRUE": True, "FALSE": False})
+                 {"TRUE": True, "FALSE": False}, 5)
     verify_bson ("bson_utc_datetime", f.readline (),
-                 {"date": datetime.utcfromtimestamp (1294860709)})
+                 {"date": datetime.utcfromtimestamp (1294860709)}, 6)
     verify_bson ("bson_null", f.readline (),
-                 {"null": None})
+                 {"null": None}, 7)
     verify_bson ("bson_int32", f.readline (),
-                 {"int32": 1984})
+                 {"int32": 1984}, 8)
     verify_bson ("bson_int64", f.readline (),
-                 {"int64": 9876543210})
+                 {"int64": 9876543210}, 9)
     verify_regexp ("bson_regexp", f.readline (),
-                   re.compile ("foo.*bar", re.I))
+                   re.compile ("foo.*bar", re.I), 10)
     verify_bson ("bson_binary_0", f.readline (),
-                 {"binary0": Binary ("foo\x00bar", 0)})
+                 {"binary0": Binary ("foo\x00bar", 0)}, 11)
     verify_bson ("bson_binary_2", f.readline (),
-                 {"binary2": Binary ("foo\x00bar", 2)})
+                 {"binary2": Binary ("foo\x00bar", 2)}, 12)
     if f.readline () != '':
-        print "FAIL: garbage after tests"
+        print "# garbage after tests"
+        print "not ok %d" % 13
         exit (1)
 
 def bson_build_compound (f):
@@ -84,7 +81,7 @@ def bson_build_compound (f):
                   "null": None,
                   "int32": 1984,
                   "int64": 9876543210
-                 })
+                 }, 13)
 
     # A complex document, with arrays and subdocuments
     verify_bson ("bson_compound_nested", f.readline (),
@@ -98,6 +95,10 @@ def bson_build_compound (f):
                                "date": datetime.utcfromtimestamp (1294860709),
                                }
                             ]
-                 })
+                 }, 14)
+
+def plan (f):
+    print "1..14"
+    pass
 
 eval (sys.argv[1] + '(sys.stdin)')

@@ -281,6 +281,8 @@ test_bson_reader_binary (void)
 int
 main (void)
 {
+  PLAN (1, 22);
+
   g_assert (test_bson_reader_flat ());
   g_assert (test_bson_reader_nested ());
   g_assert (test_bson_reader_regexp ());

@@ -17,8 +17,7 @@ test_mongo_client (void)
 
   TEST (mongo_client.connect);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP ();
+  g_assert (conn);
   PASS ();
 
   sel = bson_new ();
@@ -55,8 +54,7 @@ test_mongo_client_recv (void)
 
   TEST (mongo_client.recv);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP ();
+  g_assert (conn);
 
   q = bson_new ();
   bson_append_string (q, "recv", "oh, yes!", -1);
@@ -115,8 +113,7 @@ test_mongo_client_recv_custom (void)
 
   TEST (mongo_client.recv.custom);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP ();
+  g_assert (conn);
 
   cmd = bson_new ();
   bson_append_int32 (cmd, "getnonce", 1);
@@ -174,8 +171,7 @@ test_mongo_client_reply_parse (void)
 
   TEST (mongo_client.reply_parse);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP ();
+  g_assert (conn);
 
   cmd = bson_new ();
   bson_append_int32 (cmd, "getnonce", 1);
@@ -234,8 +230,7 @@ test_mongo_client_cursors (void)
 
   TEST (mongo_client.cursors);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP ();
+  g_assert (conn);
 
   mongo_util_oid_init (0);
 
@@ -343,8 +338,7 @@ test_mongo_client_delete (void)
 
   TEST (mongo_client.delete);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP ();
+  g_assert (conn);
 
   b = bson_new ();
   bson_finish (b);
@@ -393,8 +387,7 @@ test_mongo_client_drop (void)
 
   TEST (mongo_client.drop);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP ();
+  g_assert (conn);
 
   cmd = bson_new ();
   bson_append_string (cmd, "drop", TEST_SERVER_COLLECTION, -1);
@@ -437,9 +430,23 @@ test_mongo_client_drop (void)
   PASS ();
 }
 
+void do_plan (int max)
+{
+  mongo_connection *conn;
+
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  if (!conn)
+    SKIP_ALL ("cannot connect to mongodb; host="
+	      TEST_SERVER_IP);
+
+  PLAN (1, max);
+}
+
 int
 main (void)
 {
+  do_plan (9);
+
   test_mongo_client ();
   test_mongo_client_recv ();
   test_mongo_client_recv_custom ();
