@@ -73,6 +73,14 @@ gboolean mongo_packet_send (mongo_connection *conn, const mongo_packet *p);
  */
 mongo_packet *mongo_packet_recv (mongo_connection *conn);
 
+/** Get the last requestID from a connection object.
+ *
+ * @param conn is the connection to get the requestID from.
+ *
+ * @returns The last requestID used, or -1 on error.
+ */
+gint32 mongo_connection_get_requestid (const mongo_connection *conn);
+
 /** @} */
 
 #endif
