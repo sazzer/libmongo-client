@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static gchar *current_test = NULL;
-static gint current_test_no = 0;
+static gchar *current_test __attribute__((unused)) = NULL;
+static gint current_test_no __attribute__((unused)) = 0;
 
 #ifndef TEST_SERVER_IP
 #define TEST_SERVER_IP "127.0.0.1"
