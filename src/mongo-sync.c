@@ -78,6 +78,7 @@ mongo_sync_cmd_query (mongo_connection *conn,
   mongo_packet *p;
   gint32 rid;
 
+  mongo_packet_header h;
   mongo_reply_packet_header rh;
 
   if (!conn)
@@ -99,6 +100,18 @@ mongo_sync_cmd_query (mongo_connection *conn,
   p = mongo_packet_recv (conn);
   if (!p)
     return NULL;
+
+  if (!mongo_wire_packet_get_header (p, &h))
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+
+  if (h.resp_to != rid)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
 
   if (!mongo_wire_reply_packet_get_header (p, &rh))
     {
