@@ -374,7 +374,6 @@ mongo_sync_cmd_drop (mongo_connection *conn,
 {
   mongo_packet *p;
   bson *cmd;
-  bson_cursor *c;
 
   if (!conn)
     return FALSE;
