@@ -62,6 +62,50 @@ test_mongo_sync_cmd_update (void)
   PASS ();
 }
 
+void
+test_mongo_sync_cmd_query (void)
+{
+  bson *doc, *sel;
+  mongo_connection *conn;
+  mongo_packet *p;
+
+  bson_cursor *c;
+  mongo_reply_packet_header rh;
+  gint32 i;
+
+  TEST (mongo_sync.cmd_query);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  g_assert (conn);
+
+  doc = test_bson_generate_flat ();
+  g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
+  g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
+  bson_free (doc);
+  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 2);
+
+  sel = bson_new ();
+  bson_append_int32 (sel, "int32", 1984);
+  bson_finish (sel);
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS,
+				       0, 0, 1, sel, NULL)) != NULL);
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 1);
+  bson_free (sel);
+
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &doc));
+  bson_finish (doc);
+  g_assert ((c = bson_find (doc, "int32")));
+  g_assert (bson_cursor_get_int32 (c, &i));
+  g_assert_cmpint (i, ==, 1984);
+  bson_free (doc);
+
+  mongo_wire_packet_free (p);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
 void do_plan (int max)
 {
   mongo_connection *conn;
@@ -78,10 +122,11 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (2);
+  do_plan (3);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
+  test_mongo_sync_cmd_query ();
 
   return 0;
 }

@@ -71,6 +71,27 @@ gboolean mongo_sync_cmd_insert (mongo_connection *conn,
 				const gchar *ns,
 				const bson *doc);
 
+/** Send a query command to MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param ns is the namespace, the database and collection name
+ * concatenaded, and separated with a single dot.
+ * @param flags are the query options. See mongo_wire_cmd_query().
+ * @param skip is the number of documents to skip.
+ * @param ret is the number of documents to return.
+ * @param query is the query BSON object.
+ * @param sel is the (optional) selector BSON object indicating the
+ * fields to return. Passing NULL will return all fields.
+ *
+ * @returns A newly allocated reply packet, or NULL on error. It is the
+ * responsibility of the caller to free the packet once it is not used
+ * anymore.
+ */
+mongo_packet *mongo_sync_cmd_query (mongo_connection *conn,
+				    const gchar *ns, gint32 flags,
+				    gint32 skip, gint32 ret, const bson *query,
+				    const bson *sel);
+
 /** @} */
 
 #endif
