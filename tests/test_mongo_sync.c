@@ -395,6 +395,35 @@ test_mongo_sync_cmd_get_last_error (void)
 }
 
 void
+test_mongo_sync_connect (void)
+{
+  mongo_connection *conn;
+
+  TEST (mongo_sync.connect.ipv4);
+  g_assert ((conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT)) != NULL);
+  g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
+  mongo_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_sync.connect.by_host);
+  g_assert ((conn = mongo_connect (TEST_SERVER_HOST, TEST_SERVER_PORT)) != NULL);
+  g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
+  mongo_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_sync.connect.ipv6);
+  conn = mongo_connect (TEST_SERVER_IPV6, TEST_SERVER_PORT);
+  if (conn)
+    {
+      g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
+      mongo_disconnect (conn);
+      PASS ();
+    }
+  else
+    SKIP ("IPv6 connection failed, but it's optional.");
+}
+
+void
 test_mongo_sync_cmd_drop (void)
 {
   mongo_connection *conn;
@@ -430,7 +459,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (10);
+  do_plan (13);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
@@ -443,6 +472,8 @@ main (void)
   test_mongo_sync_cmd_count ();
   test_mongo_sync_cmd_get_last_error ();
   test_mongo_sync_cmd_drop ();
+
+  test_mongo_sync_connect ();
 
   return 0;
 }
