@@ -181,6 +181,32 @@ gdouble mongo_sync_cmd_count (mongo_connection *conn,
 gboolean mongo_sync_cmd_drop (mongo_connection *conn,
 			      const gchar *db, const gchar *coll);
 
+/** Get the last error from MongoDB.
+ *
+ * Retrieves the last error from MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the name of the database.
+ * @param error is a pointer to a string variable that will hold the
+ * error message.
+ *
+ * @returns TRUE if the error was succesfully retrieved, FALSE
+ * otherwise. The output variable @a error is only set if the function
+ * is returning TRUE.
+ */
+gboolean mongo_sync_cmd_get_last_error (mongo_connection *conn,
+					const gchar *db, gchar **error);
+
+/** Reset the last error variable in MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the name of the database.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_reset_error (mongo_connection *conn,
+				     const gchar *db);
+
 /** @} */
 
 #endif

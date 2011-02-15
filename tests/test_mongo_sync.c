@@ -352,6 +352,49 @@ test_mongo_sync_cmd_count (void)
 }
 
 void
+test_mongo_sync_cmd_get_last_error (void)
+{
+  mongo_connection *conn;
+  bson *b;
+  gchar *err;
+  mongo_packet *p;
+
+  TEST (mongo_sync.cmd_get_last_error);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  g_assert (conn);
+
+  b = bson_new ();
+  bson_append_int32 (b, "int32", 1984);
+  bson_finish (b);
+  mongo_sync_cmd_insert (conn, TEST_SERVER_NS, b);
+  bson_free (b);
+
+  g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
+  g_assert (err == NULL);
+
+  b = bson_new ();
+  bson_append_int32 (b, "forceerror", 1);
+  bson_finish (b);
+  g_assert ((p = mongo_sync_cmd_custom (conn, TEST_SERVER_DB, b)) != NULL);
+  bson_free (b);
+
+  g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
+  g_assert (err != NULL);
+  printf (" # err: %s\n", err);
+  g_free (err);
+  g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
+  g_assert (err != NULL);
+  g_free (err);
+
+  g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
+  g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
+  g_assert (err == NULL);
+
+  mongo_disconnect (conn);
+  PASS();
+}
+
+void
 test_mongo_sync_cmd_drop (void)
 {
   mongo_connection *conn;
@@ -387,7 +430,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (9);
+  do_plan (10);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
@@ -398,6 +441,7 @@ main (void)
   test_mongo_sync_cmd_custom ();
 
   test_mongo_sync_cmd_count ();
+  test_mongo_sync_cmd_get_last_error ();
   test_mongo_sync_cmd_drop ();
 
   return 0;
