@@ -327,16 +327,26 @@ test_mongo_sync_cmd_custom (void)
 void
 test_mongo_sync_cmd_count (void)
 {
-  gint32 cnt;
+  gdouble cnt1, cnt2;
   mongo_connection *conn;
+  bson *b;
 
   TEST (mongo_sync.cmd_count);
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
   g_assert (conn);
 
-  cnt = mongo_sync_cmd_count (conn, TEST_SERVER_DB, TEST_SERVER_COLLECTION,
+  cnt1 = mongo_sync_cmd_count (conn, TEST_SERVER_DB, TEST_SERVER_COLLECTION,
 			      NULL);
-  g_assert_cmpint (cnt, >, 0);
+  g_assert_cmpint (cnt1, >, 0);
+
+  b = bson_new ();
+  bson_append_int32 (b, "int32", 1984);
+  bson_finish (b);
+  cnt2 = mongo_sync_cmd_count (conn, TEST_SERVER_DB, TEST_SERVER_COLLECTION,
+			       b);
+  bson_free (b);
+  g_assert_cmpint (cnt2, >, 0);
+  g_assert_cmpint (cnt1, >, cnt2);
 
   mongo_disconnect (conn);
   PASS ();
