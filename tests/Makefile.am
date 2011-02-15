@@ -1,4 +1,4 @@
-check_PROGRAMS = test_bson_build_base test_bson_build_compound \
+check_PROGRAMS = test_bson_build_base test_bson_build_compound test_bson_builder \
 	test_bson_reader_base test_bson_reader_iterator test_bson_from_data \
 	\
 	test_mongo_wire \
@@ -10,6 +10,7 @@ check_PROGRAMS = test_bson_build_base test_bson_build_compound \
 	test_invalid
 
 HARNESS_TESTS = ${srcdir}/verify-bson-wrapper.sh \
+		./test_bson_builder \
 		./test_bson_reader_base ./test_bson_reader_iterator ./test_bson_from_data \
 		./test_mongo_wire \
 		./test_mongo_client ./test_mongo_sync \
@@ -31,6 +32,7 @@ test_srcs = test.c test.h test-generator.c test-generator.h
 
 test_bson_build_base_SOURCES = test_bson_build_base.c $(test_srcs)
 test_bson_build_compound_SOURCES = test_bson_build_compound.c $(test_srcs)
+test_bson_builder_SOURCES = test_bson_builder.c $(test_srcs)
 
 test_bson_reader_base_SOURCES = test_bson_reader_base.c $(test_srcs)
 test_bson_reader_iterator_SOURCES = test_bson_reader_iterator.c $(test_srcs)
