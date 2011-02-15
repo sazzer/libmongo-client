@@ -108,6 +108,32 @@ mongo_packet *mongo_sync_cmd_get_more (mongo_connection *conn,
 				       const gchar *ns,
 				       gint32 ret, gint64 cursor_id);
 
+/** Send a delete command to MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param ns is the namespace, the database and collection name
+ * concatenaded, and separated with a single dot.
+ * @param flags are the delete options. See mongo_wire_cmd_delete().
+ * @param sel is the BSON object to use as a selector.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_delete (mongo_connection *conn, const gchar *ns,
+				gint32 flags, const bson *sel);
+
+/** Send a kill_cursors command to MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param cursor_id is the cursor to kill.
+ *
+ * @note Unlike mongo_wire_cmd_kill_cursors(), this function can only
+ * kill one cursors at a time.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_kill_cursor (mongo_connection *conn,
+				     gint64 cursor_id);
+
 /** @} */
 
 #endif

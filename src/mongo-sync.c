@@ -185,3 +185,53 @@ mongo_sync_cmd_get_more (mongo_connection *conn,
 
   return p;
 }
+
+gboolean
+mongo_sync_cmd_delete (mongo_connection *conn, const gchar *ns,
+		       gint32 flags, const bson *sel)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  if (!conn)
+    return FALSE;
+
+  rid = mongo_connection_get_requestid (conn) + 1;
+
+  p = mongo_wire_cmd_delete (rid, ns, flags, sel);
+  if (!p)
+    return FALSE;
+
+  if (!mongo_packet_send (conn, p))
+    {
+      mongo_wire_packet_free (p);
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  return TRUE;
+}
+
+gboolean
+mongo_sync_cmd_kill_cursor (mongo_connection *conn,
+			    gint64 cursor_id)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  if (!conn)
+    return FALSE;
+
+  rid = mongo_connection_get_requestid (conn) + 1;
+
+  p = mongo_wire_cmd_kill_cursors (rid, 1, cursor_id);
+  if (!p)
+    return FALSE;
+
+  if (!mongo_packet_send (conn, p))
+    {
+      mongo_wire_packet_free (p);
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  return TRUE;
+}

@@ -181,7 +181,109 @@ test_mongo_sync_cmd_get_more (void)
   PASS ();
 }
 
-void do_plan (int max)
+void
+test_mongo_sync_cmd_delete (void)
+{
+  bson *b;
+  mongo_connection *conn;
+  gint32 i;
+  mongo_packet *p;
+
+  bson_cursor *c;
+
+  TEST (mongo_sync.cmd_delete);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  g_assert (conn);
+
+  b = bson_new ();
+  for (i = 1; i < 10; i++)
+    {
+      bson_reset (b);
+      bson_append_int32 (b, "sync_delete_seq", i);
+      bson_append_boolean (b, "sync_delete_flag", TRUE);
+      bson_finish (b);
+      g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, b));
+    }
+  bson_free (b);
+  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 9);
+
+  b = bson_new ();
+  bson_append_boolean (b, "sync_delete_flag", TRUE);
+  bson_finish (b);
+  g_assert (mongo_sync_cmd_delete (conn, TEST_SERVER_NS,
+				   MONGO_WIRE_FLAG_DELETE_SINGLE, b));
+
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS, 0, 0, 2, b,
+				       NULL)) != NULL);
+  bson_free (b);
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &b));
+  bson_finish (b);
+  g_assert ((c = bson_find (b, "sync_delete_seq")));
+  g_assert (bson_cursor_get_int32 (c, &i));
+  g_free (c);
+  bson_free (b);
+  mongo_wire_packet_free (p);
+
+  mongo_disconnect (conn);
+  PASS();
+}
+
+void
+test_mongo_sync_cmd_kill_cursor (void)
+{
+  bson *doc, *sel;
+  mongo_connection *conn;
+  mongo_packet *p;
+
+  bson_cursor *c;
+  mongo_reply_packet_header rh;
+  gint32 i;
+  gint64 cid;
+
+  TEST (mongo_sync.cmd_get_more);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  g_assert (conn);
+
+  doc = bson_new ();
+  for (i = 1; i <= 30; i++)
+    {
+      bson_reset (doc);
+      bson_append_int32 (doc, "int32", 1984);
+      bson_append_int32 (doc, "seq", i);
+      bson_append_boolean (doc, "kill_cursor_test", TRUE);
+      bson_finish (doc);
+      g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
+    }
+  bson_free (doc);
+  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 30);
+
+  sel = bson_new ();
+  bson_append_boolean (sel, "kill_cursor_test", TRUE);
+  bson_finish (sel);
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS,
+				       MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT,
+				       0, 2, sel, NULL)) != NULL);
+  bson_free (sel);
+  g_assert (mongo_wire_reply_packet_get_header (p, &rh));
+  g_assert_cmpint (rh.cursor_id, !=, 0);
+  g_assert_cmpint (rh.start, ==, 0);
+  g_assert_cmpint (rh.returned, ==, 2);
+
+  cid = rh.cursor_id;
+
+  mongo_wire_packet_free (p);
+
+  g_assert (mongo_sync_cmd_kill_cursor (conn, cid));
+
+  g_assert ((p = mongo_sync_cmd_get_more
+	     (conn, TEST_SERVER_NS, 4, cid)) == NULL);
+
+  mongo_disconnect (conn);
+  PASS ();
+}
+
+void
+do_plan (int max)
 {
   mongo_connection *conn;
 
@@ -198,12 +300,14 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (4);
+  do_plan (6);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
   test_mongo_sync_cmd_query ();
   test_mongo_sync_cmd_get_more ();
+  test_mongo_sync_cmd_delete ();
+  test_mongo_sync_cmd_kill_cursor ();
 
   return 0;
 }
