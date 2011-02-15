@@ -20,6 +20,7 @@
 
 #include <glib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "bson.h"
 
@@ -280,6 +281,220 @@ bson_new_from_data (const guint8 *data, gint32 size)
       g_free (b);
       return NULL;
     }
+
+  return b;
+}
+
+/** @internal Add a single element of any type to a BSON object.
+ *
+ * Used internally by bson_build() and bson_build_full(), this
+ * function adds a single element of any supported type to the target
+ * BSON object.
+ *
+ * @param b is the target BSON object.
+ * @param type is the element type to add.
+ * @param name is the key name.
+ * @param free_after signals whether to free the values after adding
+ * them.
+ * @param ap is the list of remaining parameters.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+static gboolean
+_bson_build_add_single (bson *b, bson_type type, const gchar *name,
+			gboolean free_after, va_list ap)
+{
+  switch (type)
+    {
+    case BSON_TYPE_NONE:
+    case BSON_TYPE_UNDEFINED:
+    case BSON_TYPE_DBPOINTER:
+    case BSON_TYPE_JS_CODE_W_SCOPE:
+      return FALSE;
+    case BSON_TYPE_MIN:
+    case BSON_TYPE_MAX:
+    default:
+      return FALSE;
+    case BSON_TYPE_DOUBLE:
+      {
+	gdouble d = (gdouble)va_arg (ap, gdouble);
+	bson_append_double (b, name, d);
+	break;
+      }
+    case BSON_TYPE_STRING:
+      {
+	gchar *s = (gchar *)va_arg (ap, gpointer);
+	gint32 l = (gint32)va_arg (ap, gint32);
+	bson_append_string (b, name, s, l);
+	if (free_after)
+	  g_free (s);
+	break;
+      }
+    case BSON_TYPE_DOCUMENT:
+      {
+	bson *d = (bson *)va_arg (ap, gpointer);
+	if (free_after && bson_size (d) < 0)
+	  bson_finish (d);
+	bson_append_document (b, name, d);
+	if (free_after)
+	  bson_free (d);
+	break;
+      }
+    case BSON_TYPE_ARRAY:
+      {
+	bson *d = (bson *)va_arg (ap, gpointer);
+	if (free_after && bson_size (d) < 0)
+	  bson_finish (d);
+	bson_append_array (b, name, d);
+	if (free_after)
+	  bson_free (d);
+	break;
+      }
+    case BSON_TYPE_BINARY:
+      {
+	bson_binary_subtype s = (bson_binary_subtype)va_arg (ap, guint);
+	guint8 *d = (guint8 *)va_arg (ap, gpointer);
+	gint32 l = (gint32)va_arg (ap, gint32);
+	bson_append_binary (b, name, s, d, l);
+	if (free_after)
+	  g_free (d);
+	break;
+      }
+    case BSON_TYPE_OID:
+      {
+	guint8 *oid = (guint8 *)va_arg (ap, gpointer);
+	bson_append_oid (b, name, oid);
+	if (free_after)
+	  g_free (oid);
+	break;
+      }
+    case BSON_TYPE_BOOLEAN:
+      {
+	gboolean v = (gboolean)va_arg (ap, guint);
+	bson_append_boolean (b, name, v);
+	break;
+      }
+    case BSON_TYPE_UTC_DATETIME:
+      {
+	gint64 ts = (gint64)va_arg (ap, gint64);
+	bson_append_utc_datetime (b, name, ts);
+	break;
+      }
+    case BSON_TYPE_NULL:
+      {
+	bson_append_null (b, name);
+	break;
+      }
+    case BSON_TYPE_REGEXP:
+      {
+	gchar *r = (gchar *)va_arg (ap, gpointer);
+	gchar *o = (gchar *)va_arg (ap, gpointer);
+	bson_append_regex (b, name, r, o);
+	if (free_after)
+	  {
+	    g_free (r);
+	    g_free (o);
+	  }
+	break;
+      }
+    case BSON_TYPE_JS_CODE:
+      {
+	gchar *s = (gchar *)va_arg (ap, gpointer);
+	gint32 l = (gint32)va_arg (ap, gint32);
+	bson_append_javascript (b, name, s, l);
+	if (free_after)
+	  g_free (s);
+	break;
+      }
+    case BSON_TYPE_SYMBOL:
+      {
+	gchar *s = (gchar *)va_arg (ap, gpointer);
+	gint32 l = (gint32)va_arg (ap, gint32);
+	bson_append_symbol (b, name, s, l);
+	if (free_after)
+	  g_free (s);
+	break;
+      }
+    case BSON_TYPE_INT32:
+      {
+	gint32 l = (gint32)va_arg (ap, gint32);
+	bson_append_int32 (b, name, l);
+	break;
+      }
+    case BSON_TYPE_TIMESTAMP:
+      {
+	gint64 ts = (gint64)va_arg (ap, gint64);
+	bson_append_timestamp (b, name, ts);
+	break;
+      }
+    case BSON_TYPE_INT64:
+      {
+	gint64 l = (gint64)va_arg (ap, gint64);
+	bson_append_int64 (b, name, l);
+	break;
+      }
+    }
+  return TRUE;
+}
+
+bson *
+bson_build (bson_type type, const gchar *name, ...)
+{
+  va_list ap;
+  bson_type t;
+  const gchar *n;
+  bson *b;
+
+  b = bson_new ();
+  va_start (ap, name);
+  if (!_bson_build_add_single (b, type, name, FALSE, ap))
+    {
+      bson_free (b);
+      return NULL;
+    }
+
+  while ((t = (bson_type)va_arg (ap, gint)))
+    {
+      n = (const gchar *)va_arg (ap, gpointer);
+      if (!_bson_build_add_single (b, t, n, FALSE, ap))
+	{
+	  bson_free (b);
+	  return NULL;
+	}
+    }
+  va_end (ap);
+
+  return b;
+}
+
+bson *
+bson_build_full (bson_type type, const gchar *name, gboolean free_after, ...)
+{
+  va_list ap;
+  bson_type t;
+  const gchar *n;
+  gboolean f;
+  bson *b;
+
+  b = bson_new ();
+  va_start (ap, free_after);
+  if (!_bson_build_add_single (b, type, name, free_after, ap))
+    {
+      bson_free (b);
+      return NULL;
+    }
+
+  while ((t = (bson_type)va_arg (ap, gint)))
+    {
+      n = (const gchar *)va_arg (ap, gpointer);
+      f = (gboolean)va_arg (ap, gint);
+      if (!_bson_build_add_single (b, t, n, f, ap))
+	{
+	  bson_free (b);
+	  return NULL;
+	}
+    }
+  va_end (ap);
 
   return b;
 }

@@ -161,6 +161,55 @@ bson *bson_new_sized (gint32 size);
  */
 bson *bson_new_from_data (const guint8 *data, gint32 size);
 
+/** Build a BSON object in one go, with full control.
+ *
+ * This function can be used to build a BSON object in one simple
+ * step, chaining all the elements together (including sub-documents,
+ * created by this same function - more about that later).
+ *
+ * One has to specify the type, the key name, and whether he wants to
+ * see the added object free'd after addition. Each element type is
+ * freed appropriately, and documents and arrays are finished before
+ * addition, if they're to be freed afterwards.
+ *
+ * This way of operation allows one to build a full BSON object, even
+ * with embedded documents, without leaking memory.
+ *
+ * After the three required parameters, one will need to list the data
+ * itself, in the same order as one would if he'd add with the
+ * bson_append family of functions.
+ *
+ * The list must be closed with a #BSON_TYPE_NONE element, and the @a
+ * name and @a free_after parameters are not needed for the closing
+ * entry.
+ *
+ * @param type is the element type we'll be adding.
+ * @param name is the key name.
+ * @param free_after determines whether the original variable will be
+ * freed after adding it to the BSON object.
+ *
+ * @returns A newly allocated, unfinished BSON object, which must be
+ * finalized and freed, once not needed anymore, by the caller. Or
+ * NULL on error.
+ */
+bson *bson_build_full (bson_type type, const gchar *name,
+		       gboolean free_after, ...);
+
+/** Build a BSON object in one go.
+ *
+ * Very similar to bson_build_full(), so much so, that it's exactly
+ * the same, except that the @a free_after parameter is always FALSE,
+ * and must not be specified in this case.
+ *
+ * @param type is the element type we'll be adding.
+ * @param name is the key name.
+ *
+ * @returns A newly allocated, unfinished BSON object, which must be
+ * finalized and freed, once not needed anymore, by the caller. Or
+ * NULL on error.
+ */
+bson *bson_build (bson_type type, const gchar *name, ...);
+
 /** Finish a BSON object.
  *
  * Terminate a BSON object. This includes appending the trailing zero
