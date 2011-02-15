@@ -440,6 +440,7 @@ void do_plan (int max)
 	      TEST_SERVER_IP);
 
   PLAN (1, max);
+  mongo_disconnect (conn);
 }
 
 int

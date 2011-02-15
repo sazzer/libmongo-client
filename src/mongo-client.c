@@ -36,6 +36,7 @@ static const int one = 1;
 struct _mongo_connection
 {
   gint fd; /**< The file descriptor associated with the connection. */
+  gint32 request_id; /**< The last sent command's requestID. */
 };
 
 static int
@@ -139,6 +140,8 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   if (writev (conn->fd, iov, 2) != sizeof (h) + data_size)
     return FALSE;
 
+  conn->request_id = h.id;
+
   return TRUE;
 }
 
@@ -192,4 +195,12 @@ mongo_packet_recv (mongo_connection *conn)
   g_free (data);
 
   return p;
+}
+
+gint32
+mongo_connection_get_requestid (const mongo_connection *conn)
+{
+  if (!conn)
+    return -1;
+  return conn->request_id;
 }
