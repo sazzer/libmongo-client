@@ -119,7 +119,7 @@ mongo_sync_cmd_query (mongo_connection *conn,
       return NULL;
     }
 
-  if (flags & MONGO_REPLY_FLAG_QUERY_FAIL)
+  if (rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL)
     {
       mongo_wire_packet_free (p);
       return NULL;
