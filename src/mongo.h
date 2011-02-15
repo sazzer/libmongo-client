@@ -18,6 +18,7 @@
 #include "mongo-wire.h"
 #include "mongo-client.h"
 #include "mongo-utils.h"
+#include "mongo-sync.h"
 
 /** @mainpage libmongo-client
  *
@@ -38,6 +39,8 @@
  *     network. @see mongo_client
  *   - mongo-utils: Various miscellaneous utilities related to either
  *     BSON or MongoDB. @see mongo_util
+ *   - mongo-sync: Wrappers around the wire commands, that talk to the
+ *     network aswell, in a synchronous, blocking manner. @see mongo_sync.
  *
  * The intended way to use the library to work with MongoDB is to
  * first construct the BSON objects, then construct the packets, and
