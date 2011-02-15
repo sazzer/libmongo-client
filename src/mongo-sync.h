@@ -134,6 +134,23 @@ gboolean mongo_sync_cmd_delete (mongo_connection *conn, const gchar *ns,
 gboolean mongo_sync_cmd_kill_cursor (mongo_connection *conn,
 				     gint64 cursor_id);
 
+/** Send a custom command to MongoDB.
+ *
+ * Custom commands are queries run in the db.$cmd namespace. The
+ * commands themselves are queries, and as such, BSON objects.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the database in which the command shall be run.
+ * @param command is the BSON object representing the command.
+ *
+ * @returns A newly allocated reply packet, or NULL on error. It is
+ * the responsibility of the caller to free the packet once it is not
+ * used anymore.
+ */
+mongo_packet *mongo_sync_cmd_custom (mongo_connection *conn,
+				     const gchar *db,
+				     const bson *command);
+
 /** @} */
 
 #endif

@@ -283,6 +283,48 @@ test_mongo_sync_cmd_kill_cursor (void)
 }
 
 void
+test_mongo_sync_cmd_custom (void)
+{
+  bson *b;
+  mongo_packet *p;
+  mongo_connection *conn;
+
+  bson_cursor *c;
+  gdouble ok;
+  const gchar *nonce;
+
+  TEST (mongo_sync.cmd_custom);
+  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  g_assert (conn);
+
+  b = bson_new ();
+  bson_append_int32 (b, "getnonce", 1);
+  bson_finish (b);
+
+  g_assert ((p = mongo_sync_cmd_custom (conn, TEST_SERVER_DB, b)) != NULL);
+  bson_free (b);
+
+  g_assert (mongo_wire_reply_packet_get_nth_document (p, 1, &b));
+  bson_finish (b);
+
+  g_assert ((c = bson_find (b, "ok")));
+  g_assert (bson_cursor_get_double (c, &ok));
+  g_assert (ok == 1);
+  g_free (c);
+
+  g_assert ((c = bson_find (b, "nonce")));
+  g_assert (bson_cursor_get_string (c, &nonce));
+  printf (" # nonce: %s\n", nonce);
+  g_free (c);
+
+  bson_free (b);
+  mongo_wire_packet_free (p);
+  mongo_disconnect (conn);
+
+  PASS ();
+}
+
+void
 do_plan (int max)
 {
   mongo_connection *conn;
@@ -300,7 +342,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (6);
+  do_plan (7);
 
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
@@ -308,6 +350,7 @@ main (void)
   test_mongo_sync_cmd_get_more ();
   test_mongo_sync_cmd_delete ();
   test_mongo_sync_cmd_kill_cursor ();
+  test_mongo_sync_cmd_custom ();
 
   return 0;
 }
