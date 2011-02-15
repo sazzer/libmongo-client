@@ -3,6 +3,8 @@
 
 #include "mongo.h"
 
+#include <errno.h>
+#include <string.h>
 #include <glib.h>
 
 void
@@ -420,7 +422,10 @@ test_mongo_sync_connect (void)
       PASS ();
     }
   else
-    SKIP ("IPv6 connection failed, but it's optional.");
+    {
+      printf ("# %s\n", strerror (errno));
+      SKIP ("IPv6 connection failed, but it's optional.");
+    }
 }
 
 void
