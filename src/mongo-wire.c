@@ -516,6 +516,10 @@ mongo_wire_reply_packet_get_data (const mongo_packet *p,
   return TRUE;
 }
 
+/** @internal Reads out the 32-bit documents size from a bytestream.
+ */
+#define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
+
 gboolean
 mongo_wire_reply_packet_get_nth_document (const mongo_packet *p,
 					  gint32 n,
@@ -543,9 +547,9 @@ mongo_wire_reply_packet_get_nth_document (const mongo_packet *p,
     return FALSE;
 
   for (i = 1; i < n; i++)
-    pos += GINT32_FROM_LE ((guint32)d[0]);
+    pos += _DOC_SIZE (d, pos);
 
-  b = bson_new_from_data (d + pos, GINT32_FROM_LE ((guint32)d[pos]) - 1);
+  b = bson_new_from_data (d + pos, _DOC_SIZE (d, pos) - 1);
   if (!b)
     return FALSE;
 
