@@ -99,7 +99,7 @@ mongo_dump (config_t *config)
   else
     {
       fd = open (config->output, O_RDWR | O_CREAT | O_TRUNC, 0600);
-      if (!fd)
+      if (fd == -1)
 	{
 	  fprintf (stderr, "Error opening output file '%s': %s\n",
 		   config->output, strerror (errno));
