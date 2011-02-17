@@ -729,6 +729,10 @@ bson_cursor_new (const bson *b)
   return c;
 }
 
+/** @internal Reads out the 32-bit documents size from a bytestream.
+ */
+#define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&(doc)[pos]))
+
 /** @internal Figure out the block size of a given type.
  *
  * Provided a #bson_type and some raw data, figures out the length of
@@ -751,15 +755,14 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_JS_CODE:
     case BSON_TYPE_SYMBOL:
     case BSON_TYPE_JS_CODE_W_SCOPE:
-      return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32);
+      return _DOC_SIZE (data, 0) + sizeof (gint32);
     case BSON_TYPE_DOCUMENT:
     case BSON_TYPE_ARRAY:
-      return GINT32_FROM_LE ((gint32)data[0]);
+      return _DOC_SIZE (data, 0);
     case BSON_TYPE_DOUBLE:
       return sizeof (gdouble);
     case BSON_TYPE_BINARY:
-      return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32) +
-	sizeof (guint8);
+      return _DOC_SIZE (data, 0) + sizeof (gint32) + sizeof (guint8);
     case BSON_TYPE_OID:
       return 12;
     case BSON_TYPE_BOOLEAN:
@@ -779,7 +782,7 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_INT32:
       return sizeof (gint32);
     case BSON_TYPE_DBPOINTER:
-      return GINT32_FROM_LE ((gint32)data[0]) + sizeof (gint32) + 12;
+      return _DOC_SIZE (data, 0) + sizeof (gint32) + 12;
     case BSON_TYPE_NONE:
     default:
       return -1;
@@ -915,7 +918,7 @@ bson_cursor_get_document (const bson_cursor *c, bson **dest)
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_DOCUMENT);
 
-  size = GINT32_FROM_LE ((gint32)(bson_data (c->obj)[c->value_pos]));
+  size = _DOC_SIZE (bson_data(c->obj), c->value_pos) - sizeof (gint32) - 1;
   b = bson_new_sized (size);
   b->data = g_byte_array_append (b->data,
 				 bson_data (c->obj) + c->value_pos +
@@ -938,7 +941,7 @@ bson_cursor_get_array (const bson_cursor *c, bson **dest)
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_ARRAY);
 
-  size = GINT32_FROM_LE ((gint32)(bson_data (c->obj)[c->value_pos]));
+  size = _DOC_SIZE (bson_data(c->obj), c->value_pos) - sizeof (gint32) - 1;
   b = bson_new_sized (size);
   b->data = g_byte_array_append (b->data,
 				 bson_data (c->obj) + c->value_pos +
@@ -960,7 +963,7 @@ bson_cursor_get_binary (const bson_cursor *c,
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_BINARY);
 
-  *size = GINT32_FROM_LE ((gint32)(bson_data (c->obj)[c->value_pos]));
+  *size = _DOC_SIZE (bson_data(c->obj), c->value_pos);
   *subtype = (bson_binary_subtype)(bson_data (c->obj)[c->value_pos +
 						      sizeof (gint32)]);
   *data = (guint8 *)(bson_data (c->obj) + c->value_pos + sizeof (gint32) + 1);
