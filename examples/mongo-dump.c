@@ -34,28 +34,21 @@ mongo_dump_packet (config_t *config, mongo_packet *p, gdouble pos, gdouble cnt,
   for (i = 1; i <= rh.returned; i++)
     {
       bson *b;
-#if VERY_VERBOSE
-      bson_cursor *c;
-      const guint8 *oid;
-      gint j;
-#endif
 
       mongo_wire_reply_packet_get_nth_document (p, i, &b);
       bson_finish (b);
 
-#if VERY_VERBOSE
-      VLOG ("Dumping object %.0f/%.0f, #", pos + i, cnt);
-      c = bson_find (b, "_id");
-      bson_cursor_get_oid (c, &oid);
-      for (j = 0; j < 12; j++)
-	VLOG("%x", oid[j]);
-      VLOG("...\n");
-      g_free (c);
+#if 0
+      VLOG ("\rDumping object %.0f/%.0f, size=%d", pos + i, cnt,
+	    bson_size (b));
+      if (config->verbose)
+	fflush (stderr);
 #endif
 
       write (fd, bson_data (b), bson_size (b));
       bson_free (b);
     }
+  VLOG("\r");
 
   return pos + i - 1;
 }
@@ -132,8 +125,12 @@ mongo_dump (config_t *config)
 
   while (pos < cnt)
     {
-      VLOG ("Retrieving documents %.0f-%.0f...\n", pos,
-	    (cnt < pos + 10) ? cnt : pos + 10);
+      gdouble pr = (pos + 10) / cnt;
+
+      VLOG ("\rDumping... %03.2f%%", ((pr > 1) ? 1 : pr) * 100);
+      if (config->verbose)
+	fflush (stderr);
+
       p = mongo_sync_cmd_get_more (conn, config->ns, 10, cid);
       if (!p)
 	{
