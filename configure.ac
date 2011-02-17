@@ -136,6 +136,7 @@ AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [version number])
 
 AC_OUTPUT(
 	Makefile
+	examples/Makefile
 	src/Makefile
 	tests/Makefile
 )
