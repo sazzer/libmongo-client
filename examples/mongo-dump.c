@@ -76,6 +76,15 @@ mongo_dump (config_t *config)
       exit (1);
     }
 
+  VLOG ("Syncing to master...\n");
+  conn = mongo_connect_to_master (conn);
+  if (!conn)
+    {
+      fprintf (stderr, "Error reconnecting to the master of %s:%d: %s\n",
+	       config->host, config->port, strerror (errno));
+      exit (1);
+    }
+
   VLOG ("Counting documents...\n");
   cnt = mongo_sync_cmd_count (conn, config->db, config->coll, NULL);
   if (cnt < 0)
