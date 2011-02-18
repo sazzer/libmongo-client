@@ -52,6 +52,24 @@ mongo_sync_disconnect (mongo_sync_connection *conn)
 }
 
 gboolean
+mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn)
+{
+  if (!conn)
+    return FALSE;
+
+  return conn->slaveok;
+}
+
+void
+mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
+			     gboolean slaveok)
+{
+  if (!conn)
+    return;
+  conn->slaveok = slaveok;
+}
+
+gboolean
 mongo_sync_cmd_update (mongo_sync_connection *conn,
 		       const gchar *ns,
 		       gint32 flags, const bson *selector,

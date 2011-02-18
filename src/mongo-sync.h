@@ -63,6 +63,22 @@ mongo_sync_connection *mongo_sync_connect (const char *host,
  */
 void mongo_sync_disconnect (mongo_sync_connection *conn);
 
+/** Retrieve the state of the SLAVE_OK flag from a sync connection.
+ *
+ * @param conn is the connection to check the flag on.
+ *
+ * @returns The state of the SLAVE_OK flag.
+ */
+gboolean mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn);
+
+/** Set the SLAVE_OK flag on a sync connection.
+ *
+ * @param conn is the connection to set the flag on.
+ * @param slaveok is the state to set.
+ */
+void mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
+				  gboolean slaveok);
+
 /** Send an update command to MongoDB.
  *
  * Constructs and sends an update command to MongoDB.

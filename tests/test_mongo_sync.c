@@ -447,6 +447,23 @@ test_mongo_sync_cmd_drop (void)
 }
 
 void
+test_mongo_sync_set_slaveok (void)
+{
+  mongo_sync_connection *conn;
+
+  TEST (mongo_sync.set_slaveok);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_conn_get_slaveok (conn) == FALSE);
+  mongo_sync_conn_set_slaveok (conn, TRUE);
+  g_assert (mongo_sync_conn_get_slaveok (conn) == TRUE);
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
 do_plan (int max)
 {
   mongo_sync_connection *conn;
@@ -464,8 +481,9 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (13);
+  do_plan (14);
 
+  test_mongo_sync_set_slaveok ();
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
   test_mongo_sync_cmd_query ();
