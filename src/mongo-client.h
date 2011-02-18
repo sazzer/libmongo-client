@@ -38,8 +38,6 @@ typedef struct _mongo_connection mongo_connection;
  * @param host is the IP address of the server.
  * @param port is the port to connect to.
  *
- * @note The @a host must be an IP address in dotted decimal form.
- *
  * @returns A newly allocated mongo_connection object or NULL on
  * error. It is the responsibility of the caller to free it once it is
  * not used anymore.
