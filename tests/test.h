@@ -40,6 +40,14 @@ static gint current_test_no __attribute__((unused)) = 0;
 #define TEST_SERVER_COLLECTION "libmongo"
 #endif
 
+#ifndef TEST_SECONDARY_IP
+#define TEST_SECONDARY_IP "127.0.0.1"
+#endif
+
+#ifndef TEST_SECONDARY_PORT
+#define TEST_SECONDARY_PORT 27018
+#endif
+
 #define TEST_SERVER_NS TEST_SERVER_DB "." TEST_SERVER_COLLECTION
 
 #define PLAN(b,e) {				\

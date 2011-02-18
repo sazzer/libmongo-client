@@ -11,10 +11,10 @@ void
 test_mongo_sync_cmd_insert (void)
 {
   bson *doc;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
 
   TEST (mongo_sync.cmd_insert);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   doc = test_bson_generate_nested ();
@@ -24,9 +24,9 @@ test_mongo_sync_cmd_insert (void)
 
   bson_free (doc);
 
-  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 2);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 2);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 }
 
@@ -34,11 +34,11 @@ void
 test_mongo_sync_cmd_update (void)
 {
   bson *sel, *upd;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   guint8 *oid;
 
   TEST (mongo_sync.cmd_update);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   sel = bson_new ();
@@ -58,9 +58,9 @@ test_mongo_sync_cmd_update (void)
   bson_free (sel);
   bson_free (upd);
 
-  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 2);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 2);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 }
 
@@ -68,7 +68,7 @@ void
 test_mongo_sync_cmd_query (void)
 {
   bson *doc, *sel;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   mongo_packet *p;
 
   bson_cursor *c;
@@ -76,14 +76,14 @@ test_mongo_sync_cmd_query (void)
   gint32 i;
 
   TEST (mongo_sync.cmd_query);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   doc = test_bson_generate_flat ();
   g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
   g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
   bson_free (doc);
-  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 2);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 2);
 
   sel = bson_new ();
   bson_append_int32 (sel, "int32", 1984);
@@ -101,11 +101,11 @@ test_mongo_sync_cmd_query (void)
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 1984);
   bson_free (doc);
-  g_free (c);
+  bson_cursor_free (c);
 
   mongo_wire_packet_free (p);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 }
 
@@ -113,7 +113,7 @@ void
 test_mongo_sync_cmd_get_more (void)
 {
   bson *doc, *sel;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   mongo_packet *p;
 
   bson_cursor *c;
@@ -122,7 +122,7 @@ test_mongo_sync_cmd_get_more (void)
   gint64 cid;
 
   TEST (mongo_sync.cmd_get_more);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   doc = bson_new ();
@@ -136,7 +136,7 @@ test_mongo_sync_cmd_get_more (void)
       g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
     }
   bson_free (doc);
-  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 30);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 30);
 
   sel = bson_new ();
   bson_append_boolean (sel, "get_more_test", TRUE);
@@ -168,18 +168,18 @@ test_mongo_sync_cmd_get_more (void)
   g_assert ((c = bson_find (doc, "int32")));
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 1984);
-  g_free (c);
+  bson_cursor_free (c);
 
   g_assert ((c = bson_find (doc, "seq")));
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 3);
-  g_free (c);
+  bson_cursor_free (c);
 
   bson_free (doc);
 
   mongo_wire_packet_free (p);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 }
 
@@ -187,14 +187,14 @@ void
 test_mongo_sync_cmd_delete (void)
 {
   bson *b;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   gint32 i;
   mongo_packet *p;
 
   bson_cursor *c;
 
   TEST (mongo_sync.cmd_delete);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   b = bson_new ();
@@ -207,7 +207,7 @@ test_mongo_sync_cmd_delete (void)
       g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, b));
     }
   bson_free (b);
-  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 9);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 9);
 
   b = bson_new ();
   bson_append_boolean (b, "sync_delete_flag", TRUE);
@@ -222,11 +222,11 @@ test_mongo_sync_cmd_delete (void)
   bson_finish (b);
   g_assert ((c = bson_find (b, "sync_delete_seq")));
   g_assert (bson_cursor_get_int32 (c, &i));
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (b);
   mongo_wire_packet_free (p);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS();
 }
 
@@ -234,7 +234,7 @@ void
 test_mongo_sync_cmd_kill_cursor (void)
 {
   bson *doc, *sel;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   mongo_packet *p;
 
   mongo_reply_packet_header rh;
@@ -242,7 +242,7 @@ test_mongo_sync_cmd_kill_cursor (void)
   gint64 cid;
 
   TEST (mongo_sync.cmd_get_more);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   doc = bson_new ();
@@ -256,7 +256,7 @@ test_mongo_sync_cmd_kill_cursor (void)
       g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
     }
   bson_free (doc);
-  g_assert_cmpint (mongo_connection_get_requestid (conn), ==, 30);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 30);
 
   sel = bson_new ();
   bson_append_boolean (sel, "kill_cursor_test", TRUE);
@@ -279,7 +279,7 @@ test_mongo_sync_cmd_kill_cursor (void)
   g_assert ((p = mongo_sync_cmd_get_more
 	     (conn, TEST_SERVER_NS, 4, cid)) == NULL);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 }
 
@@ -288,14 +288,14 @@ test_mongo_sync_cmd_custom (void)
 {
   bson *b;
   mongo_packet *p;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
 
   bson_cursor *c;
   gdouble ok;
   const gchar *nonce;
 
   TEST (mongo_sync.cmd_custom);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, TRUE);
   g_assert (conn);
 
   b = bson_new ();
@@ -311,16 +311,16 @@ test_mongo_sync_cmd_custom (void)
   g_assert ((c = bson_find (b, "ok")));
   g_assert (bson_cursor_get_double (c, &ok));
   g_assert (ok == 1);
-  g_free (c);
+  bson_cursor_free (c);
 
   g_assert ((c = bson_find (b, "nonce")));
   g_assert (bson_cursor_get_string (c, &nonce));
   printf (" # nonce: %s\n", nonce);
-  g_free (c);
+  bson_cursor_free (c);
 
   bson_free (b);
   mongo_wire_packet_free (p);
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
 
   PASS ();
 }
@@ -329,11 +329,11 @@ void
 test_mongo_sync_cmd_count (void)
 {
   gdouble cnt1, cnt2;
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   bson *b;
 
   TEST (mongo_sync.cmd_count);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, TRUE);
   g_assert (conn);
 
   cnt1 = mongo_sync_cmd_count (conn, TEST_SERVER_DB, TEST_SERVER_COLLECTION,
@@ -349,20 +349,20 @@ test_mongo_sync_cmd_count (void)
   g_assert_cmpint (cnt2, >, 0);
   g_assert_cmpint (cnt1, >, cnt2);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 }
 
 void
 test_mongo_sync_cmd_get_last_error (void)
 {
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   bson *b;
   gchar *err;
   mongo_packet *p;
 
   TEST (mongo_sync.cmd_get_last_error);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   b = bson_new ();
@@ -392,58 +392,58 @@ test_mongo_sync_cmd_get_last_error (void)
   g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
   g_assert (err == NULL);
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS();
 }
 
 void
 test_mongo_sync_connect (void)
 {
-  mongo_connection *conn, *o;
+  mongo_sync_connection *conn, *o;
 
   TEST (mongo_sync.connect.ipv4);
-  g_assert ((conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT)) != NULL);
+  g_assert ((conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, TRUE)) != NULL);
   g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 
   TEST (mongo_sync.connect.to_master.self);
-  g_assert ((conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT)) != NULL);
+  g_assert ((conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, TRUE)) != NULL);
   o = conn;
-  g_assert ((conn = mongo_connect_to_master (conn)) != NULL);
+  g_assert ((conn = mongo_sync_connect_to_master (conn)) != NULL);
   g_assert (o == conn);
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 
-  TEST (mongo_sync.connect.to_master.via_arbiter);
-  conn = mongo_connect (TEST_ARBITER_IP, TEST_ARBITER_PORT);
+  TEST (mongo_sync.connect.to_master.via_secondary);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
   if (conn)
     {
       o = conn;
-      g_assert ((conn = mongo_connect_to_master (conn)) != NULL);
+      g_assert ((conn = mongo_sync_connect_to_master (conn)) != NULL);
       g_assert (o != conn);
       g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
-      mongo_disconnect (conn);
+      mongo_sync_disconnect (conn);
       PASS ();
     }
   else
     {
       printf ("# %s\n", strerror (errno));
-      SKIP ("Connecting via arbiter failed, but it's optional.");
+      SKIP ("Connecting via secondary failed, but it's optional.");
     }
 
   TEST (mongo_sync.connect.by_host);
-  g_assert ((conn = mongo_connect (TEST_SERVER_HOST, TEST_SERVER_PORT)) != NULL);
+  g_assert ((conn = mongo_sync_connect (TEST_SERVER_HOST, TEST_SERVER_PORT, TRUE)) != NULL);
   g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
   PASS ();
 
   TEST (mongo_sync.connect.ipv6);
-  conn = mongo_connect (TEST_SERVER_IPV6, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IPV6, TEST_SERVER_PORT, TRUE);
   if (conn)
     {
       g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
-      mongo_disconnect (conn);
+      mongo_sync_disconnect (conn);
       PASS ();
     }
   else
@@ -456,10 +456,10 @@ test_mongo_sync_connect (void)
 void
 test_mongo_sync_cmd_drop (void)
 {
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
 
   TEST (mongo_sync.cmd_drop);
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
   g_assert (mongo_sync_cmd_drop (conn, TEST_SERVER_DB,
@@ -467,30 +467,48 @@ test_mongo_sync_cmd_drop (void)
   g_assert (!mongo_sync_cmd_drop (conn, TEST_SERVER_DB,
 				  TEST_SERVER_COLLECTION));
 
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
+test_mongo_sync_set_slaveok (void)
+{
+  mongo_sync_connection *conn;
+
+  TEST (mongo_sync.set_slaveok);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_conn_get_slaveok (conn) == FALSE);
+  mongo_sync_conn_set_slaveok (conn, TRUE);
+  g_assert (mongo_sync_conn_get_slaveok (conn) == TRUE);
+
+  mongo_sync_disconnect (conn);
   PASS ();
 }
 
 void
 do_plan (int max)
 {
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
 
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   if (!conn)
     SKIP_ALL ("cannot connect to mongodb; host="
 	      TEST_SERVER_IP);
 
   PLAN (1, max);
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
 }
 
 int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (15);
+  do_plan (16);
 
+  test_mongo_sync_set_slaveok ();
   test_mongo_sync_cmd_insert ();
   test_mongo_sync_cmd_update ();
   test_mongo_sync_cmd_query ();

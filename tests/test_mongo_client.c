@@ -88,7 +88,7 @@ test_mongo_client_recv (void)
 
   g_assert ((c = bson_find (q, "recv")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (q);
 
   mongo_wire_packet_free (p);
@@ -119,7 +119,7 @@ test_mongo_client_recv_custom (void)
   bson_append_int32 (cmd, "getnonce", 1);
   bson_finish (cmd);
 
-  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, 0, cmd);
   g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);
@@ -141,13 +141,13 @@ test_mongo_client_recv_custom (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
   g_assert (bson_cursor_get_double (c, &ok));
   g_assert (ok == 1);
-  g_free (c);
+  bson_cursor_free (c);
 
   g_assert ((c = bson_find (cmd, "nonce")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
   g_assert (bson_cursor_get_string (c, &nonce));
   printf ("   # nonce: %s\n", nonce);
-  g_free (c);
+  bson_cursor_free (c);
 
   bson_free (cmd);
   mongo_wire_packet_free (p);
@@ -177,7 +177,7 @@ test_mongo_client_reply_parse (void)
   bson_append_int32 (cmd, "getnonce", 1);
   bson_finish (cmd);
 
-  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, 0, cmd);
   g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);
@@ -196,13 +196,13 @@ test_mongo_client_reply_parse (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
   g_assert (bson_cursor_get_double (c, &ok));
   g_assert (ok == 1);
-  g_free (c);
+  bson_cursor_free (c);
 
   g_assert ((c = bson_find (cmd, "nonce")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
   g_assert (bson_cursor_get_string (c, &nonce));
   printf ("   # nonce: %s\n", nonce);
-  g_free (c);
+  bson_cursor_free (c);
 
   bson_free (cmd);
 
@@ -283,7 +283,7 @@ test_mongo_client_cursors (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
   g_assert (bson_cursor_get_string (c, &s));
   g_assert_cmpstr (s, ==, "string1");
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (doc);
 
   cid = rh.cursor_id;
@@ -314,7 +314,7 @@ test_mongo_client_cursors (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_INT32);
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 6);
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (doc);
   mongo_wire_packet_free (p);
 
@@ -393,7 +393,7 @@ test_mongo_client_drop (void)
   bson_append_string (cmd, "drop", TEST_SERVER_COLLECTION, -1);
   bson_finish (cmd);
 
-  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, 0, cmd);
   g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);
@@ -416,13 +416,13 @@ test_mongo_client_drop (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
   g_assert (bson_cursor_get_double (c, &d));
   g_assert (d == 1);
-  g_free (c);
+  bson_cursor_free (c);
 
   g_assert ((c = bson_find (res, "msg")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
   g_assert (bson_cursor_get_string (c, &s));
   g_assert_cmpstr (s, ==, "indexes dropped for collection");
-  g_free (c);
+  bson_cursor_free (c);
 
   mongo_wire_packet_free (p);
 

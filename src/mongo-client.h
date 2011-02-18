@@ -28,9 +28,12 @@
  * @{
  */
 
-/** An opaque mongo connection object.
- */
-typedef struct _mongo_connection mongo_connection;
+/** Mongo Connection state object. */
+typedef struct
+{
+  gint fd; /**< The file descriptor associated with the connection. */
+  gint32 request_id; /**< The last sent command's requestID. */
+} mongo_connection;
 
 /** Connect to a MongoDB server.
  *
@@ -47,20 +50,20 @@ typedef struct _mongo_connection mongo_connection;
  */
 mongo_connection *mongo_connect (const char *host, int port);
 
-/** Attempt to connect to the master of a replica set.
+/** Connect to a MongoDB server, using an existing connection object.
  *
- * Given an existing connection, this will determine the master node,
- * and attempt to connect there.
+ * Connects to a MongoDB server, but uses an existing connection
+ * object to store the connection info in.
  *
- * @param conn is an existing MongoDB connection.
+ * @param host is the address of the server.
+ * @param port is the port to connect to.
+ * @param conn is a pointer to an allocated mongo_connection object.
  *
- * @returns A mongo_collection object, or NULL if the reconnect fails
- * for one reason or the other.
- *
- * @note If the existing connection is not the master, it will be
- * destroyed, whether the connection to the new master suceeds or not.
+ * @returns The conn object, or NULL on error. Upon error, the
+ * contents of the conn pointer are unspecified.
  */
-mongo_connection *mongo_connect_to_master (mongo_connection *conn);
+mongo_connection *mongo_connection_new (const char *host, int port,
+					mongo_connection **conn);
 
 /** Disconnect from a MongoDB server.
  *

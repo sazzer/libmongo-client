@@ -56,7 +56,7 @@ mongo_dump_packet (config_t *config, mongo_packet *p, gdouble pos, gdouble cnt,
 int
 mongo_dump (config_t *config)
 {
-  mongo_connection *conn;
+  mongo_sync_connection *conn;
   bson *b;
   int fd;
 
@@ -68,7 +68,7 @@ mongo_dump (config_t *config)
   VLOG ("Connecting to %s:%d/%s.%s...\n", config->host, config->port,
 	config->db, config->coll);
 
-  conn = mongo_connect (config->host, config->port);
+  conn = mongo_sync_connect (config->host, config->port, TRUE);
   if (!conn)
     {
       fprintf (stderr, "Error connecting to %s:%d: %s\n", config->host,
@@ -77,7 +77,7 @@ mongo_dump (config_t *config)
     }
 
   VLOG ("Syncing to master...\n");
-  conn = mongo_connect_to_master (conn);
+  conn = mongo_sync_connect_to_master (conn);
   if (!conn)
     {
       fprintf (stderr, "Error reconnecting to the master of %s:%d: %s\n",
@@ -91,7 +91,7 @@ mongo_dump (config_t *config)
     {
       fprintf (stderr, "Error counting documents in %s.%s: %s\n",
 	       config->db, config->coll, strerror (errno));
-      mongo_disconnect (conn);
+      mongo_sync_disconnect (conn);
       exit (1);
     }
 
@@ -105,7 +105,7 @@ mongo_dump (config_t *config)
 	{
 	  fprintf (stderr, "Error opening output file '%s': %s\n",
 		   config->output, strerror (errno));
-	  mongo_disconnect (conn);
+	  mongo_sync_disconnect (conn);
 	  exit (1);
 	}
     }
@@ -123,7 +123,7 @@ mongo_dump (config_t *config)
       close (fd);
       fprintf (stderr, "Error retrieving the cursor: %s\n",
 	       strerror (errno));
-      mongo_disconnect (conn);
+      mongo_sync_disconnect (conn);
       exit (1);
     }
 
@@ -147,7 +147,7 @@ mongo_dump (config_t *config)
 	  close (fd);
 	  fprintf (stderr, "Error advancing the cursor: %s\n",
 		   strerror (errno));
-	  mongo_disconnect (conn);
+	  mongo_sync_disconnect (conn);
 	  exit (1);
 	}
       pos = mongo_dump_packet (config, p, pos, cnt, fd);
@@ -155,7 +155,7 @@ mongo_dump (config_t *config)
     }
 
   close (fd);
-  mongo_disconnect (conn);
+  mongo_sync_disconnect (conn);
 
   return 0;
 }

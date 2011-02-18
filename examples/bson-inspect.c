@@ -121,7 +121,7 @@ bson_dump (bson *b, gint ilevel)
 	  break;
 	}
     }
-  g_free (c);
+  bson_cursor_free (c);
 }
 
 int
