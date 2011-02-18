@@ -181,18 +181,11 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
 }
 
 mongo_packet *
-mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *docs, ...)
+mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
 {
   mongo_packet *p;
-  va_list ap;
   bson *d;
   gint32 pos;
-
-  if (!ns || !docs)
-    return NULL;
-
-  if (bson_size (docs) < 0)
-    return NULL;
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
   if (!p)
@@ -200,7 +193,7 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *docs, ...)
   p->header.id = id;
   p->header.opcode = GINT32_TO_LE (OP_INSERT);
 
-  p->data_size = pos = sizeof (gint32) + strlen (ns) + 1 + bson_size (docs);
+  p->data_size = pos = sizeof (gint32) + strlen (ns) + 1;
   p->data = (guint8 *)g_try_malloc (p->data_size);
   if (!p->data)
     {
@@ -210,10 +203,7 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *docs, ...)
 
   memcpy (p->data, (void *)&zero, sizeof (gint32));
   memcpy (p->data + sizeof (gint32), (void *)ns, strlen (ns) + 1);
-  memcpy (p->data + sizeof (gint32) + strlen (ns) + 1,
-	  bson_data (docs), bson_size (docs));
 
-  va_start (ap, docs);
   while ((d = (bson *)va_arg (ap, gpointer)))
     {
       if (bson_size (d) < 0)
@@ -232,7 +222,6 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *docs, ...)
       memcpy (p->data + pos, bson_data (d), bson_size (d));
       pos += bson_size (d);
     }
-  va_end (ap);
 
   if (!p->data)
     {
@@ -242,6 +231,22 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, const bson *docs, ...)
 
   p->data_size = pos;
   p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data_size);
+
+  return p;
+}
+
+mongo_packet *
+mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...)
+{
+  va_list ap;
+  mongo_packet *p;
+
+  if (!ns)
+    return NULL;
+
+  va_start (ap, ns);
+  p = mongo_wire_cmd_insert_va (id, ns, ap);
+  va_end (ap);
 
   return p;
 }
@@ -385,16 +390,11 @@ mongo_wire_cmd_delete (gint32 id, const gchar *ns,
 }
 
 mongo_packet *
-mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
-			     gint64 cursor_ids, ...)
+mongo_wire_cmd_kill_cursors_va (gint32 id, gint32 n, va_list ap)
 {
   mongo_packet *p;
   gint32 i, t_n, pos;
   gint64 t_cid;
-  va_list ap;
-
-  if (n <= 0)
-    return NULL;
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
   if (!p)
@@ -404,9 +404,8 @@ mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
   p->header.opcode = GINT32_TO_LE (OP_KILL_CURSORS);
 
   t_n = GINT32_TO_LE (n);
-  t_cid = GINT64_TO_LE (cursor_ids);
-  p->data_size = sizeof (gint32) + sizeof (gint32) + sizeof (gint64) * n;
-  pos = sizeof (gint32) * 2 + sizeof (gint64);
+  p->data_size = sizeof (gint32) + sizeof (gint32) + sizeof (gint64)* n;
+  pos = sizeof (gint32) * 2;
 
   p->data = g_try_malloc (p->data_size);
   if (!p->data)
@@ -416,10 +415,8 @@ mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
     }
   memcpy (p->data, (void *)&zero, sizeof (gint32));
   memcpy (p->data + sizeof (gint32), (void *)&t_n, sizeof (gint32));
-  memcpy (p->data + sizeof (gint32) * 2, (void *)&t_cid, sizeof (gint64));
 
-  va_start (ap, cursor_ids);
-  for (i = 1; i < n; i++)
+  for (i = 1; i <= n; i++)
     {
       t_cid = va_arg (ap, gint64);
       t_cid = GINT64_TO_LE (t_cid);
@@ -427,7 +424,6 @@ mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
       memcpy (p->data + pos, (void *)&t_cid, sizeof (gint64));
       pos += sizeof (gint64);
     }
-  va_end (ap);
 
   if (!p->data)
     {
@@ -436,6 +432,22 @@ mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
     }
 
   p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data_size);
+
+  return p;
+}
+
+mongo_packet *
+mongo_wire_cmd_kill_cursors (gint32 id, gint32 n, ...)
+{
+  va_list ap;
+  mongo_packet *p;
+
+  if (n <= 0)
+    return NULL;
+
+  va_start (ap, n);
+  p = mongo_wire_cmd_kill_cursors_va (id, n, ap);
+  va_end (ap);
 
   return p;
 }

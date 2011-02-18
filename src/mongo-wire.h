@@ -270,15 +270,14 @@ mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
  * @param id is the sequence id.
  * @param ns is the namespace, the database and collection name
  * concatenaded, and separated with a single dot.
- * @param docs are the BSON documents to insert. One must close the
+ * @tparam docs are the BSON documents to insert. One must close the
  * list with a NULL value.
  *
  * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
  * anymore.
  */
-mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns,
-				     const bson *docs, ...);
+mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...);
 
 /** Flags available for the query command.
  * @see mongo_wire_cmd_query().
@@ -369,7 +368,7 @@ mongo_packet *mongo_wire_cmd_delete (gint32 id, const gchar *ns,
  *
  * @param id is the sequence id.
  * @param n is the number of cursors to delete.
- * @param cursor_ids are the ids of the cursors to delete.
+ * @tparam cursor_ids are the ids of the cursors to delete.
  *
  * @note One must supply exaclty @a n number of cursor IDs.
  *
@@ -377,8 +376,7 @@ mongo_packet *mongo_wire_cmd_delete (gint32 id, const gchar *ns,
  * responsibility of the caller to free the packet once it is not used
  * anymore.
  */
-mongo_packet *mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
-					   gint64 cursor_ids, ...);
+mongo_packet *mongo_wire_cmd_kill_cursors (gint32 id, gint32 n, ...);
 
 /** Construct a custom command.
  *
