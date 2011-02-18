@@ -84,6 +84,14 @@ typedef enum
     BSON_TYPE_MAX = 0x7f
   } bson_type;
 
+/** Return a type's stringified name.
+ *
+ * @param type is the type to stringify.
+ *
+ * @returns The stringified type, or NULL on error.
+ */
+const gchar *bson_type_as_string (bson_type type);
+
 /** Supported BSON binary subtypes.
  */
 typedef enum

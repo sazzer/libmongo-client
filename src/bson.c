@@ -33,31 +33,6 @@ struct _bson
 			or finished. */
 };
 
-static gchar *_bson_types_str[] =
-  {
-    [0] = "BSON_TYPE_NONE",
-    "BSON_TYPE_DOUBLE",
-    "BSON_TYPE_STRING",
-    "BSON_TYPE_DOCUMENT",
-    "BSON_TYPE_ARRAY",
-    "BSON_TYPE_BINARY",
-    "BSON_TYPE_UNDEFINED",
-    "BSON_TYPE_OID",
-    "BSON_TYPE_BOOLEAN",
-    "BSON_TYPE_UTC_DATETIME",
-    "BSON_TYPE_NULL",
-    "BSON_TYPE_REGEXP",
-    "BSON_TYPE_DBPOINTER",
-    "BSON_TYPE_JS_CODE",
-    "BSON_TYPE_SYMBOL",
-    "BSON_TYPE_JS_CODE_W_SCOPE",
-    "BSON_TYPE_INT32",
-    "BSON_TYPE_TIMESTAMP",
-    "BSON_TYPE_INT64",
-    [BSON_TYPE_MIN] = "BSON_TYPE_MIN",
-    [BSON_TYPE_MAX] = "BSON_TYPE_MAX",
-  };
-
 /** @internal BSON cursor structure.
  */
 struct _bson_cursor
@@ -250,6 +225,58 @@ _bson_append_int64_element (bson *b, bson_type type, const gchar *name,
 /********************
  * Public interface *
  ********************/
+
+const gchar *
+bson_type_as_string (bson_type type)
+{
+  switch (type)
+    {
+    case BSON_TYPE_NONE:
+      return "BSON_TYPE_NONE";
+    case BSON_TYPE_DOUBLE:
+      return "BSON_TYPE_DOUBLE";
+    case BSON_TYPE_STRING:
+      return "BSON_TYPE_STRING";
+    case BSON_TYPE_DOCUMENT:
+      return "BSON_TYPE_DOCUMENT";
+    case BSON_TYPE_ARRAY:
+      return "BSON_TYPE_ARRAY";
+    case BSON_TYPE_BINARY:
+      return "BSON_TYPE_BINARY";
+    case BSON_TYPE_UNDEFINED:
+      return "BSON_TYPE_UNDEFINED";
+    case BSON_TYPE_OID:
+      return "BSON_TYPE_OID";
+    case BSON_TYPE_BOOLEAN:
+      return "BSON_TYPE_BOOLEAN";
+    case BSON_TYPE_UTC_DATETIME:
+      return "BSON_TYPE_UTC_DATETIME";
+    case BSON_TYPE_NULL:
+      return "BSON_TYPE_NULL";
+    case BSON_TYPE_REGEXP:
+      return "BSON_TYPE_REGEXP";
+    case BSON_TYPE_DBPOINTER:
+      return "BSON_TYPE_DBPOINTER";
+    case BSON_TYPE_JS_CODE:
+      return "BSON_TYPE_JS_CODE";
+    case BSON_TYPE_SYMBOL:
+      return "BSON_TYPE_SYMBOL";
+    case BSON_TYPE_JS_CODE_W_SCOPE:
+      return "BSON_TYPE_JS_CODE_W_SCOPE";
+    case BSON_TYPE_INT32:
+      return "BSON_TYPE_INT32";
+    case BSON_TYPE_TIMESTAMP:
+      return "BSON_TYPE_TIMESTAMP";
+    case BSON_TYPE_INT64:
+      return "BSON_TYPE_INT64";
+    case BSON_TYPE_MIN:
+      return "BSON_TYPE_MIN";
+    case BSON_TYPE_MAX:
+      return "BSON_TYPE_MAX";
+    default:
+      return NULL;
+  }
+}
 
 bson *
 bson_new (void)
@@ -900,7 +927,7 @@ bson_cursor_type_as_string (const bson_cursor *c)
   if (!c || c->pos < sizeof (gint32))
     return NULL;
 
-  return _bson_types_str[bson_cursor_type (c)];
+  return bson_type_as_string (bson_cursor_type (c));
 }
 
 const gchar *
