@@ -1,0 +1,38 @@
+About the test suite 		-*- org -*-
+====================
+
+The test suite has two parts: the basic tests, which do not require
+anything outside of this library, and networked tests, which require a
+certain network setup if one wants to run them all.
+
+The basic tests are run as part of `make check', while to run the
+network tests, one must do a few other things:
+
+* Set up a mongodb server, and set up variables for the test suite
+
+One must set the `TEST_SERVER' variable to the "IP:PORT" of the
+mongodb server. To test host resolution aswell, one will need to set
+the `TEST_SERVER_HOST' variable aswell.
+
+For example, assuming a bourne shell:
+
+  $ TEST_SERVER="127.0.0.1:27017"; export TEST_SERVER
+  $ TEST_SERVER_HOST="localhost"; export TEST_SERVER_HOST
+  $ make full-check
+
+* Set up a mongodb server accessible via IPv6
+
+Once done, export the `TEST_SERVER_IPV6' variable, which must contain
+the address only, without the port. The port specified by
+`TEST_SERVER' will be used.
+
+  $ TEST_SERVER_IPV6="::1" export TEST_SERVER
+
+* To test replica sets, point the test suite to a secondary node
+
+First of all, one will need to set up a Replica Set (see the mongodb
+documentation for examples and a tutorial), and point the test suite
+to a *secondary* node by setting the `TEST_SECONDARY' environment
+variable:
+
+  $ TEST_SECONDARY="127.0.0.1:27018"; export TEST_SECONDARY
