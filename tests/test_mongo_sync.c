@@ -1,4 +1,4 @@
-#include "test.h"
+#include "test-network.h"
 #include "test-generator.h"
 
 #include "mongo.h"

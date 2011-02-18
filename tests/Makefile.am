@@ -39,6 +39,7 @@ LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
 EXTRA_DIST = verify-bson.py verify-bson-wrapper.sh
 
 test_srcs = test.c test.h test-generator.c test-generator.h
+test_network_srcs = ${test_srcs} test-network.h
 
 test_bson_build_base_SOURCES = test_bson_build_base.c $(test_srcs)
 test_bson_build_compound_SOURCES = test_bson_build_compound.c $(test_srcs)
@@ -50,11 +51,10 @@ test_bson_from_data_SOURCES = test_bson_from_data.c $(test_srcs)
 
 test_mongo_wire_SOURCES = test_mongo_wire.c $(test_srcs)
 
-test_mongo_client_SOURCES = test_mongo_client.c $(test_srcs)
-test_mongo_sync_SOURCES = test_mongo_sync.c $(test_srcs)
-test_mongo_slave_SOURCES = test_mongo_slave.c $(test_srcs)
-
 test_oid_SOURCES = test_oid.c $(test_srcs)
 
 test_invalid_SOURCES = test_invalid.c $(test_srcs)
 
+test_mongo_client_SOURCES = test_mongo_client.c $(test_network_srcs)
+test_mongo_sync_SOURCES = test_mongo_sync.c $(test_network_srcs)
+test_mongo_slave_SOURCES = test_mongo_slave.c $(test_network_srcs)
