@@ -28,9 +28,12 @@
  * @{
  */
 
-/** An opaque mongo connection object.
- */
-typedef struct _mongo_connection mongo_connection;
+/** Mongo Connection state object. */
+typedef struct
+{
+  gint fd; /**< The file descriptor associated with the connection. */
+  gint32 request_id; /**< The last sent command's requestID. */
+} mongo_connection;
 
 /** Connect to a MongoDB server.
  *
@@ -46,6 +49,21 @@ typedef struct _mongo_connection mongo_connection;
  * not used anymore.
  */
 mongo_connection *mongo_connect (const char *host, int port);
+
+/** Connect to a MongoDB server, using an existing connection object.
+ *
+ * Connects to a MongoDB server, but uses an existing connection
+ * object to store the connection info in.
+ *
+ * @param host is the address of the server.
+ * @param port is the port to connect to.
+ * @param conn is a pointer to an allocated mongo_connection object.
+ *
+ * @returns The conn object, or NULL on error. Upon error, the
+ * contents of the conn pointer are unspecified.
+ */
+mongo_connection *mongo_connection_new (const char *host, int port,
+					mongo_connection **conn);
 
 /** Disconnect from a MongoDB server.
  *

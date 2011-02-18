@@ -35,6 +35,50 @@
  * @{
  */
 
+/** Opaque synchronous connection object. */
+typedef struct _mongo_sync_connection mongo_sync_connection;
+
+/** Synchronously connect to a MongoDB server.
+ *
+ * Sets up a synchronous connection to a MongoDB server.
+ *
+ * @param host is the address of the server.
+ * @param port is the port to connect to.
+ * @param slaveok signals whether queries made against a slave are
+ * acceptable.
+ *
+ * @returns A newly allocated mongo_sync_connection object, or NULL on
+ * error. It is the responsibility of the caller to close and free the
+ * connection when appropriate.
+ */
+mongo_sync_connection *mongo_sync_connect (const char *host,
+					   int port,
+					   gboolean slaveok);
+
+/** Close and free a synchronous MongoDB connection.
+ *
+ * @param conn is the connection to close.
+ *
+ * @note The object will be freed, and shall not be used afterwards!
+ */
+void mongo_sync_disconnect (mongo_sync_connection *conn);
+
+/** Retrieve the state of the SLAVE_OK flag from a sync connection.
+ *
+ * @param conn is the connection to check the flag on.
+ *
+ * @returns The state of the SLAVE_OK flag.
+ */
+gboolean mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn);
+
+/** Set the SLAVE_OK flag on a sync connection.
+ *
+ * @param conn is the connection to set the flag on.
+ * @param slaveok is the state to set.
+ */
+void mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
+				  gboolean slaveok);
+
 /** Send an update command to MongoDB.
  *
  * Constructs and sends an update command to MongoDB.
@@ -49,7 +93,7 @@
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-gboolean mongo_sync_cmd_update (mongo_connection *conn,
+gboolean mongo_sync_cmd_update (mongo_sync_connection *conn,
 				const gchar *ns,
 				gint32 flags, const bson *selector,
 				const bson *update);
@@ -67,7 +111,7 @@ gboolean mongo_sync_cmd_update (mongo_connection *conn,
  * @note Unlike mongo_wire_cmd_insert(), the wrapper can only insert a
  * single document.
  */
-gboolean mongo_sync_cmd_insert (mongo_connection *conn,
+gboolean mongo_sync_cmd_insert (mongo_sync_connection *conn,
 				const gchar *ns,
 				const bson *doc);
 
@@ -87,7 +131,7 @@ gboolean mongo_sync_cmd_insert (mongo_connection *conn,
  * responsibility of the caller to free the packet once it is not used
  * anymore.
  */
-mongo_packet *mongo_sync_cmd_query (mongo_connection *conn,
+mongo_packet *mongo_sync_cmd_query (mongo_sync_connection *conn,
 				    const gchar *ns, gint32 flags,
 				    gint32 skip, gint32 ret, const bson *query,
 				    const bson *sel);
@@ -104,7 +148,7 @@ mongo_packet *mongo_sync_cmd_query (mongo_connection *conn,
  * the responsibility of the caller to free the packet once it is not
  * used anymore.
  */
-mongo_packet *mongo_sync_cmd_get_more (mongo_connection *conn,
+mongo_packet *mongo_sync_cmd_get_more (mongo_sync_connection *conn,
 				       const gchar *ns,
 				       gint32 ret, gint64 cursor_id);
 
@@ -118,7 +162,7 @@ mongo_packet *mongo_sync_cmd_get_more (mongo_connection *conn,
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-gboolean mongo_sync_cmd_delete (mongo_connection *conn, const gchar *ns,
+gboolean mongo_sync_cmd_delete (mongo_sync_connection *conn, const gchar *ns,
 				gint32 flags, const bson *sel);
 
 /** Send a kill_cursors command to MongoDB.
@@ -131,7 +175,7 @@ gboolean mongo_sync_cmd_delete (mongo_connection *conn, const gchar *ns,
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-gboolean mongo_sync_cmd_kill_cursor (mongo_connection *conn,
+gboolean mongo_sync_cmd_kill_cursor (mongo_sync_connection *conn,
 				     gint64 cursor_id);
 
 /** Send a custom command to MongoDB.
@@ -147,7 +191,7 @@ gboolean mongo_sync_cmd_kill_cursor (mongo_connection *conn,
  * the responsibility of the caller to free the packet once it is not
  * used anymore.
  */
-mongo_packet *mongo_sync_cmd_custom (mongo_connection *conn,
+mongo_packet *mongo_sync_cmd_custom (mongo_sync_connection *conn,
 				     const gchar *db,
 				     const bson *command);
 
@@ -164,7 +208,7 @@ mongo_packet *mongo_sync_cmd_custom (mongo_connection *conn,
  *
  * @returns The number of matching documents, or -1 on error.
  */
-gdouble mongo_sync_cmd_count (mongo_connection *conn,
+gdouble mongo_sync_cmd_count (mongo_sync_connection *conn,
 			      const gchar *db, const gchar *coll,
 			      const bson *query);
 
@@ -178,7 +222,7 @@ gdouble mongo_sync_cmd_count (mongo_connection *conn,
  *
  * @returns TRUE if the collection was dropped, FALSE otherwise.
  */
-gboolean mongo_sync_cmd_drop (mongo_connection *conn,
+gboolean mongo_sync_cmd_drop (mongo_sync_connection *conn,
 			      const gchar *db, const gchar *coll);
 
 /** Get the last error from MongoDB.
@@ -194,7 +238,7 @@ gboolean mongo_sync_cmd_drop (mongo_connection *conn,
  * otherwise. The output variable @a error is only set if the function
  * is returning TRUE.
  */
-gboolean mongo_sync_cmd_get_last_error (mongo_connection *conn,
+gboolean mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
 					const gchar *db, gchar **error);
 
 /** Reset the last error variable in MongoDB.
@@ -204,7 +248,7 @@ gboolean mongo_sync_cmd_get_last_error (mongo_connection *conn,
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-gboolean mongo_sync_cmd_reset_error (mongo_connection *conn,
+gboolean mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
 				     const gchar *db);
 
 /** @} */

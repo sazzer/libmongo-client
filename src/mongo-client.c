@@ -33,13 +33,6 @@
 
 static const int one = 1;
 
-/** @internal Mongo Connection state object. */
-struct _mongo_connection
-{
-  gint fd; /**< The file descriptor associated with the connection. */
-  gint32 request_id; /**< The last sent command's requestID. */
-};
-
 static int
 unset_nonblock (int fd)
 {
@@ -60,12 +53,11 @@ unset_nonblock (int fd)
 }
 
 mongo_connection *
-mongo_connect (const char *host, int port)
+_mongo_connect (const char *host, int port, mongo_connection *c)
 {
   struct addrinfo *res, *r;
   struct addrinfo hints;
   int e, fd = -1;
-  mongo_connection *c;
   gchar *port_s;
 
   memset (&hints, 0, sizeof (hints));
@@ -106,13 +98,27 @@ mongo_connect (const char *host, int port)
       return NULL;
     }
 
-  c = (mongo_connection *)g_try_new0 (mongo_connection, 1);
-  if (!c)
-    return NULL;
-
   c->fd = fd;
 
   return c;
+}
+
+mongo_connection *
+mongo_connect (const gchar *host, int port)
+{
+  mongo_connection *conn;
+
+  conn = g_try_new0 (mongo_connection, 1);
+  if (!conn)
+    return NULL;
+  return _mongo_connect (host, port, conn);
+}
+
+mongo_connection *
+mongo_connection_new (const char *host, int port,
+		      mongo_connection **conn)
+{
+  return _mongo_connect (host, port, *conn);
 }
 
 void
