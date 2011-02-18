@@ -83,3 +83,40 @@ mongo_util_oid_new (gint32 seq)
 {
   return mongo_util_oid_new_with_time (time (NULL), seq);
 }
+
+gboolean
+mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
+{
+  gchar *port_s, *ep;
+
+  if (!addr)
+    {
+      *host = NULL;
+      *port = -1;
+      return FALSE;
+    }
+
+  /* Split up to host:port */
+  port_s = g_strrstr (addr, ":");
+  if (!port_s)
+    return FALSE;
+  port_s++;
+  *host = g_strndup (addr, port_s - addr - 1);
+
+  *port = strtol (port_s, &ep, 10);
+  if (*port == LONG_MIN || *port == LONG_MAX)
+    {
+      g_free (*host);
+      *host = NULL;
+      *port = -1;
+      return FALSE;
+    }
+  if (ep && *ep)
+    {
+      g_free (*host);
+      *host = NULL;
+      *port = -1;
+      return FALSE;
+    }
+  return TRUE;
+}

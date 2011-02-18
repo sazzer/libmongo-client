@@ -119,16 +119,13 @@ gboolean mongo_sync_cmd_update (mongo_sync_connection *conn,
  *
  * @param conn is the connection to work with.
  * @param ns is the namespace to work in.
- * @param doc is the document to insert.
+ * @tparam docs are the documents to insert. One must close the list
+ * with a NULL value.
  *
  * @returns TRUE on success, FALSE otherwise.
- *
- * @note Unlike mongo_wire_cmd_insert(), the wrapper can only insert a
- * single document.
  */
 gboolean mongo_sync_cmd_insert (mongo_sync_connection *conn,
-				const gchar *ns,
-				const bson *doc);
+				const gchar *ns, ...);
 
 /** Send a query command to MongoDB.
  *
@@ -183,15 +180,15 @@ gboolean mongo_sync_cmd_delete (mongo_sync_connection *conn, const gchar *ns,
 /** Send a kill_cursors command to MongoDB.
  *
  * @param conn is the connection to work with.
- * @param cursor_id is the cursor to kill.
+ * @param n is the number of cursors to kill.
+ * @tparam cursor_ids is the list of cursor ids to kill.
  *
- * @note Unlike mongo_wire_cmd_kill_cursors(), this function can only
- * kill one cursors at a time.
+ * @note One must supply exaclty @a n number of cursor IDs.
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-gboolean mongo_sync_cmd_kill_cursor (mongo_sync_connection *conn,
-				     gint64 cursor_id);
+gboolean mongo_sync_cmd_kill_cursors (mongo_sync_connection *conn,
+				      gint32 n, ...);
 
 /** Send a custom command to MongoDB.
  *

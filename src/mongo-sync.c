@@ -15,6 +15,7 @@
  */
 
 #include "mongo.h"
+#include "libmongo-private.h"
 
 #include <stdlib.h>
 
@@ -205,18 +206,20 @@ mongo_sync_cmd_update (mongo_sync_connection *conn,
 
 gboolean
 mongo_sync_cmd_insert (mongo_sync_connection *conn,
-		       const char *ns,
-		       const bson *doc)
+		       const char *ns, ...)
 {
   mongo_packet *p;
   gint32 rid;
+  va_list ap;
 
-  if (!conn)
+  if (!conn || !ns)
     return FALSE;
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
-  p = mongo_wire_cmd_insert (rid, ns, doc, NULL);
+  va_start (ap, ns);
+  p = mongo_wire_cmd_insert_va (rid, ns, ap);
+  va_end (ap);
   if (!p)
     return FALSE;
 
@@ -373,18 +376,21 @@ mongo_sync_cmd_delete (mongo_sync_connection *conn, const gchar *ns,
 }
 
 gboolean
-mongo_sync_cmd_kill_cursor (mongo_sync_connection *conn,
-			    gint64 cursor_id)
+mongo_sync_cmd_kill_cursors (mongo_sync_connection *conn,
+			     gint32 n, ...)
 {
   mongo_packet *p;
   gint32 rid;
+  va_list ap;
 
-  if (!conn)
+  if (!conn || n <= 0)
     return FALSE;
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
-  p = mongo_wire_cmd_kill_cursors (rid, 1, cursor_id);
+  va_start (ap, n);
+  p = mongo_wire_cmd_kill_cursors_va (rid, n, ap);
+  va_end (ap);
   if (!p)
     return FALSE;
 

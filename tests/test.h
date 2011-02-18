@@ -8,44 +8,12 @@
 static gchar *current_test __attribute__((unused)) = NULL;
 static gint current_test_no __attribute__((unused)) = 0;
 
-#ifndef TEST_SERVER_IP
-#define TEST_SERVER_IP "127.0.0.1"
-#endif
-
-#ifndef TEST_SERVER_IPV6
-#define TEST_SERVER_IPV6 "::1"
-#endif
-
-#ifndef TEST_SERVER_HOST
-#define TEST_SERVER_HOST "localhost"
-#endif
-
-#ifndef TEST_SERVER_PORT
-#define TEST_SERVER_PORT 27017
-#endif
-
-#ifndef TEST_ARBITER_IP
-#define TEST_ARBITER_IP "127.0.0.1"
-#endif
-
-#ifndef TEST_ARBITER_PORT
-#define TEST_ARBITER_PORT 30000
-#endif
-
 #ifndef TEST_SERVER_DB
 #define TEST_SERVER_DB "test"
 #endif
 
 #ifndef TEST_SERVER_COLLECTION
 #define TEST_SERVER_COLLECTION "libmongo"
-#endif
-
-#ifndef TEST_SECONDARY_IP
-#define TEST_SECONDARY_IP "127.0.0.1"
-#endif
-
-#ifndef TEST_SECONDARY_PORT
-#define TEST_SECONDARY_PORT 27018
 #endif
 
 #define TEST_SERVER_NS TEST_SERVER_DB "." TEST_SERVER_COLLECTION
