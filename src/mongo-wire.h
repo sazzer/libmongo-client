@@ -387,6 +387,8 @@ mongo_packet *mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
  *
  * @param id is the sequence id.
  * @param db is the database in which the command shall be run.
+ * @param flags are the query flags. See mongo_wire_cmd_query() for a
+ * list.
  * @param command is the BSON object representing the command.
  *
  * @returns A newly allocated packet, or NULL on error. It is the
@@ -394,6 +396,7 @@ mongo_packet *mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
  * anymore.
  */
 mongo_packet *mongo_wire_cmd_custom (gint32 id, const gchar *db,
+				     gint32 flags,
 				     const bson *command);
 
 /** @} */

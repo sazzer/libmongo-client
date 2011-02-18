@@ -119,7 +119,7 @@ test_mongo_client_recv_custom (void)
   bson_append_int32 (cmd, "getnonce", 1);
   bson_finish (cmd);
 
-  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, 0, cmd);
   g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);
@@ -177,7 +177,7 @@ test_mongo_client_reply_parse (void)
   bson_append_int32 (cmd, "getnonce", 1);
   bson_finish (cmd);
 
-  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, 0, cmd);
   g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);
@@ -393,7 +393,7 @@ test_mongo_client_drop (void)
   bson_append_string (cmd, "drop", TEST_SERVER_COLLECTION, -1);
   bson_finish (cmd);
 
-  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd);
+  p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, 0, cmd);
   g_assert (mongo_packet_send (conn, p));
   mongo_wire_packet_free (p);
   bson_free (cmd);

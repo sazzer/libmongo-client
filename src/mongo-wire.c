@@ -441,7 +441,8 @@ mongo_wire_cmd_kill_cursors (gint32 id, gint32 n,
 }
 
 mongo_packet *
-mongo_wire_cmd_custom (gint32 id, const gchar *db, const bson *command)
+mongo_wire_cmd_custom (gint32 id, const gchar *db, gint32 flags,
+		       const bson *command)
 {
   mongo_packet *p;
   gchar *ns;
@@ -465,7 +466,7 @@ mongo_wire_cmd_custom (gint32 id, const gchar *db, const bson *command)
     }
   bson_finish (empty);
 
-  p = mongo_wire_cmd_query (id, ns, 0, 0, 1, command, empty);
+  p = mongo_wire_cmd_query (id, ns, flags, 0, 1, command, empty);
   g_free (ns);
   bson_free (empty);
   return p;
