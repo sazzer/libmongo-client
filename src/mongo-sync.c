@@ -53,9 +53,8 @@ mongo_sync_connect_to_master (mongo_sync_connection *conn)
   bson_cursor *c;
   gboolean b;
   const gchar *primary;
-  const gchar *port_s;
-  gchar *host, *ep = NULL;
-  glong port;
+  gchar *host;
+  gint port;
   mongo_sync_connection *nc;
 
   if (!conn)
@@ -113,28 +112,8 @@ mongo_sync_connect_to_master (mongo_sync_connection *conn)
     }
   g_free (c);
 
-  /* Split up to host:port */
-  port_s = g_strrstr (primary, ":");
-  if (!port_s)
+  if (!mongo_util_parse_addr (primary, &host, &port))
     {
-      bson_free (res);
-      mongo_sync_disconnect (conn);
-      return NULL;
-    }
-  port_s++;
-  host = g_strndup (primary, port_s - primary - 1);
-
-  port = strtol (port_s, &ep, 10);
-  if (port == LONG_MIN || port == LONG_MAX)
-    {
-      g_free (host);
-      bson_free (res);
-      mongo_sync_disconnect (conn);
-      return NULL;
-    }
-  if (ep && *ep)
-    {
-      g_free (host);
       bson_free (res);
       mongo_sync_disconnect (conn);
       return NULL;
