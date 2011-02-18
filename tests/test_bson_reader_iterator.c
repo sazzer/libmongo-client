@@ -89,7 +89,7 @@ test_bson_reader_iterate_flat (void)
   g_assert (!bson_cursor_next (c));
   PASS ();
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (b);
 
   return TRUE;
@@ -119,7 +119,7 @@ test_bson_reader_iterate_nested (void)
   g_assert (!bson_cursor_next (c));
   PASS ();
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (b);
 
   return TRUE;

@@ -52,7 +52,7 @@ test_mongo_wire_update (void)
 
   g_assert ((c = bson_find (sel, "_id")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_NULL);
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (sel);
 
   pos += (gint32)data[pos];
@@ -65,7 +65,7 @@ test_mongo_wire_update (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_ARRAY);
   g_assert (!bson_cursor_next (c));
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (upd);
   mongo_wire_packet_free (p);
 
@@ -110,7 +110,7 @@ test_mongo_wire_insert ()
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_ARRAY);
   g_assert (!bson_cursor_next (c));
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (ins);
   mongo_wire_packet_free (p);
 
@@ -157,7 +157,7 @@ test_mongo_wire_query ()
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_ARRAY);
   g_assert (!bson_cursor_next (c));
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (q);
 
   pos += (gint32)data[pos];
@@ -169,7 +169,7 @@ test_mongo_wire_query ()
   g_assert (bson_cursor_next (c));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_BOOLEAN);
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (s);
   mongo_wire_packet_free (p);
 
@@ -238,7 +238,7 @@ test_mongo_wire_setters (void)
   g_assert (bson_cursor_next (c));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_BOOLEAN);
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (f);
   g_free (wdata);
   mongo_wire_packet_free (p);
@@ -319,7 +319,7 @@ test_mongo_wire_delete (void)
   g_assert (bson_cursor_next (c));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_BOOLEAN);
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (s);
 
   mongo_wire_packet_free (p);
@@ -408,7 +408,7 @@ test_mongo_wire_custom ()
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_INT32);
   g_assert (!bson_cursor_next (c));
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (cmd);
   mongo_wire_packet_free (p);
 

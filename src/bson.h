@@ -517,6 +517,12 @@ bson_cursor *bson_cursor_new (const bson *b);
  */
 bson_cursor *bson_find (const bson *b, const gchar *name);
 
+/** Delete a cursor, and free up all resources used by it.
+ *
+ * @param c is the cursor to free.
+ */
+void bson_cursor_free (bson_cursor *c);
+
 /** Position the cursor to the next key.
  *
  * @param c is the cursor to move forward.
