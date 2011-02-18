@@ -18,6 +18,8 @@ typedef struct
   gchar *output;
   gchar *ns;
   gboolean verbose;
+  gboolean slaveok;
+  gboolean master_sync;
 } config_t;
 
 #define VLOG(...) { if (config->verbose) fprintf (stderr, __VA_ARGS__); }
@@ -68,7 +70,7 @@ mongo_dump (config_t *config)
   VLOG ("Connecting to %s:%d/%s.%s...\n", config->host, config->port,
 	config->db, config->coll);
 
-  conn = mongo_sync_connect (config->host, config->port, TRUE);
+  conn = mongo_sync_connect (config->host, config->port, config->slaveok);
   if (!conn)
     {
       fprintf (stderr, "Error connecting to %s:%d: %s\n", config->host,
@@ -76,13 +78,16 @@ mongo_dump (config_t *config)
       exit (1);
     }
 
-  VLOG ("Syncing to master...\n");
-  conn = mongo_sync_connect_to_master (conn);
-  if (!conn)
+  if (config->master_sync)
     {
-      fprintf (stderr, "Error reconnecting to the master of %s:%d: %s\n",
-	       config->host, config->port, strerror (errno));
-      exit (1);
+      VLOG ("Syncing to master...\n");
+      conn = mongo_sync_connect_to_master (conn);
+      if (!conn)
+	{
+	  fprintf (stderr, "Error reconnecting to the master of %s:%d: %s\n",
+		   config->host, config->port, strerror (errno));
+	  exit (1);
+	}
     }
 
   VLOG ("Counting documents...\n");
@@ -166,7 +171,7 @@ main (int argc, char *argv[])
   GError *error = NULL;
   GOptionContext *context;
   config_t config = {
-    NULL, 27017, NULL, NULL, NULL, NULL, FALSE
+    NULL, 27017, NULL, NULL, NULL, NULL, FALSE, FALSE, FALSE
   };
 
   GOptionEntry entries[] =
@@ -180,6 +185,10 @@ main (int argc, char *argv[])
 	"Be verbose", NULL },
       { "output", 'o', 0, G_OPTION_ARG_STRING, &config.output,
 	"Output", "FILENAME" },
+      { "slave-ok", 's', 0, G_OPTION_ARG_NONE, &config.slaveok,
+	"Connecting to slaves is ok", NULL },
+      { "master-sync", 'm', 0, G_OPTION_ARG_NONE, &config.master_sync,
+	"Reconnect to the replica master", NULL },
       { NULL }
     };
 
