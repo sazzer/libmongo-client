@@ -15,6 +15,7 @@
  */
 
 #include "mongo.h"
+#include "libmongo-private.h"
 
 /** @internal Synchronous connection object. */
 struct _mongo_sync_connection

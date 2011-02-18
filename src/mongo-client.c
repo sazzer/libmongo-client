@@ -17,6 +17,7 @@
 #include "mongo-client.h"
 #include "bson.h"
 #include "mongo-wire.h"
+#include "libmongo-private.h"
 
 #include <glib.h>
 
