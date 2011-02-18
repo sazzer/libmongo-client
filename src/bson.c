@@ -33,6 +33,31 @@ struct _bson
 			or finished. */
 };
 
+static gchar *_bson_types_str[] =
+  {
+    [0] = "BSON_TYPE_NONE",
+    "BSON_TYPE_DOUBLE",
+    "BSON_TYPE_STRING",
+    "BSON_TYPE_DOCUMENT",
+    "BSON_TYPE_ARRAY",
+    "BSON_TYPE_BINARY",
+    "BSON_TYPE_UNDEFINED",
+    "BSON_TYPE_OID",
+    "BSON_TYPE_BOOLEAN",
+    "BSON_TYPE_UTC_DATETIME",
+    "BSON_TYPE_NULL",
+    "BSON_TYPE_REGEXP",
+    "BSON_TYPE_DBPOINTER",
+    "BSON_TYPE_JS_CODE",
+    "BSON_TYPE_SYMBOL",
+    "BSON_TYPE_JS_CODE_W_SCOPE",
+    "BSON_TYPE_INT32",
+    "BSON_TYPE_TIMESTAMP",
+    "BSON_TYPE_INT64",
+    [BSON_TYPE_MIN] = "BSON_TYPE_MIN",
+    [BSON_TYPE_MAX] = "BSON_TYPE_MAX",
+  };
+
 /** @internal BSON cursor structure.
  */
 struct _bson_cursor
@@ -867,6 +892,15 @@ bson_cursor_type (const bson_cursor *c)
     return BSON_TYPE_NONE;
 
   return (bson_type)(bson_data (c->obj)[c->pos]);
+}
+
+const gchar *
+bson_cursor_type_as_string (const bson_cursor *c)
+{
+  if (!c || c->pos < sizeof (gint32))
+    return NULL;
+
+  return _bson_types_str[bson_cursor_type (c)];
 }
 
 const gchar *
