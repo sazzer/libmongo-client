@@ -69,6 +69,8 @@ mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
   conn->slaveok = slaveok;
 }
 
+#define _SLAVE_FLAG(c) ((c->slaveok) ? MONGO_WIRE_FLAG_QUERY_SLAVE_OK : 0)
+
 gboolean
 mongo_sync_cmd_update (mongo_sync_connection *conn,
 		       const gchar *ns,
@@ -139,7 +141,8 @@ mongo_sync_cmd_query (mongo_sync_connection *conn,
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
-  p = mongo_wire_cmd_query (rid, ns, flags, skip, ret, query, sel);
+  p = mongo_wire_cmd_query (rid, ns, flags | _SLAVE_FLAG (conn),
+			    skip, ret, query, sel);
   if (!p)
     return NULL;
 
@@ -305,7 +308,7 @@ mongo_sync_cmd_custom (mongo_sync_connection *conn,
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
-  p = mongo_wire_cmd_custom (rid, db, 0, command);
+  p = mongo_wire_cmd_custom (rid, db, _SLAVE_FLAG (conn), command);
   if (!p)
     return NULL;
 
