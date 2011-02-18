@@ -1,4 +1,5 @@
 #include "test-network.h"
+#include "mongo-utils.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -11,49 +12,12 @@ gint TEST_SERVER_PORT;
 gchar *TEST_SECONDARY_IP;
 gint TEST_SECONDARY_PORT;
 
-static gboolean
-_parse_addr (const gchar *addr, gchar **host, gint *port)
-{
-  gchar *port_s, *ep;
-
-  if (!addr)
-    {
-      *host = NULL;
-      *port = -1;
-      return FALSE;
-    }
-
-  /* Split up to host:port */
-  port_s = g_strrstr (addr, ":");
-  if (!port_s)
-    return FALSE;
-  port_s++;
-  *host = g_strndup (addr, port_s - addr - 1);
-
-  *port = strtol (port_s, &ep, 10);
-  if (*port == LONG_MIN || *port == LONG_MAX)
-    {
-      g_free (*host);
-      *host = NULL;
-      *port = -1;
-      return FALSE;
-    }
-  if (ep && *ep)
-    {
-      g_free (*host);
-      *host = NULL;
-      *port = -1;
-      return FALSE;
-    }
-  return TRUE;
-}
-
 gboolean
 test_getenv_server (void)
 {
   gchar *addr = getenv ("TEST_SERVER");
 
-  return _parse_addr (addr, &TEST_SERVER_IP, &TEST_SERVER_PORT);
+  return mongo_util_parse_addr (addr, &TEST_SERVER_IP, &TEST_SERVER_PORT);
 }
 
 gboolean
@@ -76,7 +40,8 @@ test_getenv_secondary (void)
 {
   gchar *addr = getenv ("TEST_SECONDARY");
 
-  return _parse_addr (addr, &TEST_SECONDARY_IP, &TEST_SECONDARY_PORT);
+  return mongo_util_parse_addr (addr, &TEST_SECONDARY_IP,
+				&TEST_SECONDARY_PORT);
 }
 
 void
