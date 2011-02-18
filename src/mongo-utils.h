@@ -78,6 +78,24 @@ guint8 *mongo_util_oid_new (gint32 seq);
  */
 guint8 *mongo_util_oid_new_with_time (gint32 time, gint32 seq);
 
+/** Parse a HOST:IP pair.
+ *
+ * Given a HOST:IP pair, split it up into a host and a port. IPv6
+ * addresses supported, the function cuts at the last ":".
+ *
+ * @param addr is the address to split.
+ * @param host is a pointer to a string where the host part will be
+ * stored.
+ * @param port is a pointer to an integer, where the port part will be
+ * stored.
+ *
+ * @returns TRUE on success, FALSE otherwise. The @a host parameter
+ * will contain a newly allocated string on succes. On failiure, host
+ * will be set to NULL, and port to -1.
+ */
+gboolean mongo_util_parse_addr (const gchar *addr, gchar **host,
+				gint *port);
+
 /** @} */
 
 #endif
