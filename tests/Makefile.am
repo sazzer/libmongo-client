@@ -13,15 +13,25 @@ HARNESS_TESTS = ${srcdir}/verify-bson-wrapper.sh \
 		./test_bson_builder \
 		./test_bson_reader_base ./test_bson_reader_iterator ./test_bson_from_data \
 		./test_mongo_wire \
-		./test_mongo_client ./test_mongo_sync ./test_mongo_slave \
 		./test_oid \
 		./test_invalid
 
+NETWORK_TESTS = ./test_mongo_client ./test_mongo_sync ./test_mongo_slave
+
 check: check-am
-	${MAKE} ${AM_MAKEFLAGS} check-HARNESS
+	@${MAKE} ${AM_MAKEFLAGS} check-HARNESS
 
 check-HARNESS: ${srcdir}/verify-bson-wrapper.sh
-	srcdir=${srcdir} prove -e '' ${PROVE_OPTIONS} ${HARNESS_TESTS}
+	$(AM_V_GEN)srcdir=${srcdir} prove -e '' ${PROVE_OPTIONS} ${HARNESS_TESTS}
+
+full-check: check-am
+	@${MAKE} ${AM_MAKEFLAGS} check-FULL-HARNESS
+
+check-FULL-HARNESS: ${srcdir}/verify-bson-wrapper.sh
+check-FULL-HARNESS: HARNESS_TESTS+=${NETWORK_TESTS}
+check-FULL-HARNESS: check-HARNESS
+
+.PHONY: check-HARNESS full-check check-FULL-HARNESS
 
 AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
