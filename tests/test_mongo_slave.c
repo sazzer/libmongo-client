@@ -58,7 +58,7 @@ test_mongo_slave_cmd_count (void)
   gdouble cnt;
   mongo_sync_connection *conn;
 
-  TEST (mongo_sync.cmd_count);
+  TEST (mongo_slave.cmd_count);
   conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
   g_assert (conn);
 
@@ -66,6 +66,24 @@ test_mongo_slave_cmd_count (void)
 			      NULL);
   
   g_assert_cmpint (cnt, >, 0);
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
+test_mongo_slave_fail (void)
+{
+  gdouble cnt;
+  mongo_sync_connection *conn;
+
+  TEST (mongo_slave.fail);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
+  g_assert (conn);
+
+  cnt = mongo_sync_cmd_count (conn, TEST_SERVER_DB, TEST_SERVER_COLLECTION,
+			      NULL);
+  g_assert_cmpint (cnt, ==, -1);
 
   mongo_sync_disconnect (conn);
   PASS ();
@@ -89,10 +107,11 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (3);
+  do_plan (4);
 
   test_mongo_slave_setup ();
   test_mongo_slave_cmd_count ();
+  test_mongo_slave_fail ();
   test_mongo_slave_teardown ();
 
   return 0;
