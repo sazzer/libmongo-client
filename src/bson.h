@@ -84,6 +84,14 @@ typedef enum
     BSON_TYPE_MAX = 0x7f
   } bson_type;
 
+/** Return a type's stringified name.
+ *
+ * @param type is the type to stringify.
+ *
+ * @returns The stringified type, or NULL on error.
+ */
+const gchar *bson_type_as_string (bson_type type);
+
 /** Supported BSON binary subtypes.
  */
 typedef enum
@@ -538,6 +546,17 @@ gboolean bson_cursor_next (bson_cursor *c);
  * @returns The type of the element, or #BSON_TYPE_NONE on error.
  */
 bson_type bson_cursor_type (const bson_cursor *c);
+
+/** Retrieve the type of the current element, as string.
+ *
+ * @param c is the cursor pointing at the appropriate element.
+ *
+ * @returns The type of the element, as string, or NULL on error.
+ *
+ * @note The string points to an internal structure, it should not be
+ * freed or modified.
+ */
+const gchar *bson_cursor_type_as_string (const bson_cursor *c);
 
 /** Determine the name of the current elements key.
  *
