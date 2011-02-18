@@ -388,7 +388,7 @@ test_mongo_wire_custom ()
   bson_append_int32 (cmd, "getnonce", 1);
   bson_finish (cmd);
 
-  g_assert ((p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, cmd)));
+  g_assert ((p = mongo_wire_cmd_custom (1, TEST_SERVER_DB, 0, cmd)));
   bson_free (cmd);
 
   g_assert (mongo_wire_packet_get_header (p, &hdr));

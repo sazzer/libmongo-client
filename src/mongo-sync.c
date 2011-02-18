@@ -252,7 +252,7 @@ mongo_sync_cmd_custom (mongo_connection *conn,
 
   rid = mongo_connection_get_requestid (conn) + 1;
 
-  p = mongo_wire_cmd_custom (rid, db, command);
+  p = mongo_wire_cmd_custom (rid, db, 0, command);
   if (!p)
     return NULL;
 
