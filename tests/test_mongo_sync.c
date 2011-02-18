@@ -101,7 +101,7 @@ test_mongo_sync_cmd_query (void)
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 1984);
   bson_free (doc);
-  g_free (c);
+  bson_cursor_free (c);
 
   mongo_wire_packet_free (p);
 
@@ -168,12 +168,12 @@ test_mongo_sync_cmd_get_more (void)
   g_assert ((c = bson_find (doc, "int32")));
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 1984);
-  g_free (c);
+  bson_cursor_free (c);
 
   g_assert ((c = bson_find (doc, "seq")));
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 3);
-  g_free (c);
+  bson_cursor_free (c);
 
   bson_free (doc);
 
@@ -222,7 +222,7 @@ test_mongo_sync_cmd_delete (void)
   bson_finish (b);
   g_assert ((c = bson_find (b, "sync_delete_seq")));
   g_assert (bson_cursor_get_int32 (c, &i));
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (b);
   mongo_wire_packet_free (p);
 
@@ -311,12 +311,12 @@ test_mongo_sync_cmd_custom (void)
   g_assert ((c = bson_find (b, "ok")));
   g_assert (bson_cursor_get_double (c, &ok));
   g_assert (ok == 1);
-  g_free (c);
+  bson_cursor_free (c);
 
   g_assert ((c = bson_find (b, "nonce")));
   g_assert (bson_cursor_get_string (c, &nonce));
   printf (" # nonce: %s\n", nonce);
-  g_free (c);
+  bson_cursor_free (c);
 
   bson_free (b);
   mongo_wire_packet_free (p);

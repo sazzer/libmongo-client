@@ -305,10 +305,10 @@ _mongo_sync_check_ok (bson *b)
     return FALSE;
   if (!bson_cursor_get_double (c, &d))
     {
-      g_free (c);
+      bson_cursor_free (c);
       return FALSE;
     }
-  g_free (c);
+  bson_cursor_free (c);
   return (d == 1);
 }
 
@@ -359,10 +359,10 @@ mongo_sync_cmd_count (mongo_connection *conn,
   if (!bson_cursor_get_double (c, &d))
     {
       bson_free (cmd);
-      g_free (c);
+      bson_cursor_free (c);
       return -1;
     }
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (cmd);
 
   return d;
@@ -449,7 +449,7 @@ mongo_sync_cmd_get_last_error (mongo_connection *conn,
     {
       *error = NULL;
       bson_free (cmd);
-      g_free (c);
+      bson_cursor_free (c);
       return TRUE;
     }
   else if (bson_cursor_type (c) == BSON_TYPE_STRING)
@@ -457,11 +457,11 @@ mongo_sync_cmd_get_last_error (mongo_connection *conn,
       bson_cursor_get_string (c, &err);
       *error = g_strdup (err);
       bson_free (cmd);
-      g_free (c);
+      bson_cursor_free (c);
       return TRUE;
     }
   bson_free (cmd);
-  g_free (c);
+  bson_cursor_free (c);
   return FALSE;
 }
 

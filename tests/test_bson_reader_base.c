@@ -26,7 +26,7 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
   g_assert (bson_cursor_get_string (c, &s));
   g_assert_cmpstr (s, ==, "world");
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reder_find_boolean_true);
@@ -34,13 +34,13 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_BOOLEAN);
   g_assert (bson_cursor_get_boolean (c, &bool));
   g_assert (bool == TRUE);
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reader_find_null);
   g_assert ((c = bson_find (b, "null")));
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_NULL);
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reader_find_int32);
@@ -48,7 +48,7 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_INT32);
   g_assert (bson_cursor_get_int32 (c, &i));
   g_assert_cmpint (i, ==, 1984);
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reader_find_boolean_false);
@@ -56,7 +56,7 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_BOOLEAN);
   g_assert (bson_cursor_get_boolean (c, &bool));
   g_assert (bool == FALSE);
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reader_find_string_2);
@@ -64,7 +64,7 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
   g_assert (bson_cursor_get_string (c, &s));
   g_assert_cmpstr (s, ==, "cruel world");
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reader_find_date);
@@ -72,7 +72,7 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_UTC_DATETIME);
   g_assert (bson_cursor_get_utc_datetime (c, &l));
   g_assert_cmpint (l, ==, 1294860709000);
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reader_find_double);
@@ -80,7 +80,7 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_DOUBLE);
   g_assert (bson_cursor_get_double (c, &d));
   g_assert_cmpfloat (d, ==, 3.14);
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST (bson_reader_find_int64);
@@ -88,7 +88,7 @@ test_bson_reader_flat (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_INT64);
   g_assert (bson_cursor_get_int64 (c, &l));
   g_assert_cmpint (l, ==, 9876543210);
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   bson_free (b);
@@ -121,7 +121,7 @@ test_bson_reader_nested (void)
     g_assert_cmpint (bson_cursor_type (c2), ==, BSON_TYPE_STRING);
     g_assert (bson_cursor_get_string (c2, &s));
     g_assert_cmpstr (s, ==, "V.A. Lucky");
-    g_free (c2);
+    bson_cursor_free (c2);
     PASS ();
 
     TEST (bson_reader_complex_find_user.id);
@@ -129,11 +129,11 @@ test_bson_reader_nested (void)
     g_assert_cmpint (bson_cursor_type (c2), ==, BSON_TYPE_INT32);
     g_assert (bson_cursor_get_int32 (c2, &i));
     g_assert_cmpint (i, ==, 12345);
-    g_free (c2);
+    bson_cursor_free (c2);
     PASS ();
   }
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (t);
 
   TEST (bson_reader_complex_find_posts);
@@ -160,7 +160,7 @@ test_bson_reader_nested (void)
       PASS ();
     }
 
-    g_free (c2);
+    bson_cursor_free (c2);
     bson_free (d);
 
     TEST (bson_reader_complex_find_posts.0);
@@ -188,19 +188,19 @@ test_bson_reader_nested (void)
 	g_assert_cmpint (bson_cursor_type (c4), ==, BSON_TYPE_STRING);
 	g_assert (bson_cursor_get_string (c4, &s));
 	g_assert_cmpstr (s, ==, "last!");
-	g_free (c4);
+	bson_cursor_free (c4);
 	PASS ();
       }
 
-      g_free (c3);
+      bson_cursor_free (c3);
       bson_free (a);
     }
 
-    g_free (c2);
+    bson_cursor_free (c2);
     bson_free (d);
   }
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (b);
 
   return TRUE;
@@ -224,7 +224,7 @@ test_bson_reader_regexp (void)
   g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_STRING);
   g_assert (bson_cursor_get_string (c, &str));
   g_assert_cmpstr (str, ==, "test2");
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST(bson_reader_regexp.read);
@@ -233,7 +233,7 @@ test_bson_reader_regexp (void)
   g_assert (bson_cursor_get_regex (c, &regexp, &flags));
   g_assert_cmpstr (regexp, ==, "foo.*bar");
   g_assert_cmpstr (flags, ==, "i");
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   return TRUE;
@@ -262,7 +262,7 @@ test_bson_reader_binary (void)
   g_assert_cmpint (subtype, ==, BSON_BINARY_SUBTYPE_GENERIC);
   g_assert_cmpint (size, ==, 7);
   g_assert (!memcmp (binary, "foo\0bar", 7));
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   TEST(bson_reader_binary.2);
@@ -272,7 +272,7 @@ test_bson_reader_binary (void)
   g_assert_cmpint (subtype, ==, BSON_BINARY_SUBTYPE_BINARY);
   g_assert_cmpint (size, ==, 11);
   g_assert (!memcmp (binary, "\0\0\0\7foo\0bar", 11));
-  g_free (c);
+  bson_cursor_free (c);
   PASS ();
 
   return TRUE;
@@ -311,7 +311,7 @@ test_bson_reader_huge (void)
   ds2 = bson_size (b);
   g_assert_cmpint (ds1, ==, ds2);
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (b);
   bson_free (s);
   PASS();

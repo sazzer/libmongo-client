@@ -729,6 +729,12 @@ bson_cursor_new (const bson *b)
   return c;
 }
 
+void
+bson_cursor_free (bson_cursor *c)
+{
+  g_free (c);
+}
+
 /** @internal Reads out the 32-bit documents size from a bytestream.
  */
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&(doc)[pos]))

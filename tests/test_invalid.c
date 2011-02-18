@@ -80,7 +80,7 @@ test_invalid_bson_cursor ()
   g_assert ((c = bson_find (b, "hello")));
   PASS ();
 
-  g_free (c);
+  bson_cursor_free (c);
 
   TEST (bson_invalid_cursor_type);
   g_assert ((c = bson_cursor_new (b)));
@@ -99,7 +99,7 @@ test_invalid_bson_cursor ()
   g_assert (bson_cursor_get_string (c, NULL) == FALSE);
   PASS ();
 
-  g_free (c);
+  bson_cursor_free (c);
   bson_free (b);
 }
 
