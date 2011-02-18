@@ -64,7 +64,7 @@ test_mongo_slave_cmd_count (void)
 
   cnt = mongo_sync_cmd_count (conn, TEST_SERVER_DB, TEST_SERVER_COLLECTION,
 			      NULL);
-  
+
   g_assert_cmpint (cnt, >, 0);
 
   mongo_sync_disconnect (conn);
@@ -94,10 +94,14 @@ do_plan (int max)
 {
   mongo_sync_connection *conn;
 
+  if (!test_getenv_server ())
+    SKIP_ALL ("TEST_SERVER variable not set");
+  if (!test_getenv_secondary ())
+    SKIP_ALL ("TEST_SECONDARY variable not set");
+
   conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
   if (!conn)
-    SKIP_ALL ("cannot connect to mongodb; host="
-	      TEST_SECONDARY_IP);
+    SKIP_ALL ("cannot connect to mongodb");
 
   PLAN (1, max);
   mongo_sync_disconnect (conn);
@@ -113,6 +117,8 @@ main (void)
   test_mongo_slave_cmd_count ();
   test_mongo_slave_fail ();
   test_mongo_slave_teardown ();
+
+  test_env_free ();
 
   return 0;
 }

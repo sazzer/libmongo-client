@@ -435,10 +435,12 @@ do_plan (int max)
 {
   mongo_connection *conn;
 
+  if (!test_getenv_server ())
+    SKIP_ALL ("TEST_SERVER variable not set");
+
   conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
   if (!conn)
-    SKIP_ALL ("cannot connect to mongodb; host="
-	      TEST_SERVER_IP);
+    SKIP_ALL ("cannot connect to mongodb");
 
   PLAN (1, max);
   mongo_disconnect (conn);
@@ -456,6 +458,8 @@ main (void)
   test_mongo_client_cursors ();
   test_mongo_client_delete ();
   test_mongo_client_drop ();
+
+  test_env_free ();
 
   return 0;
 }

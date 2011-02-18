@@ -2,29 +2,19 @@
 #define LIBMONGO_CLIENT_TEST_NETWORK_H
 
 #include "test.h"
+#include <glib.h>
 
-#ifndef TEST_SERVER_IP
-#define TEST_SERVER_IP "127.0.0.1"
-#endif
+extern gchar *TEST_SERVER_IP;
+extern gchar *TEST_SERVER_HOST;
+extern gchar *TEST_SERVER_IPV6;
+extern gint TEST_SERVER_PORT;
 
-#ifndef TEST_SERVER_IPV6
-#define TEST_SERVER_IPV6 "::1"
-#endif
+extern gchar *TEST_SECONDARY_IP;
+extern gint TEST_SECONDARY_PORT;
 
-#ifndef TEST_SERVER_HOST
-#define TEST_SERVER_HOST "localhost"
-#endif
-
-#ifndef TEST_SERVER_PORT
-#define TEST_SERVER_PORT 27017
-#endif
-
-#ifndef TEST_SECONDARY_IP
-#define TEST_SECONDARY_IP "127.0.0.1"
-#endif
-
-#ifndef TEST_SECONDARY_PORT
-#define TEST_SECONDARY_PORT 27018
-#endif
+gboolean test_getenv_server (void);
+gboolean test_getenv_server_extra (void);
+gboolean test_getenv_secondary (void);
+void test_env_free (void);
 
 #endif

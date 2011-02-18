@@ -408,23 +408,33 @@ test_mongo_sync_connect (void)
   PASS ();
 
   TEST (mongo_sync.connect.by_host);
-  g_assert ((conn = mongo_sync_connect (TEST_SERVER_HOST, TEST_SERVER_PORT, TRUE)) != NULL);
-  g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
-  mongo_sync_disconnect (conn);
-  PASS ();
-
-  TEST (mongo_sync.connect.ipv6);
-  conn = mongo_sync_connect (TEST_SERVER_IPV6, TEST_SERVER_PORT, TRUE);
-  if (conn)
+  if (!TEST_SERVER_HOST)
+    SKIP ("TEST_SERVER_HOST variable not set")
+  else
     {
+      g_assert ((conn = mongo_sync_connect (TEST_SERVER_HOST, TEST_SERVER_PORT, TRUE)) != NULL);
       g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
       mongo_sync_disconnect (conn);
       PASS ();
     }
+
+  TEST (mongo_sync.connect.ipv6);
+  if (!TEST_SERVER_IPV6)
+    SKIP ("TEST_SERVER_IPV6 variable not set")
   else
     {
-      printf ("# %s\n", strerror (errno));
-      SKIP ("IPv6 connection failed, but it's optional.");
+      conn = mongo_sync_connect (TEST_SERVER_IPV6, TEST_SERVER_PORT, TRUE);
+      if (conn)
+	{
+	  g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
+	  mongo_sync_disconnect (conn);
+	  PASS ();
+	}
+      else
+	{
+	  printf ("# %s\n", strerror (errno));
+	  SKIP ("IPv6 connection failed, but it's optional.");
+	}
     }
 }
 
@@ -468,10 +478,13 @@ do_plan (int max)
 {
   mongo_sync_connection *conn;
 
+  if (!test_getenv_server ())
+    SKIP_ALL ("TEST_SERVER variable not set");
+  test_getenv_server_extra ();
+
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   if (!conn)
-    SKIP_ALL ("cannot connect to mongodb; host="
-	      TEST_SERVER_IP);
+    SKIP_ALL ("cannot connect to mongodb");
 
   PLAN (1, max);
   mongo_sync_disconnect (conn);

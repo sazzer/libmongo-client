@@ -18,6 +18,8 @@ HARNESS_TESTS = ${srcdir}/verify-bson-wrapper.sh \
 
 NETWORK_TESTS = ./test_mongo_client ./test_mongo_sync ./test_mongo_slave
 
+EXTRA_DIST = README
+
 check: check-am
 	@${MAKE} ${AM_MAKEFLAGS} check-HARNESS
 
@@ -39,7 +41,7 @@ LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
 EXTRA_DIST = verify-bson.py verify-bson-wrapper.sh
 
 test_srcs = test.c test.h test-generator.c test-generator.h
-test_network_srcs = ${test_srcs} test-network.h
+test_network_srcs = ${test_srcs} test-network.h test-network.c
 
 test_bson_build_base_SOURCES = test_bson_build_base.c $(test_srcs)
 test_bson_build_compound_SOURCES = test_bson_build_compound.c $(test_srcs)
