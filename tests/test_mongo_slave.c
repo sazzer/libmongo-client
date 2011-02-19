@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <string.h>
 #include <glib.h>
+#include <unistd.h>
+#include <sys/socket.h>
 
 void
 test_mongo_slave_setup (void)
@@ -126,6 +128,7 @@ void
 test_mongo_slave_reconnect (void)
 {
   mongo_sync_connection *conn, *o;
+  gint i;
 
   TEST (mongo_slave.reconnect.primary);
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
@@ -153,6 +156,23 @@ test_mongo_slave_reconnect (void)
 
   mongo_sync_disconnect (conn);
   PASS ();
+
+  TEST (mongo_slave.reconnect.from_disconnect);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  for (i = 3; i < 128; i++)
+    shutdown (i, SHUT_RDWR);
+
+  g_assert (mongo_sync_cmd_ping (conn) == FALSE);
+  conn = mongo_sync_reconnect (conn, TRUE);
+  g_assert (conn);
+  g_assert (mongo_sync_cmd_ping (conn));
+
+  mongo_sync_disconnect (conn);
+  PASS ();
 }
 
 void
@@ -177,7 +197,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (9);
+  do_plan (10);
 
   test_mongo_slave_setup ();
   test_mongo_slave_cmd_count ();
