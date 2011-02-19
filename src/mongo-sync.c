@@ -66,9 +66,32 @@ mongo_sync_connect_to_master (mongo_sync_connection *conn)
     return conn;
 
   /* Oh blast, we're not the master. Do we have a primary? */
+
   if (!conn->rs.primary)
     {
-      /* Nope, we don't know no stinkin' primary. */
+      guint i;
+
+      /* Nope, we don't know no stinkin' primary. Lets try all the
+	 hosts, maybe one of them's a master! */
+
+      for (i = 0; i < g_list_length (conn->rs.hosts); i++)
+	{
+	  gchar *addr = (gchar *)g_list_nth_data (conn->rs.hosts, i);
+
+	  if (!mongo_util_parse_addr (addr, &host, &port))
+	    continue;
+
+	  nc = mongo_sync_connect (host, port, conn->slaveok);
+	  g_free (host);
+	  if (mongo_sync_cmd_is_master (nc))
+	    {
+	      mongo_sync_disconnect (conn);
+	      return nc;
+	    }
+	  mongo_sync_disconnect (nc);
+	}
+
+      /* Nope, none of them were masters.. */
       mongo_sync_disconnect (conn);
       return NULL;
     }
