@@ -23,8 +23,9 @@ bson_dump (bson *b, gint ilevel)
     {
       for (l = 1; l <= ilevel; l++)
 	printf (" ");
-      printf ("%s (%d): ",
-	      bson_cursor_key (c), bson_cursor_type (c));
+      printf ("%s (%s): ",
+	      bson_cursor_key (c),
+	      bson_cursor_type_as_string (c) + strlen ("BSON_TYPE_"));
       switch (bson_cursor_type (c))
 	{
 	case BSON_TYPE_DOUBLE:

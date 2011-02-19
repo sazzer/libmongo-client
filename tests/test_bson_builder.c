@@ -97,13 +97,57 @@ test_bson_builder_full (void)
   PASS ();
 }
 
+void
+test_bson_builder_cursor_as_string (void)
+{
+  bson *b;
+  bson_cursor *c;
+
+  TEST (bson_builder.cursor_as_string);
+  b = bson_build (BSON_TYPE_INT32, "i32", 1984,
+		  BSON_TYPE_STRING, "s", "Hello World!", -1,
+		  BSON_TYPE_NULL, "nil",
+		  BSON_TYPE_DOUBLE, "d", 3.14,
+		  BSON_TYPE_NONE);
+  bson_finish (b);
+
+  g_assert ((c = bson_cursor_new (b)));
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpstr (bson_cursor_type_as_string (c), ==,
+		   "BSON_TYPE_INT32");
+  g_assert_cmpint (bson_cursor_type (c), ==,
+		   BSON_TYPE_INT32);
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpstr (bson_cursor_type_as_string (c), ==,
+		   "BSON_TYPE_STRING");
+  g_assert_cmpint (bson_cursor_type (c), ==,
+		   BSON_TYPE_STRING);
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpstr (bson_cursor_type_as_string (c), ==,
+		   "BSON_TYPE_NULL");
+  g_assert_cmpint (bson_cursor_type (c), ==,
+		   BSON_TYPE_NULL);
+  g_assert (bson_cursor_next (c));
+  g_assert_cmpstr (bson_cursor_type_as_string (c), ==,
+		   "BSON_TYPE_DOUBLE");
+  g_assert_cmpint (bson_cursor_type (c), ==,
+		   BSON_TYPE_DOUBLE);
+  g_assert (!bson_cursor_next (c));
+
+  bson_cursor_free (c);
+  bson_free (b);
+
+  PASS ();
+}
+
 int
 main (void)
 {
-  PLAN (1, 2);
+  PLAN (1, 3);
 
   test_bson_builder ();
   test_bson_builder_full ();
+  test_bson_builder_cursor_as_string ();
 
   return 0;
 }
