@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "bson.h"
-#include "mongo-wire.h"
-#include "mongo-client.h"
-#include "mongo-utils.h"
-#include "mongo-sync.h"
+#include <bson.h>
+#include <mongo-wire.h>
+#include <mongo-client.h>
+#include <mongo-utils.h>
+#include <mongo-sync.h>
 
 /** @mainpage libmongo-client
  *
