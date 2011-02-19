@@ -19,7 +19,7 @@ test_mongo_slave_setup (void)
 
   doc = test_bson_generate_flat ();
 
-  g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc));
+  g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, NULL));
   bson_free (doc);
 
   /* Run fsync on the admin db, so that we sync to the replica set.
