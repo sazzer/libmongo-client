@@ -90,6 +90,37 @@ test_mongo_slave_fail (void)
 }
 
 void
+test_mongo_slave_cmd_is_master (void)
+{
+  mongo_sync_connection *conn;
+
+  TEST (mongo_slave.cmd.is_master.primary);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn));
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.cmd.is_master.secondary);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+  PASS ();
+
+  TEST (mongo_slave.cmd.is_master.secondary.reconnect);
+  conn = mongo_sync_connect_to_master (conn);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn));
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
 do_plan (int max)
 {
   mongo_sync_connection *conn;
@@ -111,11 +142,12 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (4);
+  do_plan (7);
 
   test_mongo_slave_setup ();
   test_mongo_slave_cmd_count ();
   test_mongo_slave_fail ();
+  test_mongo_slave_cmd_is_master ();
   test_mongo_slave_teardown ();
 
   test_env_free ();

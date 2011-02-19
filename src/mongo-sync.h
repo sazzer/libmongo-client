@@ -263,6 +263,14 @@ gboolean mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
 gboolean mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
 				     const gchar *db);
 
+/** Check whether the current node is the master.
+ *
+ * @param conn is the connection to work with.
+ *
+ * @returns TRUE if it is master, FALSE otherwise and on errors.
+ */
+gboolean mongo_sync_cmd_is_master (mongo_sync_connection *conn);
+
 /** @} */
 
 #endif
