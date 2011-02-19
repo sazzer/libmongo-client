@@ -3,6 +3,18 @@
 #include <glib.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <signal.h>
+
+void
+ignore_sigpipe (void)
+{
+  struct sigaction sa;
+
+  sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
+}
 
 gboolean
 dump_bson (bson *b)

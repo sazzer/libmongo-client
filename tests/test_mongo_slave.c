@@ -199,6 +199,8 @@ main (void)
   mongo_util_oid_init (0);
   do_plan (10);
 
+  ignore_sigpipe ();
+
   test_mongo_slave_setup ();
   test_mongo_slave_cmd_count ();
   test_mongo_slave_fail ();
