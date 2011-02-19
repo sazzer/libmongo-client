@@ -25,6 +25,12 @@ struct _mongo_sync_connection
   mongo_connection super; /**< The parent object. */
   gboolean slaveok; /**< Whether queries against slave nodes are
 		       acceptable. */
+
+  struct
+  {
+    GList *hosts;
+    gchar *primary;
+  } rs;
 };
 
 mongo_sync_connection *
@@ -48,11 +54,6 @@ mongo_sync_connect (const gchar *host, int port,
 mongo_sync_connection *
 mongo_sync_connect_to_master (mongo_sync_connection *conn)
 {
-  bson *cmd, *res;
-  mongo_packet *p;
-  bson_cursor *c;
-  gboolean b;
-  const gchar *primary;
   gchar *host;
   gint port;
   mongo_sync_connection *nc;
@@ -61,64 +62,22 @@ mongo_sync_connect_to_master (mongo_sync_connection *conn)
     return NULL;
 
   /* Verify if we're master */
-  cmd = bson_new ();
-  bson_append_int32 (cmd, "ismaster", 1);
-  bson_finish (cmd);
+  if (mongo_sync_cmd_is_master (conn))
+    return conn;
 
-  p = mongo_sync_cmd_custom (conn, "system", cmd);
-  bson_free (cmd);
-  if (!p)
+  /* Oh blast, we're not the master. Do we have a primary? */
+  if (!conn->rs.primary)
     {
-      mongo_wire_packet_free (p);
+      /* Nope, we don't know no stinkin' primary. */
       mongo_sync_disconnect (conn);
       return NULL;
     }
 
-  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &res))
+  if (!mongo_util_parse_addr (conn->rs.primary, &host, &port))
     {
-      mongo_wire_packet_free (p);
       mongo_sync_disconnect (conn);
       return NULL;
     }
-  mongo_wire_packet_free (p);
-  bson_finish (res);
-
-  c = bson_find (res, "ismaster");
-  if (!bson_cursor_get_boolean (c, &b))
-    {
-      g_free (c);
-      bson_free (res);
-      mongo_sync_disconnect (conn);
-      return NULL;
-    }
-
-  if (b)
-    {
-      /* We're the master already, awesome! */
-      g_free (c);
-      bson_free (res);
-      return conn;
-    }
-  g_free (c);
-
-  /* Oh blast, we're not the master. Grab it from the primary key! */
-  c = bson_find (res, "primary");
-  if (!bson_cursor_get_string (c, &primary))
-    {
-      g_free (c);
-      bson_free (res);
-      mongo_sync_disconnect (conn);
-      return NULL;
-    }
-  g_free (c);
-
-  if (!mongo_util_parse_addr (primary, &host, &port))
-    {
-      bson_free (res);
-      mongo_sync_disconnect (conn);
-      return NULL;
-    }
-  bson_free (res);
 
   nc = mongo_sync_connect (host, port, conn->slaveok);
   g_free (host);
@@ -130,8 +89,20 @@ mongo_sync_connect_to_master (mongo_sync_connection *conn)
 void
 mongo_sync_disconnect (mongo_sync_connection *conn)
 {
+  GList *l;
+
   if (!conn)
     return;
+
+  g_free (conn->rs.primary);
+
+  /* Delete the host list. */
+  l = conn->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
 
   mongo_disconnect ((mongo_connection *)conn);
 }
@@ -650,10 +621,11 @@ mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
 gboolean
 mongo_sync_cmd_is_master (mongo_sync_connection *conn)
 {
-  bson *cmd, *res;
+  bson *cmd, *res, *hosts;
   mongo_packet *p;
   bson_cursor *c;
   gboolean b;
+  GList *l;
 
   if (!conn)
     return FALSE;
@@ -683,8 +655,60 @@ mongo_sync_cmd_is_master (mongo_sync_connection *conn)
       bson_free (res);
       return FALSE;
     }
+  bson_cursor_free (c);
 
+  if (!b)
+    {
+      const gchar *s;
+
+      /* We're not the master, so we should have a 'primary' key in
+	 the response. */
+      c = bson_find (res, "primary");
+      if (bson_cursor_get_string (c, &s))
+	{
+	  g_free (conn->rs.primary);
+	  conn->rs.primary = g_strdup (s);
+	}
+      bson_cursor_free (c);
+    }
+
+  /* Find all the members of the set, and cache them. */
+  c = bson_find (res, "hosts");
+  if (!c)
+    {
+      bson_free (res);
+      return b;
+    }
+
+  if (!bson_cursor_get_array (c, &hosts))
+    {
+      bson_cursor_free (c);
+      bson_free (res);
+      return b;
+    }
   bson_cursor_free (c);
   bson_free (res);
+  bson_finish (hosts);
+
+  /* Delete the old host list. */
+  l = conn->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+  conn->rs.hosts = NULL;
+
+  c = bson_cursor_new (hosts);
+  while (bson_cursor_next (c))
+    {
+      const gchar *s;
+
+      if (bson_cursor_get_string (c, &s))
+	conn->rs.hosts = g_list_append (conn->rs.hosts, g_strdup (s));
+    }
+  bson_cursor_free (c);
+  bson_free (hosts);
+
   return b;
 }
