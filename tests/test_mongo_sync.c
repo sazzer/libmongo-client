@@ -378,6 +378,7 @@ test_mongo_sync_cmd_get_last_error (void)
   bson_append_int32 (b, "forceerror", 1);
   bson_finish (b);
   g_assert ((p = mongo_sync_cmd_custom (conn, TEST_SERVER_DB, b)) != NULL);
+  mongo_wire_packet_free (p);
   bson_free (b);
 
   g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
