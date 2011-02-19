@@ -33,10 +33,11 @@ struct _mongo_sync_connection
   gboolean slaveok; /**< Whether queries against slave nodes are
 		       acceptable. */
 
+  /** Replica Set properties. */
   struct
   {
-    GList *hosts;
-    gchar *primary;
+    GList *hosts; /**< Replica set members, as a list of strings. */
+    gchar *primary; /**< The replica master, if any. */
   } rs;
 };
 
