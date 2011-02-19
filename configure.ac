@@ -138,5 +138,6 @@ AC_OUTPUT(
 	Makefile
 	examples/Makefile
 	src/Makefile
+	src/libmongo-client.pc
 	tests/Makefile
 )
