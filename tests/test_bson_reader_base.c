@@ -334,4 +334,6 @@ main (void)
   g_assert (test_bson_reader_regexp ());
   g_assert (test_bson_reader_binary ());
   g_assert (test_bson_reader_huge ());
+
+  return 0;
 }

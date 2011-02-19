@@ -132,4 +132,6 @@ main (void)
 
   g_assert (test_bson_reader_iterate_flat ());
   g_assert (test_bson_reader_iterate_nested ());
+
+  return 0;
 }

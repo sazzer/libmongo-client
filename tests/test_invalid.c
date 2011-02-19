@@ -166,4 +166,6 @@ main (void)
   test_invalid_bson_null ();
   test_invalid_bson_cursor ();
   test_invalid_mongo_wire ();
+
+  return 0;
 }
