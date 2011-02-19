@@ -113,10 +113,43 @@ test_mongo_slave_cmd_is_master (void)
   PASS ();
 
   TEST (mongo_slave.cmd.is_master.secondary.reconnect);
-  conn = mongo_sync_connect_to_master (conn);
+  conn = mongo_sync_reconnect (conn, TRUE);
   g_assert (conn);
 
   g_assert (mongo_sync_cmd_is_master (conn));
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
+test_mongo_slave_reconnect (void)
+{
+  mongo_sync_connection *conn, *o;
+
+  TEST (mongo_slave.reconnect.primary);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  g_assert (conn);
+
+  o = conn;
+  g_assert ((conn = mongo_sync_reconnect (conn, FALSE)) != NULL);
+  g_assert (o == conn);
+  g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
+  g_assert (o == conn);
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.reconnect.secondary);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
+  g_assert (conn);
+
+  o = conn;
+  g_assert ((conn = mongo_sync_reconnect (conn, FALSE)) != NULL);
+  g_assert (o == conn);
+  g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
+  g_assert (o != conn);
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
 
   mongo_sync_disconnect (conn);
   PASS ();
@@ -144,12 +177,13 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (7);
+  do_plan (9);
 
   test_mongo_slave_setup ();
   test_mongo_slave_cmd_count ();
   test_mongo_slave_fail ();
   test_mongo_slave_cmd_is_master ();
+  test_mongo_slave_reconnect ();
   test_mongo_slave_teardown ();
 
   test_env_free ();

@@ -52,61 +52,74 @@ mongo_sync_connect (const gchar *host, int port,
 }
 
 mongo_sync_connection *
-mongo_sync_connect_to_master (mongo_sync_connection *conn)
+mongo_sync_reconnect (mongo_sync_connection *conn,
+		      gboolean force_master)
 {
+  gboolean ping = FALSE;
+  guint i;
+  mongo_sync_connection *nc;
   gchar *host;
   gint port;
-  mongo_sync_connection *nc;
 
   if (!conn)
     return NULL;
 
-  /* Verify if we're master */
-  if (mongo_sync_cmd_is_master (conn))
-    return conn;
+  ping = mongo_sync_cmd_ping (conn);
 
-  /* Oh blast, we're not the master. Do we have a primary? */
-
-  if (!conn->rs.primary)
+  if (ping)
     {
-      guint i;
+      if (!force_master)
+	return conn;
+      if (force_master && mongo_sync_cmd_is_master (conn))
+	return conn;
 
-      /* Nope, we don't know no stinkin' primary. Lets try all the
-	 hosts, maybe one of them's a master! */
+      /* Force refresh the host list. */
+      mongo_sync_cmd_is_master (conn);
+    }
 
-      for (i = 0; i < g_list_length (conn->rs.hosts); i++)
+  /* We either didn't ping, or we're not master, and have to
+   * reconnect.
+   *
+   * First, check if we have a primary, and if we can connect there.
+   */
+
+  if (conn->rs.primary)
+    {
+      if (mongo_util_parse_addr (conn->rs.primary, &host, &port))
 	{
-	  gchar *addr = (gchar *)g_list_nth_data (conn->rs.hosts, i);
-
-	  if (!mongo_util_parse_addr (addr, &host, &port))
-	    continue;
-
 	  nc = mongo_sync_connect (host, port, conn->slaveok);
 	  g_free (host);
-	  if (mongo_sync_cmd_is_master (nc))
+	  if (nc)
 	    {
+	      /* We can call ourselves here, since connect does not set
+		 conn->rs, thus, we won't end up in an infinite loop. */
 	      mongo_sync_disconnect (conn);
-	      return nc;
+	      return mongo_sync_reconnect (nc, force_master);
 	    }
-	  mongo_sync_disconnect (nc);
 	}
-
-      /* Nope, none of them were masters.. */
-      mongo_sync_disconnect (conn);
-      return NULL;
     }
 
-  if (!mongo_util_parse_addr (conn->rs.primary, &host, &port))
+  /* No primary found, or we couldn't connect, try the rest of the
+     hosts. */
+
+  for (i = 0; i < g_list_length (conn->rs.hosts); i++)
     {
+      gchar *addr = (gchar *)g_list_nth_data (conn->rs.hosts, i);
+
+      if (!mongo_util_parse_addr (addr, &host, &port))
+	continue;
+
+      nc = mongo_sync_connect (host, port, conn->slaveok);
+      g_free (host);
+      if (!nc)
+	continue;
+
       mongo_sync_disconnect (conn);
-      return NULL;
+      return mongo_sync_reconnect (nc, force_master);
     }
 
-  nc = mongo_sync_connect (host, port, conn->slaveok);
-  g_free (host);
   mongo_sync_disconnect (conn);
-
-  return nc;
+  return NULL;
 }
 
 void

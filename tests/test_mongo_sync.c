@@ -411,7 +411,7 @@ test_mongo_sync_connect (void)
   TEST (mongo_sync.connect.to_master.self);
   g_assert ((conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, TRUE)) != NULL);
   o = conn;
-  g_assert ((conn = mongo_sync_connect_to_master (conn)) != NULL);
+  g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
   g_assert (o == conn);
   mongo_sync_disconnect (conn);
   PASS ();
@@ -421,7 +421,7 @@ test_mongo_sync_connect (void)
   if (conn)
     {
       o = conn;
-      g_assert ((conn = mongo_sync_connect_to_master (conn)) != NULL);
+      g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
       g_assert (o != conn);
       g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
       mongo_sync_disconnect (conn);

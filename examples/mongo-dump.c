@@ -81,7 +81,7 @@ mongo_dump (config_t *config)
   if (config->master_sync)
     {
       VLOG ("Syncing to master...\n");
-      conn = mongo_sync_connect_to_master (conn);
+      conn = mongo_sync_reconnect (conn, TRUE);
       if (!conn)
 	{
 	  fprintf (stderr, "Error reconnecting to the master of %s:%d: %s\n",
