@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 static const int one = 1;
 
@@ -71,10 +72,15 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
 
   port_s = g_strdup_printf ("%d", port);
   e = getaddrinfo (host, port_s, &hints, & res);
-  g_free (port_s);
-
   if (e != 0)
-    return NULL;
+    {
+      int e = errno;
+
+      g_free (port_s);
+      errno = e;
+      return NULL;
+    }
+  g_free (port_s);
 
   for (r = res; r != NULL; r = r->ai_next)
     {
@@ -90,13 +96,19 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
   freeaddrinfo (res);
 
   if (fd == -1)
-    return NULL;
+    {
+      errno = EADDRNOTAVAIL;
+      return NULL;
+    }
 
   setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, (char *)&one, sizeof (one));
 
   if (unset_nonblock (fd))
     {
+      int e = errno;
+
       close (fd);
+      errno = e;
       return NULL;
     }
 
@@ -112,7 +124,10 @@ mongo_connect (const gchar *host, int port)
 
   conn = g_try_new0 (mongo_connection, 1);
   if (!conn)
-    return NULL;
+    {
+      errno = ENOTCONN;
+      return NULL;
+    }
   return _mongo_connect (host, port, conn);
 }
 
@@ -127,12 +142,16 @@ void
 mongo_disconnect (mongo_connection *conn)
 {
   if (!conn)
-    return;
+    {
+      errno = ENOTCONN;
+      return;
+    }
 
   if (conn->fd >= 0)
     close (conn->fd);
 
   g_free (conn);
+  errno = 0;
 }
 
 gboolean
@@ -143,10 +162,22 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   mongo_packet_header h;
   struct iovec iov[2];
 
-  if (!conn || !p)
-    return FALSE;
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+  if (!p)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
   if (conn->fd < 0)
-    return FALSE;
+    {
+      errno = EBADF;
+      return FALSE;
+    }
 
   if (!mongo_wire_packet_get_header (p, &h))
     return FALSE;
@@ -177,8 +208,17 @@ mongo_packet_recv (mongo_connection *conn)
   guint32 size;
   mongo_packet_header h;
 
-  if (!conn || conn->fd < 0)
-    return NULL;
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return NULL;
+    }
+
+  if (conn->fd < 0)
+    {
+      errno = EBADF;
+      return NULL;
+    }
 
   memset (&h, 0, sizeof (h));
   if (recv (conn->fd, &h, sizeof (mongo_packet_header), 0) !=
@@ -196,7 +236,10 @@ mongo_packet_recv (mongo_connection *conn)
 
   if (!mongo_wire_packet_set_header (p, &h))
     {
+      int e = errno;
+
       mongo_wire_packet_free (p);
+      errno = e;
       return NULL;
     }
 
@@ -204,15 +247,21 @@ mongo_packet_recv (mongo_connection *conn)
   data = g_try_new0 (guint8, size);
   if (recv (conn->fd, data, size, 0) != size)
     {
+      int e = errno;
+
       g_free (data);
       mongo_wire_packet_free (p);
+      errno = e;
       return NULL;
     }
 
   if (!mongo_wire_packet_set_data (p, data, size))
     {
+      int e = errno;
+
       g_free (data);
       mongo_wire_packet_free (p);
+      errno = e;
       return NULL;
     }
 
@@ -225,6 +274,10 @@ gint32
 mongo_connection_get_requestid (const mongo_connection *conn)
 {
   if (!conn)
-    return -1;
+    {
+      errno = ENOTCONN;
+      return -1;
+    }
+
   return conn->request_id;
 }
