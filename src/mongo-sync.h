@@ -17,7 +17,7 @@
 #ifndef LIBMONGO_SYNC_H
 #define LIBMONGO_SYNC_H 1
 
-#include "mongo-client.h"
+#include <mongo-client.h>
 
 #include <glib.h>
 

@@ -19,7 +19,7 @@
 
 #include <glib.h>
 
-#include "bson.h"
+#include <bson.h>
 
 /** @defgroup mongo_wire Mongo Wire Protocol
  *

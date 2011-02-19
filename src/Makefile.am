@@ -1,4 +1,4 @@
-noinst_LTLIBRARIES = libmongo-client.la
+lib_LTLIBRARIES = libmongo-client.la
 libmongo_client_la_LIBADD = @GLIB_LIBS@
 libmongo_client_la_CFLAGS = @GLIB_CFLAGS@
 
@@ -15,3 +15,6 @@ libmongo_client_includedir = $(includedir)/mongo-client
 libmongo_client_include_HEADERS = \
 	bson.h mongo-wire.h mongo-client.h \
 	mongo-utils.h mongo-sync.h mongo.h
+
+pkgconfigdir            = $(libdir)/pkgconfig
+pkgconfig_DATA          = libmongo-client.pc
