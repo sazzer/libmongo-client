@@ -79,8 +79,9 @@ mongo_sync_reconnect (mongo_sync_connection *conn,
 	    {
 	      /* We can call ourselves here, since connect does not set
 		 conn->rs, thus, we won't end up in an infinite loop. */
+	      nc = mongo_sync_reconnect (nc, force_master);
 	      mongo_sync_disconnect (conn);
-	      return mongo_sync_reconnect (nc, force_master);
+	      return nc;
 	    }
 	}
     }
@@ -100,8 +101,9 @@ mongo_sync_reconnect (mongo_sync_connection *conn,
       if (!nc)
 	continue;
 
+      nc = mongo_sync_reconnect (nc, force_master);
       mongo_sync_disconnect (conn);
-      return mongo_sync_reconnect (nc, force_master);
+      return (nc);
     }
 
   mongo_sync_disconnect (conn);
