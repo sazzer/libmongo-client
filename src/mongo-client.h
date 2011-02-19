@@ -17,8 +17,8 @@
 #ifndef LIBMONGO_CLIENT_H
 #define LIBMONGO_CLIENT_H 1
 
-#include "bson.h"
-#include "mongo-wire.h"
+#include <bson.h>
+#include <mongo-wire.h>
 
 #include <glib.h>
 
