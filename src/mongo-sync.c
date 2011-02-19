@@ -19,20 +19,6 @@
 
 #include <stdlib.h>
 
-/** @internal Synchronous connection object. */
-struct _mongo_sync_connection
-{
-  mongo_connection super; /**< The parent object. */
-  gboolean slaveok; /**< Whether queries against slave nodes are
-		       acceptable. */
-
-  struct
-  {
-    GList *hosts;
-    gchar *primary;
-  } rs;
-};
-
 mongo_sync_connection *
 mongo_sync_connect (const gchar *host, int port,
 		    gboolean slaveok)

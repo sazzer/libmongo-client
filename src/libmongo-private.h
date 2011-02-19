@@ -26,6 +26,20 @@ struct _mongo_connection
   gint32 request_id; /**< The last sent command's requestID. */
 };
 
+/** @internal Synchronous connection object. */
+struct _mongo_sync_connection
+{
+  mongo_connection super; /**< The parent object. */
+  gboolean slaveok; /**< Whether queries against slave nodes are
+		       acceptable. */
+
+  struct
+  {
+    GList *hosts;
+    gchar *primary;
+  } rs;
+};
+
 /** @internal Connect to a MongoDB server, using an existing connection object.
  *
  * Connects to a MongoDB server, but uses an existing connection
