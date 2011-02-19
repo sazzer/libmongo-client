@@ -32,7 +32,7 @@ if test "x$ac_cv_prog_cc_c99" = "xno"; then
 fi
 AC_PROG_MAKE_SET
 PKG_PROG_PKG_CONFIG
-LT_INIT()
+LT_INIT([disable-shared pic-only])
 
 dnl ***************************************************************************
 dnl How to do static linking?
