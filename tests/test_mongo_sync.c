@@ -506,6 +506,7 @@ do_plan (int max)
   if (!test_getenv_server ())
     SKIP_ALL ("TEST_SERVER variable not set");
   test_getenv_server_extra ();
+  test_getenv_secondary ();
 
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   if (!conn)
@@ -535,6 +536,8 @@ main (void)
   test_mongo_sync_cmd_drop ();
 
   test_mongo_sync_connect ();
+
+  test_env_free ();
 
   return 0;
 }
