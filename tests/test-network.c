@@ -26,11 +26,13 @@ test_getenv_server_extra (void)
   gchar *host = getenv ("TEST_SERVER_HOST");
   gchar *ipv6 = getenv ("TEST_SERVER_IPV6");
 
-  if (!host || !ipv6)
+  if (!host && !ipv6)
     return FALSE;
 
-  TEST_SERVER_HOST = g_strdup (host);
-  TEST_SERVER_IPV6 = g_strdup (ipv6);
+  if (host)
+    TEST_SERVER_HOST = g_strdup (host);
+  if (ipv6)
+    TEST_SERVER_IPV6 = g_strdup (ipv6);
 
   return TRUE;
 }
