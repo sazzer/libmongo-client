@@ -12,6 +12,7 @@ test_mongo_slave_setup (void)
 {
   bson *doc;
   mongo_sync_connection *conn;
+  mongo_packet *p;
 
   TEST (mongo_slave.setup);
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
@@ -29,7 +30,8 @@ test_mongo_slave_setup (void)
   doc = bson_new ();
   bson_append_int32 (doc, "fsync", 1);
   bson_finish (doc);
-  g_assert (mongo_sync_cmd_custom (conn, "admin", doc));
+  g_assert ((p = mongo_sync_cmd_custom (conn, "admin", doc)) != NULL);
+  mongo_wire_packet_free (p);
   bson_free (doc);
 
   mongo_sync_disconnect (conn);
