@@ -735,3 +735,38 @@ mongo_sync_cmd_is_master (mongo_sync_connection *conn)
 
   return b;
 }
+
+gboolean
+mongo_sync_cmd_ping (mongo_sync_connection *conn)
+{
+  bson *cmd;
+  mongo_packet *p;
+
+  if (!conn)
+    return FALSE;
+
+  cmd = bson_new_sized (32);
+  bson_append_int32 (cmd, "ping", 1);
+  bson_finish (cmd);
+
+  p = mongo_sync_cmd_custom (conn, "system", cmd);
+  bson_free (cmd);
+  if (!p)
+    return FALSE;
+
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &cmd))
+    {
+      mongo_wire_packet_free (p);
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  bson_finish (cmd);
+
+  if (!_mongo_sync_check_ok (cmd))
+    {
+      bson_free (cmd);
+      return FALSE;
+    }
+  bson_free (cmd);
+  return TRUE;
+}

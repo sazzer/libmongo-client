@@ -271,6 +271,15 @@ gboolean mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
  */
 gboolean mongo_sync_cmd_is_master (mongo_sync_connection *conn);
 
+/** Send a PING command to MongoDB.
+ *
+ * @param conn is the connection to work with.
+ *
+ * @returns TRUE if the connection is alive and kicking, FALSE
+ * otherwise.
+ */
+gboolean mongo_sync_cmd_ping (mongo_sync_connection *conn);
+
 /** @} */
 
 #endif
