@@ -152,6 +152,10 @@ test_invalid_mongo_wire (void)
   g_assert ((p = mongo_wire_packet_new ()));
   mongo_wire_packet_free (p);
   PASS ();
+
+  bson_free (u);
+  bson_free (sel);
+  bson_free (data);
 }
 
 int

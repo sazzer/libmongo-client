@@ -200,6 +200,7 @@ test_bson_reader_nested (void)
     bson_free (d);
   }
 
+  bson_free (t);
   bson_cursor_free (c);
   bson_free (b);
 
@@ -235,6 +236,8 @@ test_bson_reader_regexp (void)
   g_assert_cmpstr (flags, ==, "i");
   bson_cursor_free (c);
   PASS ();
+
+  bson_free (b);
 
   return TRUE;
 }
@@ -274,6 +277,8 @@ test_bson_reader_binary (void)
   g_assert (!memcmp (binary, "\0\0\0\7foo\0bar", 11));
   bson_cursor_free (c);
   PASS ();
+
+  bson_free (b);
 
   return TRUE;
 }
