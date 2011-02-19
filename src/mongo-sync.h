@@ -55,6 +55,25 @@ mongo_sync_connection *mongo_sync_connect (const char *host,
 					   int port,
 					   gboolean slaveok);
 
+/** Attempt to connect to another member of a replica set.
+ *
+ * Given an existing connection, this function will try to connect to
+ * an available node (enforcing that it's a primary, if asked to) by
+ * trying all known hosts until it finds one available.
+ *
+ * @param conn is an existing MongoDB connection.
+ * @param force_master signals whether a primary node should be found.
+ *
+ * @returns A mongo_sync_collection object, or NULL if the reconnect fails
+ * for one reason or the other.
+ *
+ * @note Upon failure, the existing connection will be destroyed, and
+ * even in case of success, the old connection object should not be
+ * used.
+ */
+mongo_sync_connection *mongo_sync_reconnect (mongo_sync_connection *conn,
+					     gboolean force_master);
+
 /** Close and free a synchronous MongoDB connection.
  *
  * @param conn is the connection to close.
@@ -247,6 +266,23 @@ gboolean mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
  */
 gboolean mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
 				     const gchar *db);
+
+/** Check whether the current node is the master.
+ *
+ * @param conn is the connection to work with.
+ *
+ * @returns TRUE if it is master, FALSE otherwise and on errors.
+ */
+gboolean mongo_sync_cmd_is_master (mongo_sync_connection *conn);
+
+/** Send a PING command to MongoDB.
+ *
+ * @param conn is the connection to work with.
+ *
+ * @returns TRUE if the connection is alive and kicking, FALSE
+ * otherwise.
+ */
+gboolean mongo_sync_cmd_ping (mongo_sync_connection *conn);
 
 /** @} */
 

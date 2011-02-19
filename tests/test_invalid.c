@@ -152,6 +152,10 @@ test_invalid_mongo_wire (void)
   g_assert ((p = mongo_wire_packet_new ()));
   mongo_wire_packet_free (p);
   PASS ();
+
+  bson_free (u);
+  bson_free (sel);
+  bson_free (data);
 }
 
 int
@@ -162,4 +166,6 @@ main (void)
   test_invalid_bson_null ();
   test_invalid_bson_cursor ();
   test_invalid_mongo_wire ();
+
+  return 0;
 }

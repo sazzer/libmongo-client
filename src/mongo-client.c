@@ -31,6 +31,7 @@
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 static const int one = 1;
 

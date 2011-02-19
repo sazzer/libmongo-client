@@ -47,5 +47,6 @@ static gint current_test_no __attribute__((unused)) = 0;
 
 gboolean dump_data (const guint8 *d, gint32 size);
 gboolean dump_bson (bson *b);
+void ignore_sigpipe (void);
 
 #endif

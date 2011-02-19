@@ -17,13 +17,7 @@
 #include "mongo.h"
 #include "libmongo-private.h"
 
-/** @internal Synchronous connection object. */
-struct _mongo_sync_connection
-{
-  mongo_connection super; /**< The parent object. */
-  gboolean slaveok; /**< Whether queries against slave nodes are
-		       acceptable. */
-};
+#include <stdlib.h>
 
 mongo_sync_connection *
 mongo_sync_connect (const gchar *host, int port,
@@ -43,11 +37,96 @@ mongo_sync_connect (const gchar *host, int port,
   return s;
 }
 
+mongo_sync_connection *
+mongo_sync_reconnect (mongo_sync_connection *conn,
+		      gboolean force_master)
+{
+  gboolean ping = FALSE;
+  guint i;
+  mongo_sync_connection *nc;
+  gchar *host;
+  gint port;
+
+  if (!conn)
+    return NULL;
+
+  ping = mongo_sync_cmd_ping (conn);
+
+  if (ping)
+    {
+      if (!force_master)
+	return conn;
+      if (force_master && mongo_sync_cmd_is_master (conn))
+	return conn;
+
+      /* Force refresh the host list. */
+      mongo_sync_cmd_is_master (conn);
+    }
+
+  /* We either didn't ping, or we're not master, and have to
+   * reconnect.
+   *
+   * First, check if we have a primary, and if we can connect there.
+   */
+
+  if (conn->rs.primary)
+    {
+      if (mongo_util_parse_addr (conn->rs.primary, &host, &port))
+	{
+	  nc = mongo_sync_connect (host, port, conn->slaveok);
+	  g_free (host);
+	  if (nc)
+	    {
+	      /* We can call ourselves here, since connect does not set
+		 conn->rs, thus, we won't end up in an infinite loop. */
+	      nc = mongo_sync_reconnect (nc, force_master);
+	      mongo_sync_disconnect (conn);
+	      return nc;
+	    }
+	}
+    }
+
+  /* No primary found, or we couldn't connect, try the rest of the
+     hosts. */
+
+  for (i = 0; i < g_list_length (conn->rs.hosts); i++)
+    {
+      gchar *addr = (gchar *)g_list_nth_data (conn->rs.hosts, i);
+
+      if (!mongo_util_parse_addr (addr, &host, &port))
+	continue;
+
+      nc = mongo_sync_connect (host, port, conn->slaveok);
+      g_free (host);
+      if (!nc)
+	continue;
+
+      nc = mongo_sync_reconnect (nc, force_master);
+      mongo_sync_disconnect (conn);
+      return (nc);
+    }
+
+  mongo_sync_disconnect (conn);
+  return NULL;
+}
+
 void
 mongo_sync_disconnect (mongo_sync_connection *conn)
 {
+  GList *l;
+
   if (!conn)
     return;
+
+  g_free (conn->rs.primary);
+
+  /* Delete the host list. */
+  l = conn->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
 
   mongo_disconnect ((mongo_connection *)conn);
 }
@@ -542,6 +621,136 @@ mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
   bson_finish (cmd);
 
   p = mongo_sync_cmd_custom (conn, db, cmd);
+  bson_free (cmd);
+  if (!p)
+    return FALSE;
+
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &cmd))
+    {
+      mongo_wire_packet_free (p);
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  bson_finish (cmd);
+
+  if (!_mongo_sync_check_ok (cmd))
+    {
+      bson_free (cmd);
+      return FALSE;
+    }
+  bson_free (cmd);
+  return TRUE;
+}
+
+gboolean
+mongo_sync_cmd_is_master (mongo_sync_connection *conn)
+{
+  bson *cmd, *res, *hosts;
+  mongo_packet *p;
+  bson_cursor *c;
+  gboolean b;
+  GList *l;
+
+  if (!conn)
+    return FALSE;
+
+  cmd = bson_new_sized (32);
+  bson_append_int32 (cmd, "ismaster", 1);
+  bson_finish (cmd);
+
+  p = mongo_sync_cmd_custom (conn, "system", cmd);
+  bson_free (cmd);
+
+  if (!p)
+    return FALSE;
+
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &res))
+    {
+      mongo_wire_packet_free (p);
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  bson_finish (res);
+
+  c = bson_find (res, "ismaster");
+  if (!bson_cursor_get_boolean (c, &b))
+    {
+      bson_cursor_free (c);
+      bson_free (res);
+      return FALSE;
+    }
+  bson_cursor_free (c);
+
+  if (!b)
+    {
+      const gchar *s;
+
+      /* We're not the master, so we should have a 'primary' key in
+	 the response. */
+      c = bson_find (res, "primary");
+      if (bson_cursor_get_string (c, &s))
+	{
+	  g_free (conn->rs.primary);
+	  conn->rs.primary = g_strdup (s);
+	}
+      bson_cursor_free (c);
+    }
+
+  /* Find all the members of the set, and cache them. */
+  c = bson_find (res, "hosts");
+  if (!c)
+    {
+      bson_free (res);
+      return b;
+    }
+
+  if (!bson_cursor_get_array (c, &hosts))
+    {
+      bson_cursor_free (c);
+      bson_free (res);
+      return b;
+    }
+  bson_cursor_free (c);
+  bson_free (res);
+  bson_finish (hosts);
+
+  /* Delete the old host list. */
+  l = conn->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+  conn->rs.hosts = NULL;
+
+  c = bson_cursor_new (hosts);
+  while (bson_cursor_next (c))
+    {
+      const gchar *s;
+
+      if (bson_cursor_get_string (c, &s))
+	conn->rs.hosts = g_list_append (conn->rs.hosts, g_strdup (s));
+    }
+  bson_cursor_free (c);
+  bson_free (hosts);
+
+  return b;
+}
+
+gboolean
+mongo_sync_cmd_ping (mongo_sync_connection *conn)
+{
+  bson *cmd;
+  mongo_packet *p;
+
+  if (!conn)
+    return FALSE;
+
+  cmd = bson_new_sized (32);
+  bson_append_int32 (cmd, "ping", 1);
+  bson_finish (cmd);
+
+  p = mongo_sync_cmd_custom (conn, "system", cmd);
   bson_free (cmd);
   if (!p)
     return FALSE;

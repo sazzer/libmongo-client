@@ -378,6 +378,7 @@ test_mongo_sync_cmd_get_last_error (void)
   bson_append_int32 (b, "forceerror", 1);
   bson_finish (b);
   g_assert ((p = mongo_sync_cmd_custom (conn, TEST_SERVER_DB, b)) != NULL);
+  mongo_wire_packet_free (p);
   bson_free (b);
 
   g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
@@ -399,13 +400,38 @@ test_mongo_sync_cmd_get_last_error (void)
 void
 test_mongo_sync_connect (void)
 {
-  mongo_sync_connection *conn;
+  mongo_sync_connection *conn, *o;
 
   TEST (mongo_sync.connect.ipv4);
   g_assert ((conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, TRUE)) != NULL);
   g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
   mongo_sync_disconnect (conn);
   PASS ();
+
+  TEST (mongo_sync.connect.to_master.self);
+  g_assert ((conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, TRUE)) != NULL);
+  o = conn;
+  g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
+  g_assert (o == conn);
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_sync.connect.to_master.via_secondary);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  if (conn)
+    {
+      o = conn;
+      g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
+      g_assert (o != conn);
+      g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
+      mongo_sync_disconnect (conn);
+      PASS ();
+    }
+  else
+    {
+      printf ("# %s\n", strerror (errno));
+      SKIP ("Connecting via secondary failed, but it's optional.");
+    }
 
   TEST (mongo_sync.connect.by_host);
   if (!TEST_SERVER_HOST)
@@ -474,6 +500,21 @@ test_mongo_sync_set_slaveok (void)
 }
 
 void
+test_mongo_sync_cmd_ping (void)
+{
+  mongo_sync_connection *conn;
+
+  TEST (mongo_sync.cmd.ping);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_ping (conn));
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
 do_plan (int max)
 {
   mongo_sync_connection *conn;
@@ -481,6 +522,7 @@ do_plan (int max)
   if (!test_getenv_server ())
     SKIP_ALL ("TEST_SERVER variable not set");
   test_getenv_server_extra ();
+  test_getenv_secondary ();
 
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   if (!conn)
@@ -494,7 +536,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (14);
+  do_plan (17);
 
   test_mongo_sync_set_slaveok ();
   test_mongo_sync_cmd_insert ();
@@ -508,8 +550,11 @@ main (void)
   test_mongo_sync_cmd_count ();
   test_mongo_sync_cmd_get_last_error ();
   test_mongo_sync_cmd_drop ();
+  test_mongo_sync_cmd_ping ();
 
   test_mongo_sync_connect ();
+
+  test_env_free ();
 
   return 0;
 }

@@ -38,6 +38,8 @@ test_mongo_client (void)
   TEST (mongo_client.disconnect);
   mongo_disconnect (conn);
   PASS ();
+
+  mongo_wire_packet_free (p);
 }
 
 void
@@ -424,6 +426,7 @@ test_mongo_client_drop (void)
   g_assert_cmpstr (s, ==, "indexes dropped for collection");
   bson_cursor_free (c);
 
+  bson_free (res);
   mongo_wire_packet_free (p);
 
   mongo_disconnect (conn);
