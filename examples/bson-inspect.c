@@ -23,23 +23,22 @@ bson_dump (bson *b, gint ilevel)
     {
       for (l = 1; l <= ilevel; l++)
 	printf (" ");
-      printf ("%s (%s): ",
-	      bson_cursor_key (c),
-	      bson_cursor_type_as_string (c) + strlen ("BSON_TYPE_"));
+      printf ("\"%s\" /* %s */: ", bson_cursor_key (c),
+	      bson_cursor_type_as_string (c) + 10);
       switch (bson_cursor_type (c))
 	{
 	case BSON_TYPE_DOUBLE:
 	  {
 	    gdouble d;
 	    bson_cursor_get_double (c, &d);
-	    printf ("%f\n", d);
+	    printf ("%f,\n", d);
 	    break;
 	  }
 	case BSON_TYPE_STRING:
 	  {
 	    const gchar *s;
 	    bson_cursor_get_string (c, &s);
-	    printf ("%s\n", s);
+	    printf ("\"%s\",\n", s);
 	    break;
 	  }
 	case BSON_TYPE_OID:
@@ -47,64 +46,68 @@ bson_dump (bson *b, gint ilevel)
 	    const guint8 *oid;
 	    gint j;
 	    bson_cursor_get_oid (c, &oid);
+	    printf ("ObjectId(\"");
 	    for (j = 0; j < 12; j++)
 	      printf ("%x", oid[j]);
-	    printf ("\n");
+	    printf ("\"),\n");
 	    break;
 	  }
 	case BSON_TYPE_BOOLEAN:
 	  {
 	    gboolean b;
 	    bson_cursor_get_boolean (c, &b);
-	    printf ((b) ? "TRUE\n" : "FALSE\n");
+	    printf ((b) ? "true,\n" : "false,\n");
 	    break;
 	  }
 	case BSON_TYPE_REGEXP:
 	  {
 	    const gchar *r, *o;
 	    bson_cursor_get_regex (c, &r, &o);
-	    printf ("/%s/%s\n", r, o);
+	    printf ("Regex(\"/%s/%s\"),\n", r, o);
 	    break;
 	  }
 	case BSON_TYPE_NULL:
 	  {
-	    printf ("NULL\n");
+	    printf ("null,\n");
 	    break;
 	  }
 	case BSON_TYPE_JS_CODE:
 	  {
 	    const gchar *js;
 	    bson_cursor_get_javascript (c, &js);
-	    printf ("%s\n", js);
+	    printf ("%s,\n", js);
 	    break;
 	  }
 	case BSON_TYPE_SYMBOL:
 	  {
 	    const gchar *s;
 	    bson_cursor_get_symbol (c, &s);
-	    printf ("%s\n", s);
+	    printf ("%s,\n", s);
 	    break;
 	  }
 	case BSON_TYPE_INT32:
 	  {
 	    gint32 l32;
 	    bson_cursor_get_int32 (c, &l32);
-	    printf ("%d\n", l32);
+	    printf ("%d,\n", l32);
 	    break;
 	  }
 	case BSON_TYPE_INT64:
 	  {
 	    gint64 l64;
 	    bson_cursor_get_int64 (c, &l64);
-	    printf ("%ld\n", l64);
+	    printf ("%ld,\n", l64);
 	    break;
 	  }
 	case BSON_TYPE_DOCUMENT:
 	  {
 	    bson *sd;
 	    bson_cursor_get_document (c, &sd);
-	    printf ("\n");
+	    printf ("{\n");
 	    bson_dump (sd, ilevel + 1);
+	    for (l = 1; l <= ilevel; l++)
+	      printf (" ");
+	    printf ("},\n");
 	    bson_free (sd);
 	    break;
 	  }
@@ -118,7 +121,7 @@ bson_dump (bson *b, gint ilevel)
 	case BSON_TYPE_MIN:
 	case BSON_TYPE_MAX:
 	default:
-	  printf ("<unimplemented>\n");
+	  printf ("\"<unimplemented>\",\n");
 	  break;
 	}
     }
@@ -172,9 +175,9 @@ main (int argc, char *argv[])
       bson_finish (b);
       offs += bson_size (b);
 
-      printf ("Document #%lu:\n", i);
+      printf ("/* Document #%lu */\n{\n", i);
       bson_dump (b, 1);
-      printf ("\n");
+      printf ("},\n\n");
 
       bson_free (b);
       i++;
