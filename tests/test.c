@@ -5,6 +5,13 @@
 #include <stdio.h>
 #include <signal.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+static int dump_fd = -1;
+
 void
 ignore_sigpipe (void)
 {
@@ -17,51 +24,29 @@ ignore_sigpipe (void)
 }
 
 gboolean
-dump_bson (bson *b)
+test_dump_setup (void)
 {
-  gboolean r;
+  int fd;
 
-  r = dump_data (bson_data (b), bson_size (b));
-  bson_free (b);
-  return r;
+  fd = open ("libmongo-tests.bson", O_RDWR | O_CREAT | O_TRUNC, 0600);
+  if (fd == -1)
+    return FALSE;
+  dump_fd = fd;
+  return TRUE;
 }
 
 gboolean
-dump_data (const guint8 *d, gint32 size)
+test_dump_teardown (void)
 {
-  gint32 i;
+  return (close (dump_fd) == 0);
+}
 
-  if (!d || size <= 0)
+gboolean
+test_dump_add_bson (const bson *b)
+{
+  if (dump_fd == -1)
     return FALSE;
-
-  for (i = 0; i < size; i++)
-    {
-      if (isprint (d[i]))
-	switch (d[i])
-	  {
-	  case '\\':
-	    printf ("\\\\");
-	    break;
-	  default:
-	    printf ("%c", d[i]);
-	    break;
-	  }
-      else
-	switch (d[i])
-	  {
-	  case '\t':
-	    printf ("\\t");
-	    break;
-	  case '\n':
-	    printf ("\\n");
-	    break;
-	  default:
-	    printf ("\\x%02x", d[i]);
-	    break;
-	  }
-    }
-
-  printf ("\n");
-
+  if (write (dump_fd, bson_data (b), bson_size (b)) != bson_size (b))
+    return FALSE;
   return TRUE;
 }

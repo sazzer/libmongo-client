@@ -1,0 +1,12 @@
+{}
+{ "hello" : "world" }
+{ "goodbye" : "cruel world" }
+{ "double" : 3.14 }
+{ "FALSE" : false, "TRUE" : true }
+{ "date" : Date( 1294860709000 ) }
+{ "null" : null }
+{ "int32" : 1984 }
+{ "int64" : 9876543210 }
+{ "regexp" : /foo.*bar/i }
+{ "binary0" : { "$binary" : "Zm9vAGJhcg==", "$type" : "00" } }
+{ "binary2" : { "$binary" : "AAAAB2ZvbwBiYXI=", "$type" : "02" } }
