@@ -58,7 +58,7 @@ unset_nonblock (int fd)
 mongo_connection *
 _mongo_connect (const char *host, int port, mongo_connection *c)
 {
-  struct addrinfo *res, *r;
+  struct addrinfo *res = NULL, *r;
   struct addrinfo hints;
   int e, fd = -1;
   gchar *port_s;
@@ -71,13 +71,13 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
 #endif
 
   port_s = g_strdup_printf ("%d", port);
-  e = getaddrinfo (host, port_s, &hints, & res);
+  e = getaddrinfo (host, port_s, &hints, &res);
   if (e != 0)
     {
-      int e = errno;
+      int err = errno;
 
       g_free (port_s);
-      errno = e;
+      errno = err;
       return NULL;
     }
   g_free (port_s);
@@ -105,10 +105,10 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
 
   if (unset_nonblock (fd))
     {
-      int e = errno;
+      int err = errno;
 
       close (fd);
-      errno = e;
+      errno = err;
       return NULL;
     }
 
