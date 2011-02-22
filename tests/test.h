@@ -45,8 +45,10 @@ static gint current_test_no __attribute__((unused)) = 0;
     exit (0);					\
   }
 
-gboolean dump_data (const guint8 *d, gint32 size);
-gboolean dump_bson (bson *b);
 void ignore_sigpipe (void);
+
+gboolean test_dump_setup (void);
+gboolean test_dump_add_bson (const bson *b);
+gboolean test_dump_teardown (void);
 
 #endif

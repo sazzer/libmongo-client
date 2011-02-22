@@ -15,7 +15,7 @@ test_bson_empty (void)
   g_assert (b);
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -27,7 +27,7 @@ test_bson_string (void)
   g_assert (bson_append_string (b, "hello", "world", -1));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -41,7 +41,7 @@ test_bson_string_len (void)
 	     strlen ("cruel world")));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -54,7 +54,7 @@ test_bson_double (void)
   g_assert (bson_append_double (b, "double", d));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -67,7 +67,7 @@ test_bson_boolean (void)
   g_assert (bson_append_boolean (b, "TRUE", TRUE));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -79,7 +79,7 @@ test_bson_utc_datetime (void)
   g_assert (bson_append_utc_datetime (b, "date", 1294860709000));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -91,7 +91,7 @@ test_bson_null (void)
   g_assert (bson_append_null (b, "null"));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -103,7 +103,7 @@ test_bson_int32 (void)
   g_assert (bson_append_int32 (b, "int32", 1984));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -115,7 +115,7 @@ test_bson_int64 (void)
   g_assert (bson_append_int64 (b, "int64", 9876543210));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -127,7 +127,7 @@ test_bson_regexp (void)
   g_assert (bson_append_regex (b, "regexp", "foo.*bar", "i"));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -140,7 +140,7 @@ test_bson_binary0 (void)
 				(guint8 *)"foo\0bar", 7));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 gboolean
@@ -153,12 +153,14 @@ test_bson_binary2 (void)
 				(guint8 *)"\0\0\0\7foo\0bar", 11));
   bson_finish (b);
 
-  return dump_bson (b);
+  return test_dump_add_bson (b);
 }
 
 int
 main (void)
 {
+  g_assert (test_dump_setup ());
+
   g_assert (test_bson_empty ());
   g_assert (test_bson_string ());
   g_assert (test_bson_string_len ());
@@ -171,6 +173,8 @@ main (void)
   g_assert (test_bson_regexp ());
   g_assert (test_bson_binary0 ());
   g_assert (test_bson_binary2 ());
+
+  g_assert (test_dump_teardown ());
 
   return 0;
 }

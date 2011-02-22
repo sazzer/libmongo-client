@@ -1,0 +1,2 @@
+{ "int32" : 1984, "FALSE" : false, "goodbye" : "cruel world", "date" : Date( 1294860709000 ), "double" : 3.14, "int64" : 9876543210, "null" : null, "TRUE" : true, "hello" : "world" }
+{ "user" : { "name" : "V.A. Lucky", "id" : 12345 }, "posts" : [ { "title" : "Post #1", "date" : Date( 1294860709000 ), "comments" : [ "first!", "2nd!", "last!" ] }, { "title" : "Post #2", "date" : Date( 1294860709000 ) } ] }

@@ -36,7 +36,7 @@ check-FULL-HARNESS: check-HARNESS
 AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
 
-EXTRA_DIST = verify-bson.py verify-bson-wrapper.sh README
+EXTRA_DIST = verify-bson-wrapper.sh README result_bson_build_base result_bson_build_compound
 
 test_srcs = test.c test.h test-generator.c test-generator.h
 test_network_srcs = ${test_srcs} test-network.h test-network.c

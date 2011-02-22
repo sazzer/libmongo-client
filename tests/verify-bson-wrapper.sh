@@ -4,21 +4,31 @@ set -e
 run_test ()
 {
 	test=$1
+	no=$2
+	t=$(mktemp)
+	ret=1
 
 	if test -x ./test_${test}; then
-		if ! ./test_${test} | python ${srcdir}/verify-bson.py ${test}; then
-			return 1
-		fi
-	else
-		if ! python ${srcdir}/verify-bson.py ${test}; then
-			return 1
+		if ./test_${test}; then
+			bsondump libmongo-tests.bson | head -n -1 >${t}
+			if cmp ${t} ${srcdir}/result_${test}; then
+				ret=0
+			fi
 		fi
 	fi
+	rm -f libmongo-tests.bson "${t}"
 
-	return 0
+	if test ${ret} = 0; then
+		echo "ok ${no}"
+	else
+		echo "not ok ${no}"
+	fi
 }
 
-if run_test plan; then
-	run_test bson_build_base
-	run_test bson_build_compound
+if ! test -z "$(which bsondump)"; then
+	echo "1..2"
+	run_test bson_build_base 1
+	run_test bson_build_compound 2
+else
+	echo "1..0 # SKIP bsondump not found"
 fi
