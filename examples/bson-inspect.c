@@ -48,7 +48,7 @@ bson_dump (bson *b, gint ilevel)
 	    bson_cursor_get_oid (c, &oid);
 	    printf ("ObjectId(\"");
 	    for (j = 0; j < 12; j++)
-	      printf ("%x", oid[j]);
+	      printf ("%02x", oid[j]);
 	    printf ("\"),\n");
 	    break;
 	  }
