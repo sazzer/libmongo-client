@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <glib.h>
+
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
 void
@@ -128,11 +130,16 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    printf ("{ ");
 	    if (verbose)
 	      printf ("\n");
-	    bson_dump (sd, ilevel + 1, FALSE);
+	    bson_dump (sd, ilevel + 1, verbose);
 	    if (verbose)
-	      for (l = 1; l <= ilevel; l++)
-		printf (" ");
-	    printf (" }");
+	      {
+		printf ("\n");
+		for (l = 1; l <= ilevel; l++)
+		  printf (" ");
+		printf ("}");
+	      }
+	    else
+	      printf (" }");
 	    bson_free (sd);
 	    break;
 	  }
@@ -149,8 +156,6 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	  printf ("\"<unimplemented>\"");
 	  break;
 	}
-      if (verbose)
-	printf ("/* %s */", bson_cursor_type_as_string (c) + 10);
     }
   bson_cursor_free (c);
 }
@@ -164,10 +169,30 @@ main (int argc, char *argv[])
   guint8 *data;
   struct stat st;
   gint64 i = 1;
+  GOptionContext *context;
+  gboolean verbose = FALSE;
+  GError *error = NULL;
+
+  GOptionEntry entries[] =
+    {
+      { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
+	"Be verbose", NULL },
+      { NULL }
+    };
+
+  context = g_option_context_new ("- inspect a BSON dump");
+  g_option_context_add_main_entries (context, entries, "bson-inspect");
+  if (!g_option_context_parse (context, &argc, &argv, &error))
+    {
+      g_print ("option parsing failed: %s\n", error->message);
+      exit (1);
+    }
 
   if (argc < 2)
     {
-      printf ("Usage: %s FILENAME\n", argv[0]);
+      gchar *help = g_option_context_get_help (context, TRUE, NULL);
+
+      printf (help);
       exit (1);
     }
 
@@ -202,12 +227,18 @@ main (int argc, char *argv[])
       bson_finish (b);
       offs += bson_size (b);
 
-      //printf ("/* Document #%lu */\n", i);
+      if (verbose)
+	printf ("/* Document #%lu */\n", i);
       printf ("{ ");
-      //printf ("\n");
-      bson_dump (b, 1, FALSE);
-      printf (" }\n");
-      //printf ("\n");
+      if (verbose)
+	printf ("\n");
+      bson_dump (b, 1, verbose);
+      if (verbose)
+	printf ("\n}\n");
+      else
+	printf (" }\n");
+      if (verbose)
+	printf ("\n");
 
       bson_free (b);
       i++;
