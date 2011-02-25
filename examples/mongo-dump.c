@@ -205,7 +205,7 @@ main (int argc, char *argv[])
     {
       gchar *help = g_option_context_get_help (context, TRUE, NULL);
 
-      printf (help);
+      printf ("%s", help);
       exit (1);
     }
 
