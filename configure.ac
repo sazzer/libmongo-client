@@ -162,11 +162,15 @@ AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [version number])
 
 if test "x$enable_openssl"; then
 	d_enable_auth=1
+	openssl_pc="openssl"
 else
+	openssl_pc=""
 	d_enable_auth=0
 fi
 
 AC_DEFINE_UNQUOTED(ENABLE_AUTH, $d_enable_auth, [OpenSSL was detected, compiling with auth support])
+
+AC_SUBST(openssl_pc)
 
 AC_OUTPUT(
 	Makefile
