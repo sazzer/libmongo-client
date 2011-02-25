@@ -129,7 +129,8 @@ gboolean mongo_sync_cmd_update (mongo_sync_connection *conn,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean mongo_sync_cmd_insert (mongo_sync_connection *conn,
-				const gchar *ns, ...);
+				const gchar *ns, ...)
+  __attribute__((sentinel));
 
 /** Send a query command to MongoDB.
  *

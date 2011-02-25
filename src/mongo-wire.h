@@ -277,7 +277,8 @@ mongo_packet *mongo_wire_cmd_update (gint32 id, const gchar *ns,
  * responsibility of the caller to free the packet once it is not used
  * anymore.
  */
-mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...);
+mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...)
+  __attribute__((sentinel));
 
 /** Flags available for the query command.
  * @see mongo_wire_cmd_query().
