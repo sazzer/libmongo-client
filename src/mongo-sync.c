@@ -1027,6 +1027,11 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
       errno = ENOTCONN;
       return FALSE;
     }
+  if (!db || !user || !pw)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
 
   /* Obtain nonce */
   b = bson_new_sized (32);
