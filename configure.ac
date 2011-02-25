@@ -160,7 +160,7 @@ fi
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE", [package name])
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [version number])
 
-if test "x$enable_openssl"; then
+if test "x$enable_openssl" = "xyes"; then
 	d_enable_auth=1
 	openssl_pc="openssl"
 else
