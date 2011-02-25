@@ -22,6 +22,10 @@
 #include <errno.h>
 #include <string.h>
 
+#if ENABLE_AUTH
+#include <openssl/md5.h>
+#endif
+
 mongo_sync_connection *
 mongo_sync_connect (const gchar *host, int port,
 		    gboolean slaveok)
@@ -986,14 +990,155 @@ mongo_sync_cmd_ping (mongo_sync_connection *conn)
 }
 
 #if ENABLE_AUTH
+static void
+digest2hex (guint8 digest[16], guint8 hex_digest[33])
+{
+  static const char hex[16] =
+    {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+     'a', 'b', 'c', 'd', 'e', 'f'};
+  int i;
+
+  for (i = 0; i < 16; i++)
+    {
+      hex_digest[2 * i] = hex[(digest[i] & 0xf0) >> 4];
+      hex_digest[2 * i + 1] = hex[digest[i] & 0x0f];
+    }
+  hex_digest[32] = '\0';
+}
+
 gboolean
 mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
 			     const gchar *db,
 			     const gchar *user,
 			     const gchar *pw)
 {
-  errno = ENOTSUP;
-  return FALSE;
+  bson *b;
+  mongo_packet *p;
+  const gchar *s;
+  gchar *nonce;
+  bson_cursor *c;
+
+  MD5_CTX mc;
+  guint8 digest[16];
+  guint8 hex_digest[33];
+
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  /* Obtain nonce */
+  b = bson_new_sized (32);
+  bson_append_int32 (b, "getnonce", 1);
+  bson_finish (b);
+
+  p = mongo_sync_cmd_custom (conn, db, b);
+  if (!p)
+    {
+      int e = errno;
+
+      bson_free (b);
+      errno = e;
+      return FALSE;
+    }
+  bson_free (b);
+
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &b))
+    {
+      int e = errno;
+
+      mongo_wire_packet_free (p);
+      errno = e;
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  bson_finish (b);
+
+  if (!_mongo_sync_check_ok (b))
+    {
+      int e = errno;
+
+      bson_free (b);
+      errno = e;
+      return FALSE;
+    }
+
+  c = bson_find (b, "nonce");
+  if (!c)
+    {
+      bson_free (b);
+      errno = EPROTO;
+      return FALSE;
+    }
+  if (!bson_cursor_get_string (c, &s))
+    {
+      bson_free (b);
+      errno = EPROTO;
+      return FALSE;
+    }
+  nonce = g_strdup (s);
+  bson_cursor_free (c);
+  bson_free (b);
+
+  /* Generate the password digest. */
+  MD5_Init (&mc);
+  MD5_Update (&mc, (const void *)user, strlen (user));
+  MD5_Update (&mc, (const void *)":mongo:", 7);
+  MD5_Update (&mc, (const void *)pw, strlen (pw));
+  MD5_Final (digest, &mc);
+  digest2hex (digest, hex_digest);
+
+  /* Generate the key */
+  MD5_Init (&mc);
+  MD5_Update (&mc, (const void *)nonce, strlen (nonce));
+  MD5_Update (&mc, (const void *)user, strlen (user));
+  MD5_Update (&mc, (const void *)hex_digest, 32);
+  MD5_Final (digest, &mc);
+  digest2hex (digest, hex_digest);
+
+  /* Run the authenticate command. */
+  b = bson_build (BSON_TYPE_INT32, "authenticate", 1,
+		  BSON_TYPE_STRING, "user", user, -1,
+		  BSON_TYPE_STRING, "nonce", nonce, -1,
+		  BSON_TYPE_STRING, "key", hex_digest, -1,
+		  BSON_TYPE_NONE);
+  bson_finish (b);
+  g_free (nonce);
+
+  p = mongo_sync_cmd_custom (conn, db, b);
+  if (!p)
+    {
+      int e = errno;
+
+      bson_free (b);
+      errno = e;
+      return FALSE;
+    }
+  bson_free (b);
+
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &b))
+    {
+      int e = errno;
+
+      mongo_wire_packet_free (p);
+      errno = e;
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  bson_finish (b);
+
+  if (!_mongo_sync_check_ok (b))
+    {
+      int e = errno;
+
+      bson_free (b);
+      errno = e;
+      return FALSE;
+    }
+  bson_free (b);
+
+  return TRUE;
 }
 #else
 gboolean
