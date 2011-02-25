@@ -33,6 +33,11 @@ static gint current_test_no __attribute__((unused)) = 0;
     printf ("ok %d\n", current_test_no);	\
     current_test = NULL;			\
   }
+#define FAIL()					\
+  {						\
+    printf ("not ok %d\n", current_test_no);	\
+    current_test = NULL;			\
+  }
 #define SKIP(s)						\
   {							\
     printf ("ok %d # SKIP %s\n", current_test_no, s);	\
