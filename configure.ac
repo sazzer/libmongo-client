@@ -131,15 +131,16 @@ dnl ***************************************************************************
 # openssl is needed for:
 #  * authentication support
 
-dnl check OpenSSL static linking
-PKG_CHECK_MODULES(OPENSSL, openssl >= $OPENSSL_MIN_VERSION,, OPENSSL_LIBS="")
+if test "x$enable_openssl" = "xauto" || test "x$enable_openssl" = "xyes"; then
+	PKG_CHECK_MODULES(OPENSSL, openssl >= $OPENSSL_MIN_VERSION,, OPENSSL_LIBS="")
 
-if test "x$OPENSSL_LIBS" != "x"; then
-        if test "x$enable_openssl" = "xauto"; then
-	        enable_openssl="yes"
-        fi
-else
-        enable_openssl="no"
+	if test "x$OPENSSL_LIBS" != "x"; then
+        	if test "x$enable_openssl" = "xauto"; then
+	        	enable_openssl="yes"
+		else
+			AC_ERROR([OpenSSL not found!])
+        	fi
+	fi
 fi
 
 dnl ***************************************************************************
