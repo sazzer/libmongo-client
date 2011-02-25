@@ -1006,6 +1006,116 @@ digest2hex (guint8 digest[16], guint8 hex_digest[33])
   hex_digest[32] = '\0';
 }
 
+static void _pass_digest (const gchar *user, const gchar *pw,
+			  guint8 hex_digest[33])
+{
+  MD5_CTX mc;
+  guint8 digest[16];
+
+  MD5_Init (&mc);
+  MD5_Update (&mc, (const void *)user, strlen (user));
+  MD5_Update (&mc, (const void *)":mongo:", 7);
+  MD5_Update (&mc, (const void *)pw, strlen (pw));
+  MD5_Final (digest, &mc);
+  digest2hex (digest, hex_digest);
+}
+
+gboolean
+mongo_sync_cmd_user_add (mongo_sync_connection *conn,
+			 const gchar *db,
+			 const gchar *user,
+			 const gchar *pw)
+{
+  bson *s, *u;
+  gchar *userns;
+  guint8 hex_digest[33];
+
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+  if (!db || !user || !pw)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  userns = g_strconcat (db, ".system.users", NULL);
+  if (!userns)
+    return FALSE;
+
+  _pass_digest (user, pw, hex_digest);
+
+  s = bson_build (BSON_TYPE_STRING, "user", user, -1,
+		  BSON_TYPE_NONE);
+  bson_finish (s);
+  u = bson_build_full (BSON_TYPE_DOCUMENT, "$set", TRUE,
+		       bson_build (BSON_TYPE_STRING, "pwd", hex_digest, -1,
+				   BSON_TYPE_NONE),
+		       BSON_TYPE_NONE);
+  bson_finish (u);
+
+  if (!mongo_sync_cmd_update (conn, userns, MONGO_WIRE_FLAG_UPDATE_UPSERT,
+			      s, u))
+    {
+      int e = errno;
+
+      bson_free (s);
+      bson_free (u);
+      g_free (userns);
+      errno = e;
+      return FALSE;
+    }
+  bson_free (s);
+  bson_free (u);
+  g_free (userns);
+
+  return TRUE;
+}
+
+gboolean
+mongo_sync_cmd_user_remove (mongo_sync_connection *conn,
+			    const gchar *db,
+			    const gchar *user)
+{
+  bson *s;
+  gchar *userns;
+
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+  if (!db || !user)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  userns = g_strconcat (db, ".system.users", NULL);
+  if (!userns)
+    return FALSE;
+
+  s = bson_build (BSON_TYPE_STRING, "user", user, -1,
+		  BSON_TYPE_NONE);
+  bson_finish (s);
+
+  if (!mongo_sync_cmd_delete (conn, userns, 0, s))
+    {
+      int e = errno;
+
+      bson_free (s);
+      g_free (userns);
+      errno = e;
+      return FALSE;
+    }
+  bson_free (s);
+  g_free (userns);
+
+  return TRUE;
+}
+
 gboolean
 mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
 			     const gchar *db,
@@ -1087,12 +1197,7 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
   bson_free (b);
 
   /* Generate the password digest. */
-  MD5_Init (&mc);
-  MD5_Update (&mc, (const void *)user, strlen (user));
-  MD5_Update (&mc, (const void *)":mongo:", 7);
-  MD5_Update (&mc, (const void *)pw, strlen (pw));
-  MD5_Final (digest, &mc);
-  digest2hex (digest, hex_digest);
+  _pass_digest (user, pw, hex_digest);
 
   /* Generate the key */
   MD5_Init (&mc);
@@ -1146,6 +1251,25 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
   return TRUE;
 }
 #else
+gboolean
+mongo_sync_cmd_user_add (mongo_sync_connection *conn,
+			 const gchar *db,
+			 const gchar *user,
+			 const gchar *pw)
+{
+  errno = ENOTSUP;
+  return FALSE;
+}
+
+gboolean
+mongo_sync_cmd_user_remove (mongo_sync_connection *conn,
+			    const gchar *db,
+			    const gchar *user)
+{
+  errno = ENOTSUP;
+  return FALSE;
+}
+
 gboolean
 mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
 			     const gchar *db,

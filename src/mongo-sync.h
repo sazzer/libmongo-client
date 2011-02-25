@@ -284,6 +284,32 @@ gboolean mongo_sync_cmd_is_master (mongo_sync_connection *conn);
  */
 gboolean mongo_sync_cmd_ping (mongo_sync_connection *conn);
 
+/** Add a user to MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the database to add the user to.
+ * @param user is the user to add.
+ * @param pw is the password.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_user_add (mongo_sync_connection *conn,
+				  const gchar *db,
+				  const gchar *user,
+				  const gchar *pw);
+
+/** Remove a user from MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the database to remove the user from.
+ * @param user is the username to remove.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_user_remove (mongo_sync_connection *conn,
+				     const gchar *db,
+				     const gchar *user);
+
 /** Authenticate a user with MongoDB.
  *
  * @param conn is the connection to work with.
