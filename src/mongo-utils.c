@@ -88,6 +88,7 @@ gboolean
 mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
 {
   gchar *port_s, *ep;
+  glong p;
 
   if (!addr)
     {
@@ -103,14 +104,16 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
   port_s++;
   *host = g_strndup (addr, port_s - addr - 1);
 
-  *port = strtol (port_s, &ep, 10);
-  if (*port == LONG_MIN || *port == LONG_MAX)
+  p = strtol (port_s, &ep, 10);
+  if (p == LONG_MIN || p == LONG_MAX)
     {
       g_free (*host);
       *host = NULL;
       *port = -1;
       return FALSE;
     }
+  *port = (gint)p;
+
   if (ep && *ep)
     {
       g_free (*host);
