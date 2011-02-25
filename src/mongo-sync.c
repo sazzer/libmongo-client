@@ -983,3 +983,13 @@ mongo_sync_cmd_ping (mongo_sync_connection *conn)
   bson_free (cmd);
   return TRUE;
 }
+
+gboolean
+mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
+			     const gchar *db,
+			     const gchar *user,
+			     const gchar *pw)
+{
+  errno = ENOTSUP;
+  return FALSE;
+}

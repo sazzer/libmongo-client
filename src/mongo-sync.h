@@ -284,6 +284,20 @@ gboolean mongo_sync_cmd_is_master (mongo_sync_connection *conn);
  */
 gboolean mongo_sync_cmd_ping (mongo_sync_connection *conn);
 
+/** Authenticate a user with MongoDB.
+ *
+ * @param conn is the connection to work with.
+ * @param db is the database to authenticate against.
+ * @param user is the username.
+ * @param pw is the password.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
+				      const gchar *db,
+				      const gchar *user,
+				      const gchar *pw);
+
 /** @} */
 
 #endif

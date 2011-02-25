@@ -515,6 +515,27 @@ test_mongo_sync_cmd_ping (void)
 }
 
 void
+test_mongo_sync_cmd_authenticate (void)
+{
+  mongo_sync_connection *conn;
+
+  TEST (mongo_sync.cmd.authenticate);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  g_assert (conn);
+
+  if (!mongo_sync_cmd_authenticate (conn, TEST_SERVER_DB, "test", "s3kr1+"))
+    {
+      if (errno == ENOTSUP)
+	SKIP ("Authentication support not compiled in.")
+      else
+	FAIL ();
+    }
+  else
+    PASS ();
+  mongo_sync_disconnect (conn);
+}
+
+void
 do_plan (int max)
 {
   mongo_sync_connection *conn;
@@ -536,7 +557,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (17);
+  do_plan (18);
 
   test_mongo_sync_set_slaveok ();
   test_mongo_sync_cmd_insert ();
@@ -551,6 +572,8 @@ main (void)
   test_mongo_sync_cmd_get_last_error ();
   test_mongo_sync_cmd_drop ();
   test_mongo_sync_cmd_ping ();
+
+  test_mongo_sync_cmd_authenticate ();
 
   test_mongo_sync_connect ();
 
