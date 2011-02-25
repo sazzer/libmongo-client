@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "config.h"
 #include "mongo.h"
 #include "libmongo-private.h"
 
@@ -984,6 +985,7 @@ mongo_sync_cmd_ping (mongo_sync_connection *conn)
   return TRUE;
 }
 
+#if ENABLE_AUTH
 gboolean
 mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
 			     const gchar *db,
@@ -993,3 +995,14 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
   errno = ENOTSUP;
   return FALSE;
 }
+#else
+gboolean
+mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
+			     const gchar *db,
+			     const gchar *user,
+			     const gchar *pw)
+{
+  errno = ENOTSUP;
+  return FALSE;
+}
+#endif
