@@ -87,7 +87,10 @@ test_mongo_slave_fail (void)
 
   cnt = mongo_sync_cmd_count (conn, TEST_SERVER_DB, TEST_SERVER_COLLECTION,
 			      NULL);
-  g_assert_cmpint (cnt, ==, -1);
+  if (!mongo_sync_cmd_is_master (conn))
+    g_assert_cmpint (cnt, ==, -1);
+  else
+    g_assert_cmpint (cnt, ==, 1);
 
   mongo_sync_disconnect (conn);
   PASS ();
@@ -148,10 +151,11 @@ test_mongo_slave_reconnect (void)
   g_assert (conn);
 
   o = conn;
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
   g_assert ((conn = mongo_sync_reconnect (conn, FALSE)) != NULL);
   g_assert (o == conn);
   g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
-  g_assert (o != conn);
+  g_assert (o == conn);
   g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
 
   mongo_sync_disconnect (conn);
@@ -171,6 +175,182 @@ test_mongo_slave_reconnect (void)
   g_assert (conn);
   g_assert (mongo_sync_cmd_ping (conn));
 
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
+test_mongo_slave_auto_reconnect (void)
+{
+  mongo_sync_connection *conn;
+  bson *b, *u;
+  mongo_packet *p;
+
+  TEST (mongo_slave.auto_reconnect.insert);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  b = bson_build (BSON_TYPE_INT32, "auto_sync", 1234,
+		  BSON_TYPE_NONE);
+  bson_finish (b);
+
+  g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, b, NULL));
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.update);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  u = bson_build (BSON_TYPE_INT32, "auto_sync", 4321,
+		  BSON_TYPE_NONE);
+  bson_finish (u);
+
+  g_assert (mongo_sync_cmd_update (conn, TEST_SERVER_NS, 0, b, u));
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+  bson_free (b);
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.query);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS, 0, 0, 1,
+				       u, NULL)) != NULL);
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  mongo_wire_packet_free (p);
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.query.force_master);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS, 0, 0, 1,
+				       u, NULL)) != NULL);
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+
+  mongo_wire_packet_free (p);
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.delete);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+  g_assert (mongo_sync_cmd_delete (conn, TEST_SERVER_NS, 0, u));
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+
+  bson_free (u);
+  mongo_sync_disconnect (conn);
+  PASS ();
+}
+
+void
+test_mongo_slave_auto_reconnect_from_dc (void)
+{
+  mongo_sync_connection *conn;
+  bson *b, *u;
+  mongo_packet *p;
+  gint i;
+
+  TEST (mongo_slave.auto_reconnect.from_dc.insert);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  b = bson_build (BSON_TYPE_INT32, "auto_sync", 1234,
+		  BSON_TYPE_NONE);
+  bson_finish (b);
+
+  for (i = 3; i < 128; i++)
+    shutdown (i, SHUT_RDWR);
+
+  g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, b, NULL));
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.from_dc.update);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  u = bson_build (BSON_TYPE_INT32, "auto_sync", 4321,
+		  BSON_TYPE_NONE);
+  bson_finish (u);
+
+  for (i = 3; i < 128; i++)
+    shutdown (i, SHUT_RDWR);
+
+  g_assert (mongo_sync_cmd_update (conn, TEST_SERVER_NS, 0, b, u));
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+  bson_free (b);
+
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.from_dc.query);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  for (i = 3; i < 128; i++)
+    shutdown (i, SHUT_RDWR);
+
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS, 0, 0, 1,
+				       u, NULL)) != NULL);
+
+  mongo_wire_packet_free (p);
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.from_dc.query.force_master);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  for (i = 3; i < 128; i++)
+    shutdown (i, SHUT_RDWR);
+
+  g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS, 0, 0, 1,
+				       u, NULL)) != NULL);
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+
+  mongo_wire_packet_free (p);
+  mongo_sync_disconnect (conn);
+  PASS ();
+
+  TEST (mongo_slave.auto_reconnect.from_dc.delete);
+  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, TRUE);
+  g_assert (conn);
+
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
+
+  for (i = 3; i < 128; i++)
+    shutdown (i, SHUT_RDWR);
+
+  g_assert (mongo_sync_cmd_delete (conn, TEST_SERVER_NS, 0, u));
+  g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
+
+  bson_free (u);
   mongo_sync_disconnect (conn);
   PASS ();
 }
@@ -197,7 +377,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (10);
+  do_plan (20);
 
   ignore_sigpipe ();
 
@@ -206,6 +386,10 @@ main (void)
   test_mongo_slave_fail ();
   test_mongo_slave_cmd_is_master ();
   test_mongo_slave_reconnect ();
+
+  test_mongo_slave_auto_reconnect ();
+  test_mongo_slave_auto_reconnect_from_dc ();
+
   test_mongo_slave_teardown ();
 
   test_env_free ();
