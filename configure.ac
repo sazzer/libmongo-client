@@ -38,29 +38,6 @@ PKG_PROG_PKG_CONFIG
 LT_INIT([disable-shared pic-only])
 
 dnl ***************************************************************************
-dnl How to do static linking?
-dnl ***************************************************************************
-AC_MSG_CHECKING(how to enable static linking for certain libraries)
-ldversion=`ld -V 2>&1 | head -1`
-if echo $ldversion | egrep "GNU|Solaris" > /dev/null; then
-        LD_START_STATIC="-Wl,-Bstatic"
-        LD_END_STATIC="-Wl,-Bdynamic"
-        AC_MSG_RESULT(GNU or Solaris)
-elif test $ostype = "HP-UX" > /dev/null; then
-        LD_START_STATIC="-Wl,-a,archive"
-        LD_END_STATIC="-Wl,-a,shared_archive"
-        AC_MSG_RESULT(HP-UX)
-elif test "$ostype" = "AIX"; then
-        LD_START_STATIC="-Wl,-bstatic"
-        LD_END_STATIC="-Wl,-bdynamic"
-        AC_MSG_RESULT(AIX)
-else
-        LD_START_STATIC=""
-        LD_END_STATIC=""
-        AC_MSG_RESULT([no clues, linking everything dynamically, please send appropriate ld arguments to algernon@balabit.hu])
-fi
-
-dnl ***************************************************************************
 dnl Miscellanneous headers
 dnl ***************************************************************************
 
@@ -91,7 +68,7 @@ AC_FUNC_MMAP
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_CHECK_FUNCS(memset socket inet_aton inet_ntoa getaddrinfo munmap strtol strerror)
+AC_CHECK_FUNCS(memset socket getaddrinfo munmap strtol strerror)
 
 dnl ***************************************************************************
 dnl GLib headers/libraries
