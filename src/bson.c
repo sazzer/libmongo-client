@@ -23,6 +23,7 @@
 #include <stdarg.h>
 
 #include "bson.h"
+#include "libmongo-macros.h"
 
 /** @internal BSON structure.
  */
@@ -625,10 +626,12 @@ bson_free (bson *b)
 gboolean
 bson_append_double (bson *b, const gchar *name, gdouble val)
 {
+  gdouble d = GDOUBLE_TO_LE (val);
+
   if (!_bson_append_element_header (b, BSON_TYPE_DOUBLE, name))
     return FALSE;
 
-  b->data = g_byte_array_append (b->data, (const guint8 *)&val, sizeof (val));
+  b->data = g_byte_array_append (b->data, (const guint8 *)&d, sizeof (val));
   return DATA_OK (b);
 }
 
@@ -970,6 +973,7 @@ bson_cursor_get_double (const bson_cursor *c, gdouble *dest)
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_DOUBLE);
 
   memcpy (dest, bson_data (c->obj) + c->value_pos, sizeof (gdouble));
+  *dest = GDOUBLE_FROM_LE (*dest);
 
   return TRUE;
 }

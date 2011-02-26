@@ -9,7 +9,7 @@ libmongo_client_la_SOURCES = \
 	mongo-utils.c mongo-utils.h \
 	mongo-sync.c mongo-sync.h \
 	mongo.h \
-	libmongo-private.h
+	libmongo-private.h libmongo-macros.h
 
 libmongo_client_includedir = $(includedir)/mongo-client
 libmongo_client_include_HEADERS = \
