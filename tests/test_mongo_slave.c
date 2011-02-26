@@ -365,6 +365,11 @@ do_plan (int max)
   if (!test_getenv_secondary ())
     SKIP_ALL ("TEST_SECONDARY variable not set");
 
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  if (!conn)
+    SKIP_ALL ("cannot connect to mongodb");
+  mongo_sync_disconnect (conn);
+
   conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
   if (!conn)
     SKIP_ALL ("cannot connect to mongodb");
