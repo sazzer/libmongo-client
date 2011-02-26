@@ -345,6 +345,14 @@ mongo_sync_cmd_query (mongo_sync_connection *conn,
 	  return FALSE;
 	}
     }
+  else if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
+    }
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
@@ -423,6 +431,14 @@ mongo_sync_cmd_get_more (mongo_sync_connection *conn,
       !mongo_sync_cmd_is_master (conn))
     {
       if (!mongo_sync_reconnect (conn, TRUE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
+    }
+  else if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
 	{
 	  errno = ENOTCONN;
 	  return FALSE;
@@ -541,6 +557,15 @@ mongo_sync_cmd_kill_cursors (mongo_sync_connection *conn,
     {
       errno = EINVAL;
       return FALSE;
+    }
+
+  if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
     }
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
@@ -689,6 +714,14 @@ mongo_sync_cmd_count (mongo_sync_connection *conn,
 	  return FALSE;
 	}
     }
+  else if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
+    }
 
   cmd = bson_new_sized (bson_size (query) + 32);
   bson_append_string (cmd, "count", coll, -1);
@@ -822,6 +855,15 @@ mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
       return FALSE;
     }
 
+  if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
+    }
+
   cmd = bson_new_sized (64);
   bson_append_int32 (cmd, "getlasterror", 1);
   bson_finish (cmd);
@@ -896,6 +938,15 @@ mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
     {
       errno = ENOTCONN;
       return FALSE;
+    }
+
+  if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
     }
 
   cmd = bson_new_sized (32);
@@ -1250,6 +1301,15 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
       return FALSE;
     }
 
+  if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
+    }
+
   /* Obtain nonce */
   b = bson_new_sized (32);
   bson_append_int32 (b, "getnonce", 1);
@@ -1322,6 +1382,15 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
 		  BSON_TYPE_NONE);
   bson_finish (b);
   g_free (nonce);
+
+  if (!mongo_sync_cmd_ping (conn))
+    {
+      if (!mongo_sync_reconnect (conn, FALSE))
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
+    }
 
   p = mongo_sync_cmd_custom (conn, db, b);
   if (!p)
