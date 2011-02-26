@@ -854,15 +854,6 @@ mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
       return FALSE;
     }
 
-  if (!mongo_sync_cmd_ping (conn))
-    {
-      if (!mongo_sync_reconnect (conn, FALSE))
-	{
-	  errno = ENOTCONN;
-	  return FALSE;
-	}
-    }
-
   cmd = bson_new_sized (64);
   bson_append_int32 (cmd, "getlasterror", 1);
   bson_finish (cmd);
