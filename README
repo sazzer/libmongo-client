@@ -4,9 +4,11 @@ goals than the official one.
 We're not so strict on dependencies (we're using glib), and the API is
 very different too.
 
-Apart from glib, there are no other hard dependencies. For the full
-test suite run, though, one will need PyMongo version 1.9 or
-later. Most of the test suite runs without it.
+Apart from glib, there are no other hard dependencies. Though, one
+will need OpenSSL for authentication support, and a mongodb
+installation (or at least bsondump) for the full test suite run. Most
+of the test suite runs without it. For more information about the test
+suite, check the README in the tests subdirectory.
 
 The main purpose of this library is to provide a well maintained
 implementation, that suits a wider range of needs than the original:
@@ -17,6 +19,8 @@ implementation, that suits a wider range of needs than the original:
 * C-like error handling. No toying around with exceptions.
 * Comprehensive test suite.
 * Strict error handling.
+* ReplicaSet support, and automatic reconnecting and discovery.
+* Well documented API.
 
 Although the code is not based on any other driver, it is released
 under the same Apache License, version 2.0 (included as the file
