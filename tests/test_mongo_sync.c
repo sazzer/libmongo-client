@@ -25,7 +25,7 @@ test_mongo_sync_cmd_insert (void)
   bson_free (doc);
 
   g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn),
-		   ==, 2);
+		   >=, 2);
 
   mongo_sync_disconnect (conn);
   PASS ();
@@ -59,7 +59,7 @@ test_mongo_sync_cmd_update (void)
   bson_free (sel);
   bson_free (upd);
 
-  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 2);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), >=, 2);
 
   mongo_sync_disconnect (conn);
   PASS ();
@@ -83,7 +83,7 @@ test_mongo_sync_cmd_query (void)
   doc = test_bson_generate_flat ();
   g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, doc, NULL));
   bson_free (doc);
-  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 1);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), >=, 1);
 
   sel = bson_new ();
   bson_append_int32 (sel, "int32", 1984);
@@ -136,7 +136,7 @@ test_mongo_sync_cmd_get_more (void)
       g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, NULL));
     }
   bson_free (doc);
-  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 30);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), >=, 30);
 
   sel = bson_new ();
   bson_append_boolean (sel, "get_more_test", TRUE);
@@ -207,7 +207,7 @@ test_mongo_sync_cmd_delete (void)
       g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, b, NULL));
     }
   bson_free (b);
-  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 9);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), >=, 9);
 
   b = bson_new ();
   bson_append_boolean (b, "sync_delete_flag", TRUE);
@@ -256,7 +256,7 @@ test_mongo_sync_cmd_kill_cursor (void)
       g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, NULL));
     }
   bson_free (doc);
-  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), ==, 30);
+  g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), >=, 30);
 
   sel = bson_new ();
   bson_append_boolean (sel, "kill_cursor_test", TRUE);
@@ -422,7 +422,8 @@ test_mongo_sync_connect (void)
     {
       o = conn;
       g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
-      g_assert (o != conn);
+      g_assert (o == conn);
+      g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
       g_assert (mongo_sync_cmd_reset_error (conn, TEST_SERVER_DB));
       mongo_sync_disconnect (conn);
       PASS ();

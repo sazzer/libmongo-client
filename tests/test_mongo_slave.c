@@ -148,10 +148,11 @@ test_mongo_slave_reconnect (void)
   g_assert (conn);
 
   o = conn;
+  g_assert (mongo_sync_cmd_is_master (conn) == FALSE);
   g_assert ((conn = mongo_sync_reconnect (conn, FALSE)) != NULL);
   g_assert (o == conn);
   g_assert ((conn = mongo_sync_reconnect (conn, TRUE)) != NULL);
-  g_assert (o != conn);
+  g_assert (o == conn);
   g_assert (mongo_sync_cmd_is_master (conn) == TRUE);
 
   mongo_sync_disconnect (conn);

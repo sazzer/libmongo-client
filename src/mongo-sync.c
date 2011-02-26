@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 #if ENABLE_AUTH
 #include <openssl/md5.h>
@@ -45,6 +46,36 @@ mongo_sync_connect (const gchar *host, int port,
     }
   s->slaveok = slaveok;
   return s;
+}
+
+static void
+_mongo_sync_connect_replace (mongo_sync_connection *old,
+			     mongo_sync_connection *new)
+{
+  GList *l;
+
+  if (!old || !new)
+    return;
+
+  g_free (old->rs.primary);
+
+  /* Delete the host list. */
+  l = old->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+
+  if (old->super.fd)
+    close (old->super.fd);
+
+  old->super.fd = new->super.fd;
+  old->super.request_id = -1;
+  old->slaveok = new->slaveok;
+  old->rs = new->rs;
+
+  g_free (new);
 }
 
 mongo_sync_connection *
@@ -96,9 +127,9 @@ mongo_sync_reconnect (mongo_sync_connection *conn,
 		 conn->rs, thus, we won't end up in an infinite loop. */
 	      nc = mongo_sync_reconnect (nc, force_master);
 	      e = errno;
-	      mongo_sync_disconnect (conn);
+	      _mongo_sync_connect_replace (conn, nc);
 	      errno = e;
-	      return nc;
+	      return conn;
 	    }
 	}
     }
@@ -121,9 +152,9 @@ mongo_sync_reconnect (mongo_sync_connection *conn,
 
       nc = mongo_sync_reconnect (nc, force_master);
       e = errno;
-      mongo_sync_disconnect (conn);
+      _mongo_sync_connect_replace (conn, nc);
       errno = e;
-      return (nc);
+      return conn;
     }
 
   mongo_sync_disconnect (conn);
