@@ -67,8 +67,7 @@ mongo_sync_connection *mongo_sync_connect (const char *host,
  * @returns A mongo_sync_collection object, or NULL if the reconnect fails
  * for one reason or the other.
  *
- * @note Upon failure, the existing connection will be destroyed. In
- * case of success, the original connection object will be updated too.
+ * @note The original connection object will be updated too!
  */
 mongo_sync_connection *mongo_sync_reconnect (mongo_sync_connection *conn,
 					     gboolean force_master);

@@ -167,7 +167,6 @@ mongo_sync_reconnect (mongo_sync_connection *conn,
       return conn;
     }
 
-  mongo_sync_disconnect (conn);
   errno = EHOSTUNREACH;
   return NULL;
 }
