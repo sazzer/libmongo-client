@@ -179,7 +179,7 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
       return FALSE;
     }
 
-  if (!mongo_wire_packet_get_header (p, &h))
+  if (!mongo_wire_packet_get_header_raw (p, &h))
     return FALSE;
 
   data_size = mongo_wire_packet_get_data (p, &data);
@@ -234,7 +234,7 @@ mongo_packet_recv (mongo_connection *conn)
 
   p = mongo_wire_packet_new ();
 
-  if (!mongo_wire_packet_set_header (p, &h))
+  if (!mongo_wire_packet_set_header_raw (p, &h))
     {
       int e = errno;
 

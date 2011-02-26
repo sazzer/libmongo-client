@@ -85,3 +85,37 @@ mongo_packet *mongo_wire_cmd_insert_va (gint32 id, const gchar *ns,
  */
 mongo_packet *mongo_wire_cmd_kill_cursors_va (gint32 id, gint32 n,
 					      va_list ap);
+
+/** @internal Get the header data of a packet, without conversion.
+ *
+ * Retrieve the mongo packet's header data, but do not convert the
+ * values from little-endian. Use only when the source has the data in
+ * the right byte order already.
+ *
+ * @param p is the packet which header we seek.
+ * @param header is a pointer to a variable which will hold the data.
+ *
+ * @note Allocating the @a header is the responsibility of the caller.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean
+mongo_wire_packet_get_header_raw (const mongo_packet *p,
+				  mongo_packet_header *header);
+
+/** @internal Set the header data of a packet, without conversion.
+ *
+ * Override the mongo packet's header data, but do not convert the
+ * values from little-endian. Use only when the source has the data in
+ * the right byte order already.
+ *
+ * @note No sanity checks are done, use this function with great care.
+ *
+ * @param p is the packet whose header we want to override.
+ * @param header is the header structure to use.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean
+mongo_wire_packet_set_header_raw (mongo_packet *p,
+				  const mongo_packet_header *header);

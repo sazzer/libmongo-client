@@ -374,7 +374,7 @@ mongo_sync_cmd_query (mongo_sync_connection *conn,
   if (!p)
     return NULL;
 
-  if (!mongo_wire_packet_get_header (p, &h))
+  if (!mongo_wire_packet_get_header_raw (p, &h))
     {
       int e = errno;
 
@@ -464,7 +464,7 @@ mongo_sync_cmd_get_more (mongo_sync_connection *conn,
   if (!p)
     return NULL;
 
-  if (!mongo_wire_packet_get_header (p, &h))
+  if (!mongo_wire_packet_get_header_raw (p, &h))
     {
       int e = errno;
 
@@ -630,7 +630,7 @@ mongo_sync_cmd_custom (mongo_sync_connection *conn,
   if (!p)
     return NULL;
 
-  if (!mongo_wire_packet_get_header (p, &h))
+  if (!mongo_wire_packet_get_header_raw (p, &h))
     {
       int e = errno;
 

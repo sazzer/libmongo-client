@@ -81,6 +81,24 @@ mongo_wire_packet_get_header (const mongo_packet *p,
 }
 
 gboolean
+mongo_wire_packet_get_header_raw (const mongo_packet *p,
+				  mongo_packet_header *header)
+{
+  if (!p || !header)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  header->length = p->header.length;
+  header->id = p->header.id;
+  header->resp_to = p->header.resp_to;
+  header->opcode = p->header.opcode;
+
+  return TRUE;
+}
+
+gboolean
 mongo_wire_packet_set_header (mongo_packet *p,
 			      const mongo_packet_header *header)
 {
@@ -94,6 +112,26 @@ mongo_wire_packet_set_header (mongo_packet *p,
   p->header.id = GINT32_TO_LE (header->id);
   p->header.resp_to = GINT32_TO_LE (header->resp_to);
   p->header.opcode = GINT32_TO_LE (header->opcode);
+
+  p->data_size = header->length - sizeof (mongo_packet_header);
+
+  return TRUE;
+}
+
+gboolean
+mongo_wire_packet_set_header_raw (mongo_packet *p,
+				  const mongo_packet_header *header)
+{
+  if (!p || !header)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  p->header.length = header->length;
+  p->header.id = header->id;
+  p->header.resp_to = header->resp_to;
+  p->header.opcode = header->opcode;
 
   p->data_size = header->length - sizeof (mongo_packet_header);
 
