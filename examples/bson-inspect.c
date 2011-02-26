@@ -120,7 +120,7 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	  {
 	    gint64 l64;
 	    bson_cursor_get_int64 (c, &l64);
-	    printf ("%ld", l64);
+	    printf ("%" G_GINT64_FORMAT, l64);
 	    break;
 	  }
 	case BSON_TYPE_DOCUMENT:
@@ -228,7 +228,7 @@ main (int argc, char *argv[])
       offs += bson_size (b);
 
       if (verbose)
-	printf ("/* Document #%lu */\n", i);
+	printf ("/* Document #%" G_GUINT64_FORMAT " */\n", i);
       printf ("{ ");
       if (verbose)
 	printf ("\n");
