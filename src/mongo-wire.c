@@ -174,7 +174,7 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
   if (!p)
     return NULL;
-  p->header.id = id;
+  p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_UPDATE);
 
   nslen = strlen (ns) + 1;
@@ -215,7 +215,7 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
   if (!p)
     return NULL;
-  p->header.id = id;
+  p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_INSERT);
 
   p->data_size = pos = sizeof (gint32) + strlen (ns) + 1;
@@ -310,7 +310,7 @@ mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
   if (!p)
     return NULL;
-  p->header.id = id;
+  p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_QUERY);
 
   nslen = strlen (ns) + 1;
@@ -368,7 +368,7 @@ mongo_wire_cmd_get_more (gint32 id, const gchar *ns,
   if (!p)
     return NULL;
 
-  p->header.id = id;
+  p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_GET_MORE);
 
   t_ret = GINT32_TO_LE (ret);
@@ -420,7 +420,7 @@ mongo_wire_cmd_delete (gint32 id, const gchar *ns,
   if (!p)
     return NULL;
 
-  p->header.id = id;
+  p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_DELETE);
 
   nslen = strlen (ns) + 1;
@@ -460,7 +460,7 @@ mongo_wire_cmd_kill_cursors_va (gint32 id, gint32 n, va_list ap)
   if (!p)
     return NULL;
 
-  p->header.id = id;
+  p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_KILL_CURSORS);
 
   t_n = GINT32_TO_LE (n);

@@ -274,6 +274,7 @@ test_mongo_wire_get_more (void)
   pos = sizeof (gint32) + strlen (TEST_SERVER_NS) + 1 + sizeof (gint32);
   cid = 0;
   memcpy (&cid, data + pos, sizeof (cid));
+  cid = GINT64_FROM_LE (cid);
 
   g_assert_cmpint (cid, ==, 9876543210);
 
@@ -359,6 +360,10 @@ test_mongo_wire_kill_cursors (void)
   memcpy (&n, data + sizeof (gint32), sizeof (gint32));
   memcpy (&c1, data + pos, sizeof (c1));
   memcpy (&c2, data + pos + sizeof (c1), sizeof (c2));
+
+  n = GINT32_FROM_LE (n);
+  c1 = GINT64_FROM_LE (c1);
+  c2 = GINT64_FROM_LE (c2);
 
   g_assert_cmpint (n, ==, 2);
   g_assert_cmpint (c1, ==, 9876543210);

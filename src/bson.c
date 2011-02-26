@@ -661,7 +661,7 @@ bson_append_binary (bson *b, const gchar *name, bson_binary_subtype subtype,
   if (!_bson_append_element_header (b, BSON_TYPE_BINARY, name))
     return FALSE;
 
-  if (!_bson_append_int32 (b, size))
+  if (!_bson_append_int32 (b, GINT32_TO_LE (size)))
     return FALSE;
 
   if (!_bson_append_byte (b, (guint8)subtype))
@@ -1059,8 +1059,7 @@ bson_cursor_get_boolean (const bson_cursor *c, gboolean *dest)
 
   BSON_CURSOR_CHECK_TYPE (c, BSON_TYPE_BOOLEAN);
 
-  *dest = FALSE;
-  memcpy (dest, bson_data (c->obj) + c->value_pos, 1);
+  *dest = (gboolean)(bson_data (c->obj) + c->value_pos)[0];
 
   return TRUE;
 }
