@@ -73,8 +73,18 @@ _mongo_sync_connect_replace (mongo_sync_connection *old,
   old->super.fd = new->super.fd;
   old->super.request_id = -1;
   old->slaveok = new->slaveok;
-  old->rs = new->rs;
+  old->rs.primary = NULL;
+  old->rs.hosts = NULL;
 
+  /* Free the replicaset struct in the new connection. These aren't
+     copied, in order to avoid infinite loops. */
+  l = new->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+  g_free (new->rs.primary);
   g_free (new);
 }
 
