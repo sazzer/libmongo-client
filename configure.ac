@@ -22,8 +22,8 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION, no-define)
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AM_CONFIG_HEADER(config.h)
 
-AC_ARG_ENABLE(openssl,
-              [  --enable-openssl    Enable OpenSSL support.],,enable_openssl="auto")
+AC_ARG_ENABLE(ssl,
+              [  --enable-ssl    Enable OpenSSL support (for authentication).],,enable_ssl="auto")
 
 dnl ***************************************************************************
 dnl Checks for programs.
@@ -131,12 +131,12 @@ dnl ***************************************************************************
 # openssl is needed for:
 #  * authentication support
 
-if test "x$enable_openssl" = "xauto" || test "x$enable_openssl" = "xyes"; then
+if test "x$enable_ssl" = "xauto" || test "x$enable_ssl" = "xyes"; then
 	PKG_CHECK_MODULES(OPENSSL, openssl >= $OPENSSL_MIN_VERSION,, OPENSSL_LIBS="")
 
 	if test "x$OPENSSL_LIBS" != "x"; then
-        	if test "x$enable_openssl" = "xauto"; then
-	        	enable_openssl="yes"
+        	if test "x$enable_ssl" = "xauto"; then
+	        	enable_ssl="yes"
 		else
 			AC_ERROR([OpenSSL not found!])
         	fi
@@ -160,7 +160,7 @@ fi
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE", [package name])
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [version number])
 
-if test "x$enable_openssl" = "xyes"; then
+if test "x$enable_ssl" = "xyes"; then
 	d_enable_auth=1
 	openssl_pc="openssl"
 else
