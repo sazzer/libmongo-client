@@ -114,9 +114,10 @@ if test "x$enable_ssl" = "xauto" || test "x$enable_ssl" = "xyes"; then
 	if test "x$OPENSSL_LIBS" != "x"; then
         	if test "x$enable_ssl" = "xauto"; then
 	        	enable_ssl="yes"
-		else
-			AC_ERROR([OpenSSL not found!])
-        	fi
+		fi
+	fi
+	if test "x$OPENSSL_LIBS" = "x" && test "x$enable_ssl" = "xyes"; then
+		AC_ERROR([OpenSSL not found!])
 	fi
 fi
 
