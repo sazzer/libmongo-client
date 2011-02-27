@@ -503,6 +503,7 @@ bson_build (bson_type type, const gchar *name, ...)
   if (!_bson_build_add_single (b, type, name, FALSE, ap))
     {
       bson_free (b);
+      va_end (ap);
       return NULL;
     }
 
@@ -512,6 +513,7 @@ bson_build (bson_type type, const gchar *name, ...)
       if (!_bson_build_add_single (b, t, n, FALSE, ap))
 	{
 	  bson_free (b);
+	  va_end (ap);
 	  return NULL;
 	}
     }
@@ -534,6 +536,7 @@ bson_build_full (bson_type type, const gchar *name, gboolean free_after, ...)
   if (!_bson_build_add_single (b, type, name, free_after, ap))
     {
       bson_free (b);
+      va_end (ap);
       return NULL;
     }
 
@@ -544,6 +547,7 @@ bson_build_full (bson_type type, const gchar *name, gboolean free_after, ...)
       if (!_bson_build_add_single (b, t, n, f, ap))
 	{
 	  bson_free (b);
+	  va_end (ap);
 	  return NULL;
 	}
     }
