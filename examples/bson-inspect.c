@@ -27,7 +27,7 @@ _indent (gint level, gboolean verbose)
 }
 
 static void
-bson_dump (bson *b, gint ilevel, gboolean verbose)
+bson_dump (bson *b, gint ilevel, gboolean verbose, gboolean as_array)
 {
   bson_cursor *c;
   gboolean first = TRUE;
@@ -49,7 +49,10 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 		  bson_cursor_type_as_string (c) + 10);
 	}
       _indent (ilevel, verbose);
-      printf ("\"%s\" : ", bson_cursor_key (c));
+      if (!as_array)
+	{
+	  printf ("\"%s\" : ", bson_cursor_key (c));
+	}
       switch (bson_cursor_type (c))
 	{
 	case BSON_TYPE_DOUBLE:
@@ -145,7 +148,7 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    printf ("{ ");
 	    if (verbose)
 	      printf ("/* size='%d' */\n", bson_size (sd));
-	    bson_dump (sd, ilevel + 1, verbose);
+	    bson_dump (sd, ilevel + 1, verbose, FALSE);
 	    if (verbose)
 	      {
 		printf ("\n");
@@ -158,8 +161,61 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    break;
 	  }
 	case BSON_TYPE_ARRAY:
-	case BSON_TYPE_JS_CODE_W_SCOPE:
+	  {
+	    bson *sa;
+
+	    bson_cursor_get_array (c, &sa);
+	    printf ("[ ");
+	    if (verbose)
+	      printf ("/* size='%d' */\n", bson_size (sa));
+	    bson_dump (sa, ilevel + 1, verbose, TRUE);
+	    if (verbose)
+	      {
+		printf ("\n");
+		_indent (ilevel, verbose);
+		printf ("]");
+	      }
+	    else
+	      printf (" ]");
+	    bson_free (sa);
+	    break;
+	  }
 	case BSON_TYPE_BINARY:
+	  {
+	    const guint8 *data;
+	    gint32 size;
+	    bson_binary_subtype t;
+	    gchar *b64;
+
+	    bson_cursor_get_binary (c, &t, &data, &size);
+	    b64 = g_base64_encode (data, size);
+	    printf ("{ ");
+	    if (verbose)
+	      {
+		printf ("/* size='%d' */\n", size);
+		_indent (ilevel + 1, verbose);
+	      }
+	    printf ("\"$binary\" : \"%s\",", b64);
+	    if (verbose)
+	      {
+		printf ("\n");
+		_indent (ilevel + 1, verbose);
+	      }
+	    else
+	      printf (" ");
+	    printf ("\"$type\" : \"%02d\"", t);
+	    if (verbose)
+	      {
+		printf ("\n");
+		_indent (ilevel, verbose);
+	      }
+	    else
+	      printf (" ");
+	    printf ("}");
+	    g_free (b64);
+	    break;
+	  }
+	case BSON_TYPE_JS_CODE_W_SCOPE:
 	case BSON_TYPE_UNDEFINED:
 	case BSON_TYPE_UTC_DATETIME:
 	case BSON_TYPE_DBPOINTER:
@@ -247,7 +303,7 @@ main (int argc, char *argv[])
       printf ("{ ");
       if (verbose)
 	printf ("\n");
-      bson_dump (b, 1, verbose);
+      bson_dump (b, 1, verbose, FALSE);
       if (verbose)
 	printf ("\n}\n");
       else
