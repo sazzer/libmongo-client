@@ -180,8 +180,42 @@ bson_dump (bson *b, gint ilevel, gboolean verbose, gboolean as_array)
 	    bson_free (sa);
 	    break;
 	  }
-	case BSON_TYPE_JS_CODE_W_SCOPE:
 	case BSON_TYPE_BINARY:
+	  {
+	    const guint8 *data;
+	    gint32 size;
+	    bson_binary_subtype t;
+	    gchar *b64;
+
+	    bson_cursor_get_binary (c, &t, &data, &size);
+	    b64 = g_base64_encode (data, size);
+	    printf ("{ ");
+	    if (verbose)
+	      {
+		printf ("/* size='%d' */\n", size);
+		_indent (ilevel + 1, verbose);
+	      }
+	    printf ("\"$binary\" : \"%s\",", b64);
+	    if (verbose)
+	      {
+		printf ("\n");
+		_indent (ilevel + 1, verbose);
+	      }
+	    else
+	      printf (" ");
+	    printf ("\"$type\" : \"%02d\"", t);
+	    if (verbose)
+	      {
+		printf ("\n");
+		_indent (ilevel, verbose);
+	      }
+	    else
+	      printf (" ");
+	    printf ("}");
+	    g_free (b64);
+	    break;
+	  }
+	case BSON_TYPE_JS_CODE_W_SCOPE:
 	case BSON_TYPE_UNDEFINED:
 	case BSON_TYPE_UTC_DATETIME:
 	case BSON_TYPE_DBPOINTER:
