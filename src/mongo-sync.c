@@ -44,6 +44,7 @@ mongo_sync_connect (const gchar *host, int port,
   s->slaveok = slaveok;
   s->rs.hosts = NULL;
   s->rs.primary = NULL;
+  s->last_error = NULL;
 
   return s;
 }
@@ -75,6 +76,8 @@ _mongo_sync_connect_replace (mongo_sync_connection *old,
   old->slaveok = new->slaveok;
   old->rs.primary = NULL;
   old->rs.hosts = NULL;
+  g_free (old->last_error);
+  old->last_error = NULL;
 
   /* Free the replicaset struct in the new connection. These aren't
      copied, in order to avoid infinite loops. */
@@ -85,6 +88,7 @@ _mongo_sync_connect_replace (mongo_sync_connection *old,
       l = g_list_delete_link (l, l);
     }
   g_free (new->rs.primary);
+  g_free (new->last_error);
   g_free (new);
 }
 
@@ -180,6 +184,7 @@ mongo_sync_disconnect (mongo_sync_connection *conn)
     return;
 
   g_free (conn->rs.primary);
+  g_free (conn->last_error);
 
   /* Delete the host list. */
   l = conn->rs.hosts;
@@ -593,6 +598,64 @@ mongo_sync_cmd_kill_cursors (mongo_sync_connection *conn,
   return TRUE;
 }
 
+gboolean
+_mongo_sync_check_ok (bson *b)
+{
+  bson_cursor *c;
+  gdouble d;
+
+  c = bson_find (b, "ok");
+  if (!c)
+    {
+      errno = ENOENT;
+      return FALSE;
+    }
+
+  if (!bson_cursor_get_double (c, &d))
+    {
+      bson_cursor_free (c);
+      errno = EINVAL;
+      return FALSE;
+    }
+  bson_cursor_free (c);
+  errno = (d == 1) ? 0 : EPROTO;
+  return (d == 1);
+}
+
+static gboolean
+_mongo_sync_get_error (const bson *rep, gchar **error)
+{
+  bson_cursor *c;
+
+  c = bson_find (rep, "err");
+  if (!c)
+    {
+      c = bson_find (rep, "errmsg");
+      if (!c)
+	{
+	  errno = EPROTO;
+	  return FALSE;
+	}
+    }
+  if (bson_cursor_type (c) == BSON_TYPE_NULL)
+    {
+      *error = NULL;
+      bson_cursor_free (c);
+      return TRUE;
+    }
+  else if (bson_cursor_type (c) == BSON_TYPE_STRING)
+    {
+      const gchar *err;
+
+      bson_cursor_get_string (c, &err);
+      *error = g_strdup (err);
+      bson_cursor_free (c);
+      return TRUE;
+    }
+  errno = EPROTO;
+  return FALSE;
+}
+
 mongo_packet *
 mongo_sync_cmd_custom (mongo_sync_connection *conn,
 		       const gchar *db,
@@ -603,6 +666,7 @@ mongo_sync_cmd_custom (mongo_sync_connection *conn,
 
   mongo_packet_header h;
   mongo_reply_packet_header rh;
+  bson *b;
 
   if (!conn)
     {
@@ -662,31 +726,29 @@ mongo_sync_cmd_custom (mongo_sync_connection *conn,
       return NULL;
     }
 
+  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &b))
+    {
+      mongo_wire_packet_free (p);
+      errno = EPROTO;
+      return NULL;
+    }
+  bson_finish (b);
+
+  if (!_mongo_sync_check_ok (b))
+    {
+      int e = errno;
+
+      g_free (conn->last_error);
+      conn->last_error = NULL;
+      _mongo_sync_get_error (b, &conn->last_error);
+      bson_free (b);
+      mongo_wire_packet_free (p);
+      errno = e;
+      return NULL;
+    }
+  bson_free (b);
+
   return p;
-}
-
-gboolean
-_mongo_sync_check_ok (bson *b)
-{
-  bson_cursor *c;
-  gdouble d;
-
-  c = bson_find (b, "ok");
-  if (!c)
-    {
-      errno = ENOENT;
-      return FALSE;
-    }
-
-  if (!bson_cursor_get_double (c, &d))
-    {
-      bson_cursor_free (c);
-      errno = EINVAL;
-      return FALSE;
-    }
-  bson_cursor_free (c);
-  errno = (d == 1) ? 0 : EPROTO;
-  return (d == 1);
 }
 
 gdouble
@@ -750,15 +812,6 @@ mongo_sync_cmd_count (mongo_sync_connection *conn,
   mongo_wire_packet_free (p);
   bson_finish (cmd);
 
-  if (!_mongo_sync_check_ok (cmd))
-    {
-      int e = errno;
-
-      bson_free (cmd);
-      errno = e;
-      return -1;
-    }
-
   c = bson_find (cmd, "n");
   if (!c)
     {
@@ -815,27 +868,8 @@ mongo_sync_cmd_drop (mongo_sync_connection *conn,
       return FALSE;
     }
   bson_free (cmd);
-
-  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &cmd))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
   mongo_wire_packet_free (p);
-  bson_finish (cmd);
 
-  if (!_mongo_sync_check_ok (cmd))
-    {
-      int e = errno;
-
-      bson_free (cmd);
-      errno = e;
-      return FALSE;
-    }
-  bson_free (cmd);
   return TRUE;
 }
 
@@ -845,8 +879,6 @@ mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
 {
   mongo_packet *p;
   bson *cmd;
-  bson_cursor *c;
-  const gchar *err;
 
   if (!conn)
     {
@@ -880,7 +912,7 @@ mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
   mongo_wire_packet_free (p);
   bson_finish (cmd);
 
-  if (!_mongo_sync_check_ok (cmd))
+  if (!_mongo_sync_get_error (cmd, error))
     {
       int e = errno;
 
@@ -888,33 +920,17 @@ mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
       errno = e;
       return FALSE;
     }
-
-  c = bson_find (cmd, "err");
-  if (!c)
-    {
-      bson_free (cmd);
-      errno = EPROTO;
-      return FALSE;
-    }
-  if (bson_cursor_type (c) == BSON_TYPE_NULL)
-    {
-      *error = NULL;
-      bson_free (cmd);
-      bson_cursor_free (c);
-      return TRUE;
-    }
-  else if (bson_cursor_type (c) == BSON_TYPE_STRING)
-    {
-      bson_cursor_get_string (c, &err);
-      *error = g_strdup (err);
-      bson_free (cmd);
-      bson_cursor_free (c);
-      return TRUE;
-    }
   bson_free (cmd);
-  bson_cursor_free (c);
-  errno = EPROTO;
-  return FALSE;
+
+  if (*error == NULL)
+    *error = g_strdup (conn->last_error);
+  else
+    {
+      g_free (conn->last_error);
+      conn->last_error = NULL;
+    }
+
+  return TRUE;
 }
 
 gboolean
@@ -929,6 +945,9 @@ mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
       errno = ENOTCONN;
       return FALSE;
     }
+
+  g_free (conn->last_error);
+  conn->last_error = NULL;
 
   if (!mongo_sync_cmd_ping (conn))
     {
@@ -953,27 +972,7 @@ mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
       return FALSE;
     }
   bson_free (cmd);
-
-  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &cmd))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
   mongo_wire_packet_free (p);
-  bson_finish (cmd);
-
-  if (!_mongo_sync_check_ok (cmd))
-    {
-      int e = errno;
-
-      bson_free (cmd);
-      errno = e;
-      return FALSE;
-    }
-  bson_free (cmd);
   return TRUE;
 }
 
@@ -1113,27 +1112,8 @@ mongo_sync_cmd_ping (mongo_sync_connection *conn)
       return FALSE;
     }
   bson_free (cmd);
-
-  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &cmd))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
   mongo_wire_packet_free (p);
-  bson_finish (cmd);
 
-  if (!_mongo_sync_check_ok (cmd))
-    {
-      int e = errno;
-
-      bson_free (cmd);
-      errno = e;
-      return FALSE;
-    }
-  bson_free (cmd);
   return TRUE;
 }
 
@@ -1327,15 +1307,6 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
   mongo_wire_packet_free (p);
   bson_finish (b);
 
-  if (!_mongo_sync_check_ok (b))
-    {
-      int e = errno;
-
-      bson_free (b);
-      errno = e;
-      return FALSE;
-    }
-
   c = bson_find (b, "nonce");
   if (!c)
     {
@@ -1392,27 +1363,7 @@ mongo_sync_cmd_authenticate (mongo_sync_connection *conn,
       return FALSE;
     }
   bson_free (b);
-
-  if (!mongo_wire_reply_packet_get_nth_document (p, 1, &b))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
   mongo_wire_packet_free (p);
-  bson_finish (b);
-
-  if (!_mongo_sync_check_ok (b))
-    {
-      int e = errno;
-
-      bson_free (b);
-      errno = e;
-      return FALSE;
-    }
-  bson_free (b);
 
   return TRUE;
 }

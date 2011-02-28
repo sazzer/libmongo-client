@@ -39,6 +39,9 @@ struct _mongo_sync_connection
     GList *hosts; /**< Replica set members, as a list of strings. */
     gchar *primary; /**< The replica master, if any. */
   } rs;
+
+  gchar *last_error; /**< The last error from the server, caught
+			during queries. */
 };
 
 /** @internal Construct an insert command, using a va_list.
