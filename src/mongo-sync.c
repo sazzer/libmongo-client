@@ -924,6 +924,11 @@ mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
 
   if (*error == NULL)
     *error = g_strdup (conn->last_error);
+  else
+    {
+      g_free (conn->last_error);
+      conn->last_error = NULL;
+    }
 
   return TRUE;
 }
