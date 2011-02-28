@@ -14,11 +14,22 @@
 
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
-void
+static void
+_indent (gint level, gboolean verbose)
+{
+  gint i;
+
+  if (!verbose)
+    return;
+
+  for (i = 1; i <= level; i++)
+    printf ("  ");
+}
+
+static void
 bson_dump (bson *b, gint ilevel, gboolean verbose)
 {
   bson_cursor *c;
-  gint l;
   gboolean first = TRUE;
 
   c = bson_cursor_new (b);
@@ -31,9 +42,7 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    printf ("\n");
 	}
       first = FALSE;
-      if (verbose)
-	for (l = 1; l <= ilevel; l++)
-	  printf (" ");
+      _indent (ilevel, verbose);
       printf ("\"%s\" : ", bson_cursor_key (c));
       switch (bson_cursor_type (c))
 	{
@@ -134,8 +143,7 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    if (verbose)
 	      {
 		printf ("\n");
-		for (l = 1; l <= ilevel; l++)
-		  printf (" ");
+		_indent (ilevel, verbose);
 		printf ("}");
 	      }
 	    else
