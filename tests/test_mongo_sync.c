@@ -395,6 +395,25 @@ test_mongo_sync_cmd_get_last_error (void)
 
   mongo_sync_disconnect (conn);
   PASS();
+
+  TEST (mongo_sync.cmd_get_last_error.from_query);
+  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
+  g_assert (conn);
+
+  b = bson_new ();
+  bson_append_int32 (b, "foobar", 1);
+  bson_finish (b);
+
+  g_assert (mongo_sync_cmd_custom (conn, TEST_SERVER_DB, b) == NULL);
+  bson_free (b);
+
+  g_assert (mongo_sync_cmd_get_last_error (conn, TEST_SERVER_DB, &err));
+  g_assert (err != NULL);
+  printf (" # err: %s\n", err);
+  g_free (err);
+
+  mongo_sync_disconnect (conn);
+  PASS();
 }
 
 void
@@ -583,7 +602,7 @@ int
 main (void)
 {
   mongo_util_oid_init (0);
-  do_plan (21);
+  do_plan (22);
 
   test_mongo_sync_set_slaveok ();
   test_mongo_sync_cmd_insert ();
