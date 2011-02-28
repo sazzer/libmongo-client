@@ -14,11 +14,22 @@
 
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
-void
+static void
+_indent (gint level, gboolean verbose)
+{
+  gint i;
+
+  if (!verbose)
+    return;
+
+  for (i = 1; i <= level; i++)
+    printf ("  ");
+}
+
+static void
 bson_dump (bson *b, gint ilevel, gboolean verbose)
 {
   bson_cursor *c;
-  gint l;
   gboolean first = TRUE;
 
   c = bson_cursor_new (b);
@@ -32,8 +43,12 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	}
       first = FALSE;
       if (verbose)
-	for (l = 1; l <= ilevel; l++)
-	  printf (" ");
+	{
+	  _indent (ilevel, verbose);
+	  printf ("/* type='%s'; */\n",
+		  bson_cursor_type_as_string (c) + 10);
+	}
+      _indent (ilevel, verbose);
       printf ("\"%s\" : ", bson_cursor_key (c));
       switch (bson_cursor_type (c))
 	{
@@ -129,13 +144,12 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    bson_cursor_get_document (c, &sd);
 	    printf ("{ ");
 	    if (verbose)
-	      printf ("\n");
+	      printf ("/* size='%d' */\n", bson_size (sd));
 	    bson_dump (sd, ilevel + 1, verbose);
 	    if (verbose)
 	      {
 		printf ("\n");
-		for (l = 1; l <= ilevel; l++)
-		  printf (" ");
+		_indent (ilevel, verbose);
 		printf ("}");
 	      }
 	    else
@@ -228,7 +242,8 @@ main (int argc, char *argv[])
       offs += bson_size (b);
 
       if (verbose)
-	printf ("/* Document #%" G_GUINT64_FORMAT " */\n", i);
+	printf ("/* Document #%" G_GUINT64_FORMAT "; size='%d' */\n", i,
+		bson_size (b));
       printf ("{ ");
       if (verbose)
 	printf ("\n");
