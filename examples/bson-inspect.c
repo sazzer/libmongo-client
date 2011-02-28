@@ -42,6 +42,12 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    printf ("\n");
 	}
       first = FALSE;
+      if (verbose)
+	{
+	  _indent (ilevel, verbose);
+	  printf ("/* type='%s'; */\n",
+		  bson_cursor_type_as_string (c) + 10);
+	}
       _indent (ilevel, verbose);
       printf ("\"%s\" : ", bson_cursor_key (c));
       switch (bson_cursor_type (c))
@@ -138,7 +144,7 @@ bson_dump (bson *b, gint ilevel, gboolean verbose)
 	    bson_cursor_get_document (c, &sd);
 	    printf ("{ ");
 	    if (verbose)
-	      printf ("\n");
+	      printf ("/* size='%d' */\n", bson_size (sd));
 	    bson_dump (sd, ilevel + 1, verbose);
 	    if (verbose)
 	      {
@@ -236,7 +242,8 @@ main (int argc, char *argv[])
       offs += bson_size (b);
 
       if (verbose)
-	printf ("/* Document #%" G_GUINT64_FORMAT " */\n", i);
+	printf ("/* Document #%" G_GUINT64_FORMAT "; size='%d' */\n", i,
+		bson_size (b));
       printf ("{ ");
       if (verbose)
 	printf ("\n");
