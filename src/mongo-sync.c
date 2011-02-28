@@ -32,19 +32,19 @@ mongo_sync_connect (const gchar *host, int port,
 		    gboolean slaveok)
 {
   mongo_sync_connection *s;
+  mongo_connection *c;
 
-  s = g_try_new0 (mongo_sync_connection, 1);
+  c = mongo_connect (host, port);
+  if (!c)
+    return NULL;
+  s = g_try_realloc (c, sizeof (mongo_sync_connection));
   if (!s)
     return NULL;
-  if (!mongo_connection_new (host, port, (mongo_connection **)&s))
-    {
-      int e = errno;
 
-      mongo_sync_disconnect (s);
-      errno = e;
-      return NULL;
-    }
   s->slaveok = slaveok;
+  s->rs.hosts = NULL;
+  s->rs.primary = NULL;
+
   return s;
 }
 

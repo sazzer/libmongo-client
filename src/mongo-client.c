@@ -56,13 +56,21 @@ unset_nonblock (int fd)
 }
 
 mongo_connection *
-_mongo_connect (const char *host, int port, mongo_connection *c)
+mongo_connect (const char *host, int port)
 {
   struct addrinfo *res = NULL, *r;
   struct addrinfo hints;
   int e, fd = -1;
   gchar *port_s;
+  mongo_connection *conn;
 
+  conn = g_try_new0 (mongo_connection, 1);
+  if (!conn)
+    {
+      errno = ENOMEM;
+      return NULL;
+    }
+  
   memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_STREAM;
 
@@ -76,6 +84,7 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
     {
       int err = errno;
 
+      g_free (conn);
       g_free (port_s);
       errno = err;
       return NULL;
@@ -107,35 +116,15 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
     {
       int err = errno;
 
+      g_free (conn);
       close (fd);
       errno = err;
       return NULL;
     }
 
-  c->fd = fd;
+  conn->fd = fd;
 
-  return c;
-}
-
-mongo_connection *
-mongo_connect (const gchar *host, int port)
-{
-  mongo_connection *conn;
-
-  conn = g_try_new0 (mongo_connection, 1);
-  if (!conn)
-    {
-      errno = ENOTCONN;
-      return NULL;
-    }
-  return _mongo_connect (host, port, conn);
-}
-
-mongo_connection *
-mongo_connection_new (const char *host, int port,
-		      mongo_connection **conn)
-{
-  return _mongo_connect (host, port, *conn);
+  return conn;
 }
 
 void
