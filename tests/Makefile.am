@@ -1,60 +1,62 @@
-check_PROGRAMS = test_bson_build_base test_bson_build_compound test_bson_builder \
-	test_bson_reader_base test_bson_reader_iterator test_bson_from_data \
-	\
-	test_mongo_wire \
-	\
-	test_mongo_client test_mongo_sync test_mongo_slave \
-	\
-	test_oid \
-	\
-	test_invalid
+bson_unit_tests = unit/bson/bson_empty \
+		unit/bson/bson_string \
+		unit/bson/bson_double \
+		unit/bson/bson_boolean \
+		unit/bson/bson_utc_datetime \
+		unit/bson/bson_null \
+		unit/bson/bson_int32 \
+		unit/bson/bson_int64 \
+		unit/bson/bson_regexp \
+		unit/bson/bson_binary \
+		unit/bson/bson_js_code \
+		unit/bson/bson_symbol \
+		unit/bson/bson_timestamp \
+		unit/bson/bson_oid \
+		unit/bson/bson_document \
+		unit/bson/bson_array \
+		\
+		unit/bson/bson_build \
+		unit/bson/bson_build_full
 
-HARNESS_TESTS = ${srcdir}/verify-bson-wrapper.sh \
-		./test_bson_builder \
-		./test_bson_reader_base ./test_bson_reader_iterator ./test_bson_from_data \
-		./test_mongo_wire \
-		./test_oid \
-		./test_invalid
+UNIT_TESTS = ${bson_unit_tests}
 
-NETWORK_TESTS = ./test_mongo_client ./test_mongo_sync ./test_mongo_slave
+check_PROGRAMS = ${UNIT_TESTS}
 
-check: check-am
-	@${MAKE} ${AM_MAKEFLAGS} check-HARNESS
+check:
+	@${MAKE} ${AM_MAKEFLAGS} check-UNIT
 
-check-HARNESS: ${srcdir}/verify-bson-wrapper.sh
-	$(AM_V_GEN)srcdir=${srcdir} prove -e '' ${PROVE_OPTIONS} ${HARNESS_TESTS}
+check-UNIT: ${UNIT_TESTS}
+check-UNIT: TESTS+=${UNIT_TESTS}
+check-UNIT: check-HARNESS
 
-full-check: check-am
-	@${MAKE} ${AM_MAKEFLAGS} check-FULL-HARNESS
+check-HARNESS: ${TESTS}
+	$(AM_V_GEN)srcdir=${srcdir} prove -e '' ${PROVE_OPTIONS} ${TESTS}
 
-check-FULL-HARNESS: ${srcdir}/verify-bson-wrapper.sh
-check-FULL-HARNESS: HARNESS_TESTS+=${NETWORK_TESTS}
-check-FULL-HARNESS: check-HARNESS
-
-.PHONY: check-HARNESS full-check check-FULL-HARNESS
+.PHONY: check-UNIT check-HARNESS
 
 AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
 
-EXTRA_DIST = verify-bson-wrapper.sh README result_bson_build_base result_bson_build_compound
+EXTRA_DIST = README
 
-test_srcs = test.c test.h test-generator.c test-generator.h
-test_network_srcs = ${test_srcs} test-network.h test-network.c
+tap_srcs = tap.h tap.c test.h test-generator.h test-generator.c
 
-test_bson_build_base_SOURCES = test_bson_build_base.c $(test_srcs)
-test_bson_build_compound_SOURCES = test_bson_build_compound.c $(test_srcs)
-test_bson_builder_SOURCES = test_bson_builder.c $(test_srcs)
+unit_bson_bson_empty_SOURCES = unit/bson/bson_empty.c ${tap_srcs}
+unit_bson_bson_string_SOURCES = unit/bson/bson_string.c ${tap_srcs}
+unit_bson_bson_double_SOURCES = unit/bson/bson_double.c ${tap_srcs}
+unit_bson_bson_boolean_SOURCES = unit/bson/bson_boolean.c ${tap_srcs}
+unit_bson_bson_utc_datetime_SOURCES = unit/bson/bson_utc_datetime.c ${tap_srcs}
+unit_bson_bson_null_SOURCES = unit/bson/bson_null.c ${tap_srcs}
+unit_bson_bson_int32_SOURCES = unit/bson/bson_int32.c ${tap_srcs}
+unit_bson_bson_int64_SOURCES = unit/bson/bson_int64.c ${tap_srcs}
+unit_bson_bson_regexp_SOURCES = unit/bson/bson_regexp.c ${tap_srcs}
+unit_bson_bson_binary_SOURCES = unit/bson/bson_binary.c ${tap_srcs}
+unit_bson_bson_js_code_SOURCES = unit/bson/bson_js_code.c ${tap_srcs}
+unit_bson_bson_symbol_SOURCES = unit/bson/bson_symbol.c ${tap_srcs}
+unit_bson_bson_timestamp_SOURCES = unit/bson/bson_timestamp.c ${tap_srcs}
+unit_bson_bson_oid_SOURCES = unit/bson/bson_oid.c ${tap_srcs}
+unit_bson_bson_document_SOURCES = unit/bson/bson_document.c ${tap_srcs}
+unit_bson_bson_array_SOURCES = unit/bson/bson_array.c ${tap_srcs}
 
-test_bson_reader_base_SOURCES = test_bson_reader_base.c $(test_srcs)
-test_bson_reader_iterator_SOURCES = test_bson_reader_iterator.c $(test_srcs)
-test_bson_from_data_SOURCES = test_bson_from_data.c $(test_srcs)
-
-test_mongo_wire_SOURCES = test_mongo_wire.c $(test_srcs)
-
-test_oid_SOURCES = test_oid.c $(test_srcs)
-
-test_invalid_SOURCES = test_invalid.c $(test_srcs)
-
-test_mongo_client_SOURCES = test_mongo_client.c $(test_network_srcs)
-test_mongo_sync_SOURCES = test_mongo_sync.c $(test_network_srcs)
-test_mongo_slave_SOURCES = test_mongo_slave.c $(test_network_srcs)
+unit_bson_bson_build_SOURCES = unit/bson/bson_build.c ${tap_srcs}
+unit_bson_bson_build_full_SOURCES = unit/bson/bson_build_full.c ${tap_srcs}
