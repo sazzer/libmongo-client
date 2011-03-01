@@ -37,6 +37,21 @@ test_bson_array (void)
       "BSON array element contents check");
 
   bson_free (b);
+
+  e1 = bson_new ();
+  bson_append_int32 (e1, "0", 1984);
+  bson_finish (e1);
+
+  b = bson_new ();
+  ok (bson_append_array (b, NULL, e1) == FALSE,
+      "bson_append_array() with a NULL name should fail");
+  ok (bson_append_array (b, "foo", NULL) == FALSE,
+      "bson_append_array() with a NULL array should fail");
+  ok (bson_append_array (NULL, "foo", e1) == FALSE,
+      "bson_append_array() with a NULL BSON should fail");
+
+  bson_free (e1);
+  bson_free (b);
 }
 
-RUN_TEST (4, bson_array);
+RUN_TEST (7, bson_array);
