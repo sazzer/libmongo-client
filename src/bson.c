@@ -194,6 +194,9 @@ static gboolean
 _bson_append_document_element (bson *b, bson_type type, const gchar *name,
 			       const bson *doc)
 {
+  if (!b)
+    return FALSE;
+
   if (bson_size (doc) < 0)
     return FALSE;
 
