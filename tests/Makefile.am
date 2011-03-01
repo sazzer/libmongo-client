@@ -1,4 +1,6 @@
-bson_unit_tests = unit/bson/bson_empty \
+bson_unit_tests = \
+		unit/bson/bson_new \
+		unit/bson/bson_empty \
 		unit/bson/bson_string \
 		unit/bson/bson_double \
 		unit/bson/bson_boolean \
@@ -44,6 +46,7 @@ EXTRA_DIST = README
 
 tap_srcs = tap.h tap.c test.h test-generator.h test-generator.c
 
+unit_bson_bson_new_SOURCES = unit/bson/bson_new.c ${tap_srcs}
 unit_bson_bson_empty_SOURCES = unit/bson/bson_empty.c ${tap_srcs}
 unit_bson_bson_string_SOURCES = unit/bson/bson_string.c ${tap_srcs}
 unit_bson_bson_double_SOURCES = unit/bson/bson_double.c ${tap_srcs}

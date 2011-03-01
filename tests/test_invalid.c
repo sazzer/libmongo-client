@@ -9,13 +9,6 @@ test_invalid_bson_null ()
 {
   bson *b;
 
-  TEST (bson_invalid_null);
-  g_assert (bson_size (NULL) == -1);
-  g_assert (bson_data (NULL) == NULL);
-  g_assert (bson_finish (NULL) == FALSE);
-  bson_free (NULL);
-  PASS ();
-
   g_assert ((b = bson_new ()));
 
   TEST (bson_invalid_double_params);
