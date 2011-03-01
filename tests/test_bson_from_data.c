@@ -23,35 +23,12 @@ test_bson_from_data (void)
   PASS ();
 }
 
-void
-test_bson_reset (void)
-{
-  bson *b;
-
-  TEST (bson_reset);
-  b = test_bson_generate_nested ();
-  bson_finish (b);
-
-  g_assert_cmpint (bson_size (b), !=, -1);
-
-  g_assert (bson_reset (b));
-  g_assert (bson_finish (b));
-
-  /* 5 is the size of an empty BSON object: 32bit length + zero byte
-     ending. */
-  g_assert_cmpint (bson_size (b), ==, 5);
-
-  bson_free (b);
-  PASS ();
-}
-
 int
 main (void)
 {
-  PLAN (1, 2);
+  PLAN (1, 1);
 
   test_bson_from_data ();
-  test_bson_reset ();
 
   return 0;
 }

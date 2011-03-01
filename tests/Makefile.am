@@ -15,6 +15,8 @@ bson_unit_tests = unit/bson/bson_empty \
 		unit/bson/bson_document \
 		unit/bson/bson_array \
 		\
+		unit/bson/bson_reset \
+		\
 		unit/bson/bson_build \
 		unit/bson/bson_build_full
 
@@ -57,6 +59,8 @@ unit_bson_bson_timestamp_SOURCES = unit/bson/bson_timestamp.c ${tap_srcs}
 unit_bson_bson_oid_SOURCES = unit/bson/bson_oid.c ${tap_srcs}
 unit_bson_bson_document_SOURCES = unit/bson/bson_document.c ${tap_srcs}
 unit_bson_bson_array_SOURCES = unit/bson/bson_array.c ${tap_srcs}
+
+unit_bson_bson_reset_SOURCES = unit/bson/bson_reset.c ${tap_srcs}
 
 unit_bson_bson_build_SOURCES = unit/bson/bson_build.c ${tap_srcs}
 unit_bson_bson_build_full_SOURCES = unit/bson/bson_build_full.c ${tap_srcs}
