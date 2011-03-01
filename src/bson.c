@@ -155,7 +155,7 @@ _bson_append_string_element (bson *b, bson_type type, const gchar *name,
 {
   gint32 len;
 
-  if (!val || !length)
+  if (!val || !length || length < -1)
     return FALSE;
 
   len = (length != -1) ? length + 1: strlen (val) + 1;
