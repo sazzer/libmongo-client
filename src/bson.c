@@ -117,7 +117,7 @@ _bson_append_int64 (bson *b, const gint64 i)
 static inline gboolean
 _bson_append_element_header (bson *b, bson_type type, const gchar *name)
 {
-  if (!name)
+  if (!name || !b)
     return FALSE;
 
   if (b->finished)
@@ -194,9 +194,6 @@ static gboolean
 _bson_append_document_element (bson *b, bson_type type, const gchar *name,
 			       const bson *doc)
 {
-  if (!b)
-    return FALSE;
-
   if (bson_size (doc) < 0)
     return FALSE;
 
