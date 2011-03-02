@@ -28,6 +28,24 @@ test_bson_binary (void)
       "BSON binary element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_binary (b, NULL, BSON_BINARY_SUBTYPE_GENERIC,
+			  (guint8 *)"foo\0bar", 7) == FALSE,
+      "bson_append_binary() without a key name should fail");
+  ok (bson_append_binary (b, "binary1", BSON_BINARY_SUBTYPE_GENERIC,
+			  NULL, 10) == FALSE,
+      "bson_append_binary () without binary data should fail");
+  ok (bson_append_binary (b, "binary3", BSON_BINARY_SUBTYPE_GENERIC,
+			  (guint8 *)"foo\0bar", -1) == FALSE,
+      "bson_append_binary () with an invalid length should fail");
+  ok (bson_append_binary (NULL, "binary1", BSON_BINARY_SUBTYPE_GENERIC,
+			  (guint8 *)"foo\0bar", 7) == FALSE,
+      "bson_append_binary () without a BSON object should fail");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (4, bson_binary);
+RUN_TEST (9, bson_binary);
