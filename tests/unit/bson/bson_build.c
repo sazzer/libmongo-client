@@ -59,6 +59,15 @@ test_bson_build (void)
 
   bson_free (d);
   bson_free (o);
+
+  d = bson_build (BSON_TYPE_UNDEFINED, BSON_TYPE_NONE);
+  ok (d == NULL,
+      "bson_build() should fail with an unsupported element type");
+  d = bson_build (BSON_TYPE_STRING, "str", "hello", -1,
+		  BSON_TYPE_UNDEFINED,
+		  BSON_TYPE_NONE);
+  ok (d == NULL,
+      "bson_build() should fail with an unsupported element type");
 }
 
-RUN_TEST (2, bson_build);
+RUN_TEST (4, bson_build);
