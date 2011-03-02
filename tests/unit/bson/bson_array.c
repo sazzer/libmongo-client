@@ -40,9 +40,11 @@ test_bson_array (void)
 
   e1 = bson_new ();
   bson_append_int32 (e1, "0", 1984);
-  bson_finish (e1);
-
   b = bson_new ();
+
+  ok (bson_append_array (b, "array", e1) == FALSE,
+      "bson_append_array() with an unfinished array should fail");
+  bson_finish (e1);
   ok (bson_append_array (b, NULL, e1) == FALSE,
       "bson_append_array() with a NULL name should fail");
   ok (bson_append_array (b, "foo", NULL) == FALSE,
@@ -57,4 +59,4 @@ test_bson_array (void)
   bson_free (b);
 }
 
-RUN_TEST (8, bson_array);
+RUN_TEST (9, bson_array);
