@@ -670,7 +670,7 @@ gboolean
 bson_append_binary (bson *b, const gchar *name, bson_binary_subtype subtype,
 		    const guint8 *data, gint32 size)
 {
-  if (!data || !size)
+  if (!data || !size || size <= 0)
     return FALSE;
 
   if (!_bson_append_element_header (b, BSON_TYPE_BINARY, name))
