@@ -49,9 +49,12 @@ test_bson_array (void)
       "bson_append_array() with a NULL array should fail");
   ok (bson_append_array (NULL, "foo", e1) == FALSE,
       "bson_append_array() with a NULL BSON should fail");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
 
   bson_free (e1);
   bson_free (b);
 }
 
-RUN_TEST (7, bson_array);
+RUN_TEST (8, bson_array);
