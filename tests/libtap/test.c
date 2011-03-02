@@ -8,34 +8,38 @@ bson *
 test_bson_generate_full (void)
 {
   bson *b, *d, *a;
+  guint8 oid[] = "1234567890ab";
 
-  a = bson_build (BSON_TYPE_INT32, "0", 32,
-		  BSON_TYPE_INT64, "1", -42,
-		  BSON_TYPE_NONE);
-  d = bson_build (BSON_TYPE_STRING, "name", "sub-document", -1,
-		  BSON_TYPE_INT32, "answer", 42,
-		  BSON_TYPE_NONE);
+  a = bson_new ();
+  bson_append_int32 (a, "0", 32);
+  bson_append_int64 (a, "1", (gint64)-42);
+  bson_finish (a);
 
-  b = bson_build (BSON_TYPE_DOUBLE, "double", 3.14,
-		  BSON_TYPE_STRING, "str", "hello world", -1,
-		  BSON_TYPE_DOCUMENT, "doc", d,
-		  BSON_TYPE_ARRAY, "array", a,
-		  BSON_TYPE_BINARY, "binary0", BSON_BINARY_SUBTYPE_GENERIC,
-		  "foo\0bar", 7,
-		  BSON_TYPE_OID, "_id", "0123456789abcd",
-		  BSON_TYPE_BOOLEAN, "TRUE", FALSE,
-		  BSON_TYPE_UTC_DATETIME, "date", 1294860709000,
-		  BSON_TYPE_NULL, "null",
-		  BSON_TYPE_REGEXP, "foobar", "s/foo.*bar/", "i",
-		  BSON_TYPE_JS_CODE, "alert", "alert (\"hello world!\");", -1,
-		  BSON_TYPE_SYMBOL, "sex", "Marylin Monroe", -1,
-		  BSON_TYPE_INT32, "int32", 32,
-		  BSON_TYPE_INT64, "int64", 42,
-		  BSON_TYPE_NONE);
+  d = bson_new ();
+  bson_append_string (d, "name", "sub-document", -1);
+  bson_append_int32 (d, "answer", 42);
+  bson_finish (d);
+
+  b = bson_new ();
+  bson_append_double (b, "double", 3.14);
+  bson_append_string (b, "str", "hello world", -1);
+  bson_append_document (b, "doc", d);
+  bson_append_array (b, "array", a);
+  bson_append_binary (b, "binary0", BSON_BINARY_SUBTYPE_GENERIC,
+		      (guint8 *)"foo\0bar", 7);
+  bson_append_oid (b, "_id", oid);
+  bson_append_boolean (b, "TRUE", FALSE);
+  bson_append_utc_datetime (b, "date", 1294860709000);
+  bson_append_null (b, "null");
+  bson_append_regex (b, "foobar", "s/foo.*bar/", "i");
+  bson_append_javascript (b, "alert", "alert (\"hello world!\");", -1);
+  bson_append_symbol (b, "sex", "Marylin Monroe", -1);
+  bson_append_int32 (b, "int32", 32);
+  bson_append_int64 (b, "int64", (gint64)-42);
+  bson_finish (b);
 
   bson_free (d);
   bson_free (a);
 
-  bson_finish (b);
   return b;
 }
