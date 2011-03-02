@@ -51,7 +51,11 @@ test_bson_string (void)
   bson_finish (b);
   cmp_ok (bson_size (b), "==", 5,
 	  "BSON object should be empty");
+
+  ok (bson_append_string (b, "hello", "world", -1) == FALSE,
+      "Appending to a finished element should fail");
+
   bson_free (b);
 }
 
-RUN_TEST (11, bson_string);
+RUN_TEST (12, bson_string);

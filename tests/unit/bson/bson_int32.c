@@ -30,7 +30,11 @@ test_bson_int32 (void)
   bson_finish (b);
   cmp_ok (bson_size (b), "==", 5,
 	  "BSON object should be empty");
+
+  ok (bson_append_int32 (b, "i32", i) == FALSE,
+      "Appending to a finished element should fail");
+
   bson_free (b);
 }
 
-RUN_TEST (6, bson_int32);
+RUN_TEST (7, bson_int32);

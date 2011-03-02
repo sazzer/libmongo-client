@@ -31,7 +31,11 @@ test_bson_int64 (void)
   bson_finish (b);
   cmp_ok (bson_size (b), "==", 5,
 	  "BSON object should be empty");
+
+  ok (bson_append_int64 (b, "i64", l) == FALSE,
+      "Appending to a finished element should fail");
+
   bson_free (b);
 }
 
-RUN_TEST (6, bson_int64);
+RUN_TEST (7, bson_int64);

@@ -33,7 +33,11 @@ test_bson_boolean (void)
   bson_finish (b);
   cmp_ok (bson_size (b), "==", 5,
 	  "BSON object should be empty");
+
+  ok (bson_append_boolean (b, "b", TRUE) == FALSE,
+      "Appending to a finished element should fail");
+
   bson_free (b);
 }
 
-RUN_TEST (7, bson_boolean);
+RUN_TEST (8, bson_boolean);

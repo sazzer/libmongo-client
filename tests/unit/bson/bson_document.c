@@ -57,8 +57,11 @@ test_bson_document (void)
   cmp_ok (bson_size (b), "==", 5,
 	  "BSON object should be empty");
 
+  ok (bson_append_document (b, "doc", e1) == FALSE,
+      "Appending to a finished element should fail");
+
   bson_free (e1);
   bson_free (b);
 }
 
-RUN_TEST (9, bson_document);
+RUN_TEST (10, bson_document);

@@ -56,7 +56,11 @@ test_bson_js_code (void)
   bson_finish (b);
   cmp_ok (bson_size (b), "==", 5,
 	  "BSON object should be empty");
+
+  ok (bson_append_javascript (b, "js", "print();", -1) == FALSE,
+      "Appending to a finished element should fail");
+
   bson_free (b);
 }
 
-RUN_TEST (11, bson_js_code);
+RUN_TEST (12, bson_js_code);

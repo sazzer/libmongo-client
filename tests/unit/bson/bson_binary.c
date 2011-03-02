@@ -45,7 +45,12 @@ test_bson_binary (void)
   bson_finish (b);
   cmp_ok (bson_size (b), "==", 5,
 	  "BSON object should be empty");
+
+  ok (bson_append_binary (b, "binary", BSON_BINARY_SUBTYPE_GENERIC,
+			  (guint8 *)"foo\0bar", 7) == FALSE,
+      "Appending to a finished element should fail");
+
   bson_free (b);
 }
 
-RUN_TEST (9, bson_binary);
+RUN_TEST (10, bson_binary);
