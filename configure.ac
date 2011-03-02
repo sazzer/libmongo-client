@@ -156,4 +156,5 @@ AC_OUTPUT(
 	src/Makefile
 	src/libmongo-client.pc
 	tests/Makefile
+	tests/libtap/Makefile
 )

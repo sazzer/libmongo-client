@@ -1,3 +1,5 @@
+SUBDIRS		= libtap
+
 bson_unit_tests = \
 		unit/bson/bson_new \
 		unit/bson/bson_empty \
@@ -41,35 +43,7 @@ check-HARNESS: ${TESTS}
 
 .PHONY: check-UNIT check-HARNESS
 
-AM_CFLAGS = -I$(top_srcdir)/src/ @GLIB_CFLAGS@
-LDADD = $(top_builddir)/src/libmongo-client.la @GLIB_LIBS@
+AM_CFLAGS = -I$(top_srcdir)/src/ -I${top_srcdir}/tests/libtap/ @GLIB_CFLAGS@
+LDADD = $(top_builddir)/src/libmongo-client.la ${top_builddir}/tests/libtap/libtap.la @GLIB_LIBS@
 
 EXTRA_DIST = README
-
-tap_srcs = tap.h tap.c test.h test-generator.h test-generator.c
-
-unit_bson_bson_new_SOURCES = unit/bson/bson_new.c ${tap_srcs}
-unit_bson_bson_empty_SOURCES = unit/bson/bson_empty.c ${tap_srcs}
-unit_bson_bson_string_SOURCES = unit/bson/bson_string.c ${tap_srcs}
-unit_bson_bson_double_SOURCES = unit/bson/bson_double.c ${tap_srcs}
-unit_bson_bson_boolean_SOURCES = unit/bson/bson_boolean.c ${tap_srcs}
-unit_bson_bson_utc_datetime_SOURCES = unit/bson/bson_utc_datetime.c ${tap_srcs}
-unit_bson_bson_null_SOURCES = unit/bson/bson_null.c ${tap_srcs}
-unit_bson_bson_int32_SOURCES = unit/bson/bson_int32.c ${tap_srcs}
-unit_bson_bson_int64_SOURCES = unit/bson/bson_int64.c ${tap_srcs}
-unit_bson_bson_regexp_SOURCES = unit/bson/bson_regexp.c ${tap_srcs}
-unit_bson_bson_binary_SOURCES = unit/bson/bson_binary.c ${tap_srcs}
-unit_bson_bson_js_code_SOURCES = unit/bson/bson_js_code.c ${tap_srcs}
-unit_bson_bson_symbol_SOURCES = unit/bson/bson_symbol.c ${tap_srcs}
-unit_bson_bson_timestamp_SOURCES = unit/bson/bson_timestamp.c ${tap_srcs}
-unit_bson_bson_oid_SOURCES = unit/bson/bson_oid.c ${tap_srcs}
-unit_bson_bson_document_SOURCES = unit/bson/bson_document.c ${tap_srcs}
-unit_bson_bson_array_SOURCES = unit/bson/bson_array.c ${tap_srcs}
-
-unit_bson_bson_reset_SOURCES = unit/bson/bson_reset.c ${tap_srcs}
-unit_bson_bson_new_from_data_SOURCES = unit/bson/bson_new_from_data.c ${tap_srcs}
-
-unit_bson_bson_build_SOURCES = unit/bson/bson_build.c ${tap_srcs}
-unit_bson_bson_build_full_SOURCES = unit/bson/bson_build_full.c ${tap_srcs}
-
-unit_bson_bson_type_as_string_SOURCES = unit/bson/bson_type_as_string.c ${tap_srcs}
