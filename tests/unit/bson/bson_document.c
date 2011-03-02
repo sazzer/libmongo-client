@@ -38,6 +38,27 @@ test_bson_document (void)
       "BSON document element contents check");
 
   bson_free (b);
+
+  e1 = bson_new ();
+  bson_append_int32 (e1, "foo", 42);
+  b = bson_new ();
+
+  ok (bson_append_document (b, "doc", e1) == FALSE,
+      "bson_append_document() with an unfinished document should fail");
+  bson_finish (e1);
+  ok (bson_append_document (b, NULL, e1) == FALSE,
+      "bson_append_document() with a NULL key should fail");
+  ok (bson_append_document (b, "doc", NULL) == FALSE,
+      "bson_append_document() with a NULL document should fail");
+  ok (bson_append_document (NULL, "doc", e1) == FALSE,
+      "bson_append_document() without a BSON object should fail");
+  bson_finish (b);
+
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+
+  bson_free (e1);
+  bson_free (b);
 }
 
-RUN_TEST (4, bson_document);
+RUN_TEST (9, bson_document);
