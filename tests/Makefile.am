@@ -21,7 +21,9 @@ bson_unit_tests = \
 		unit/bson/bson_new_from_data \
 		\
 		unit/bson/bson_build \
-		unit/bson/bson_build_full
+		unit/bson/bson_build_full \
+		\
+		unit/bson/bson_type_as_string
 
 UNIT_TESTS = ${bson_unit_tests}
 
@@ -69,3 +71,5 @@ unit_bson_bson_new_from_data_SOURCES = unit/bson/bson_new_from_data.c ${tap_srcs
 
 unit_bson_bson_build_SOURCES = unit/bson/bson_build.c ${tap_srcs}
 unit_bson_bson_build_full_SOURCES = unit/bson/bson_build_full.c ${tap_srcs}
+
+unit_bson_bson_type_as_string_SOURCES = unit/bson/bson_type_as_string.c ${tap_srcs}
