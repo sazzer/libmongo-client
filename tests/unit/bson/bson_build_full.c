@@ -25,11 +25,11 @@ test_bson_build_full (void)
 				   BSON_TYPE_NONE),
 		       BSON_TYPE_ARRAY, "array", TRUE,
 		       bson_build (BSON_TYPE_INT32, "0", 32,
-				   BSON_TYPE_INT64, "1", -42,
+				   BSON_TYPE_INT64, "1", (gint64)-42,
 				   BSON_TYPE_NONE),
 		       BSON_TYPE_BINARY, "binary0", FALSE, BSON_BINARY_SUBTYPE_GENERIC,
 		       "foo\0bar", 7,
-		       BSON_TYPE_OID, "_id", FALSE, "0123456789abcd",
+		       BSON_TYPE_OID, "_id", FALSE, "1234567890ab",
 		       BSON_TYPE_BOOLEAN, "TRUE", FALSE, FALSE,
 		       BSON_TYPE_UTC_DATETIME, "date", FALSE, 1294860709000,
 		       BSON_TYPE_NULL, "null", FALSE,
@@ -37,7 +37,7 @@ test_bson_build_full (void)
 		       BSON_TYPE_JS_CODE, "alert", FALSE, "alert (\"hello world!\");", -1,
 		       BSON_TYPE_SYMBOL, "sex", FALSE, "Marylin Monroe", -1,
 		       BSON_TYPE_INT32, "int32", FALSE, 32,
-		       BSON_TYPE_INT64, "int64", FALSE, 42,
+		       BSON_TYPE_INT64, "int64", FALSE, (gint64)-42,
 		       BSON_TYPE_NONE);
   bson_finish (b);
 
