@@ -15,6 +15,8 @@ test_bson_new (void)
   ok (bson_size (b) == -1,
       "bson_size() with an unfinished object should fail");
   ok (bson_finish (b), "bson_finish() works");
+  ok (bson_finish (b),
+      "bson_finish() works on an already finished object too");
   bson_free (b);
 
   ok (bson_size (NULL) == -1, "bson_size(NULL) works correctly");
@@ -23,4 +25,4 @@ test_bson_new (void)
   bson_free (NULL);
 }
 
-RUN_TEST (7, bson_new);
+RUN_TEST (8, bson_new);
