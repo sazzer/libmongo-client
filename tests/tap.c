@@ -249,7 +249,7 @@ tap_test_died (int status) {
     int prev;
     if (!test_died) {
         test_died = mmap(0, sizeof (int), PROT_READ | PROT_WRITE,
-                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+                         MAP_SHARED | MAP_ANON, -1, 0);
         *test_died = 0;
     }
     prev = *test_died;
