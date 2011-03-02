@@ -45,6 +45,7 @@ bson_unit_tests	= \
 		unit/bson/bson_cursor_get_utc_datetime \
 		unit/bson/bson_cursor_get_regex \
 		unit/bson/bson_cursor_get_javascript \
+		unit/bson/bson_cursor_get_symbol \
 		unit/bson/bson_cursor_get_int32 \
 		unit/bson/bson_cursor_get_timestamp \
 		unit/bson/bson_cursor_get_int64
