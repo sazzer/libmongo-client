@@ -22,6 +22,18 @@ test_bson_oid (void)
       "BSON OID element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_oid (b, "_id", NULL) == FALSE,
+      "bson_append_oid() should fail without an OID");
+  ok (bson_append_oid (b, NULL, oid) == FALSE,
+      "bson_append_oid() should fail without a key name");
+  ok (bson_append_oid (NULL, "_id", oid) == FALSE,
+      "bson_append_oid() should fail without a BSON object");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_oid);
+RUN_TEST (7, bson_oid);

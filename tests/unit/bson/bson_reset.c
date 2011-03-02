@@ -21,6 +21,9 @@ test_bson_reset (void)
 	  "bson_size() on a reseted & finished object matches the "
 	  "size of an empty document");
   bson_free (b);
+
+  ok (bson_reset (NULL) == FALSE,
+      "bson_reset(NULL) should fail");
 }
 
-RUN_TEST (4, bson_reset);
+RUN_TEST (5, bson_reset);

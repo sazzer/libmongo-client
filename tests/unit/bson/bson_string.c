@@ -38,11 +38,20 @@ test_bson_string (void)
       "BSON string element contents check, #2");
   bson_free (b);
 
-  /* Test #3: Negative test, passing an invalid length. */
+  /* Test #3: Negative test, passing invalid arguments. */
   b = bson_new ();
   ok (bson_append_string (b, "hello", "world", -42) == FALSE,
-      "bson_append_string() fails with an invalid length");
+      "bson_append_string() should fail with invalid length");
+  ok (bson_append_string (b, "hello", NULL, -1) == FALSE,
+      "bson_append_string() should fail without a string");
+  ok (bson_append_string (b, NULL, "world", -1) == FALSE,
+      "bson_append_string() should fail without a key name");
+  ok (bson_append_string (NULL, "hello", "world", -1) == FALSE,
+      "bson_append_string() should fail without a BSON object");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
   bson_free (b);
 }
 
-RUN_TEST (7, bson_string);
+RUN_TEST (11, bson_string);

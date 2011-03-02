@@ -43,11 +43,20 @@ test_bson_js_code (void)
       "BSON javascript element contents check, #2");
   bson_free (b);
 
-  /* Test #3: Negative test, passing an invalid length. */
+  /* Test #3: Negative test, passing an invalid arguments. */
   b = bson_new ();
   ok (bson_append_javascript (b, "hello", "print();", -42) == FALSE,
-      "bson_append_javascript() fails with an invalid length");
+      "bson_append_javascript() with an invalid length should fail");
+  ok (bson_append_javascript (b, NULL, "print();", -1) == FALSE,
+      "bson_append_javascript() should fail without a key name");
+  ok (bson_append_javascript (b, "hello", NULL, -1) == FALSE,
+      "bson_append_javascript() should fail without javascript code");
+  ok (bson_append_javascript (NULL, "hello", "print();", -1) == FALSE,
+      "bson_append_javascript() should fail without a BSON object");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
   bson_free (b);
 }
 
-RUN_TEST (7, bson_js_code);
+RUN_TEST (11, bson_js_code);

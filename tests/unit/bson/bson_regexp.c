@@ -22,6 +22,20 @@ test_bson_regex (void)
       "BSON regex element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_regex (b, "regex", "foo.*bar", NULL) == FALSE,
+      "bson_append_regex() without options should fail");
+  ok (bson_append_regex (b, "regex", NULL, "i") == FALSE,
+      "bson_append_regex() without a regex should fail");
+  ok (bson_append_regex (b, NULL, "foo.*bar", "i") == FALSE,
+      "bson_append_regex() should fail without a key name");
+  ok (bson_append_regex (NULL, "regex", "foo.*bar", "i") == FALSE,
+      "bson_append_regex() should fail without a BSON object");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_regex);
+RUN_TEST (8, bson_regex);

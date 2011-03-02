@@ -21,6 +21,16 @@ test_bson_null (void)
       "BSON NULL element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_null (b, NULL) == FALSE,
+      "bson_append_null() should fail without a key name");
+  ok (bson_append_null (NULL, "null") == FALSE,
+      "bson_append_null() should fail without a BSON object");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_null);
+RUN_TEST (6, bson_null);
