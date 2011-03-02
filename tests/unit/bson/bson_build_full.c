@@ -36,7 +36,7 @@ test_bson_build_full (void)
 		       BSON_TYPE_NULL, "null", FALSE,
 		       BSON_TYPE_REGEXP, "foobar", FALSE, "s/foo.*bar/", "i",
 		       BSON_TYPE_JS_CODE, "alert", FALSE, "alert (\"hello world!\");", -1,
-		       BSON_TYPE_SYMBOL, "sex", FALSE, "Marylin Monroe", -1,
+		       BSON_TYPE_SYMBOL, "sex", FALSE, "Marilyn Monroe", -1,
 		       BSON_TYPE_INT32, "int32", FALSE, 32,
 		       BSON_TYPE_INT64, "int64", FALSE, (gint64)-42,
 		       BSON_TYPE_NONE);

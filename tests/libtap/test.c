@@ -34,7 +34,7 @@ test_bson_generate_full (void)
   bson_append_null (b, "null");
   bson_append_regex (b, "foobar", "s/foo.*bar/", "i");
   bson_append_javascript (b, "alert", "alert (\"hello world!\");", -1);
-  bson_append_symbol (b, "sex", "Marylin Monroe", -1);
+  bson_append_symbol (b, "sex", "Marilyn Monroe", -1);
   bson_append_int32 (b, "int32", 32);
   bson_append_int64 (b, "int64", (gint64)-42);
   bson_finish (b);
