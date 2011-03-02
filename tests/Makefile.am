@@ -26,7 +26,28 @@ bson_unit_tests	= \
 		unit/bson/bson_build \
 		unit/bson/bson_build_full \
 		\
-		unit/bson/bson_type_as_string
+		unit/bson/bson_type_as_string \
+		\
+		unit/bson/bson_cursor_new \
+		unit/bson/bson_find \
+		unit/bson/bson_cursor_next \
+		unit/bson/bson_cursor_type \
+		unit/bson/bson_cursor_type_as_string \
+		unit/bson/bson_cursor_key \
+		\
+		unit/bson/bson_cursor_get_string \
+		unit/bson/bson_cursor_get_double \
+		unit/bson/bson_cursor_get_document \
+		unit/bson/bson_cursor_get_array \
+		unit/bson/bson_cursor_get_binary \
+		unit/bson/bson_cursor_get_oid \
+		unit/bson/bson_cursor_get_boolean \
+		unit/bson/bson_cursor_get_utc_datetime \
+		unit/bson/bson_cursor_get_regex \
+		unit/bson/bson_cursor_get_javascript \
+		unit/bson/bson_cursor_get_int32 \
+		unit/bson/bson_cursor_get_timestamp \
+		unit/bson/bson_cursor_get_int64
 
 UNIT_TESTS	= ${bson_unit_tests}
 TESTCASES	= ${UNIT_TESTS}
