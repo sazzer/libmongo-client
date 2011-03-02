@@ -22,6 +22,16 @@ test_bson_timestamp (void)
       "BSON timestamp element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_timestamp (b, NULL, l) == FALSE,
+      "bson_append_timestamp() with a NULL key should fail");
+  ok (bson_append_timestamp (NULL, "ts", l) == FALSE,
+      "bson_append_timestamp() without a BSON object should fail");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_timestamp);
+RUN_TEST (6, bson_timestamp);

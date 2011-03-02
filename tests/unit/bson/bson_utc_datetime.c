@@ -22,6 +22,16 @@ test_bson_utc_datetime (void)
       "BSON UTC datetime element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_utc_datetime (b, NULL, 1294860709000) == FALSE,
+      "bson_append_utc_datetime() with a NULL key should fail");
+  ok (bson_append_utc_datetime (NULL, "date", 1294860709000) == FALSE,
+      "bson_append_utc_datetime() without a BSON object should fail");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_utc_datetime);
+RUN_TEST (6, bson_utc_datetime);

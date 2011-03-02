@@ -22,6 +22,16 @@ test_bson_double (void)
       "BSON double element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_double (b, NULL, d) == FALSE,
+      "bson_append_double() with a NULL key should fail");
+  ok (bson_append_double (NULL, "double", d) == FALSE,
+      "bson_append_double() without a BSON object should fail");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_double);
+RUN_TEST (6, bson_double);

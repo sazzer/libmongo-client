@@ -21,6 +21,16 @@ test_bson_int32 (void)
       "BSON int32 element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_int32 (b, NULL, i) == FALSE,
+      "bson_append_int32() with a NULL key should fail");
+  ok (bson_append_int32 (NULL, "i32", i) == FALSE,
+      "bson_append_int32() without a BSON object should fail");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_int32);
+RUN_TEST (6, bson_int32);

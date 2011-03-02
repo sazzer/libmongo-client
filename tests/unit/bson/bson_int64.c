@@ -22,6 +22,16 @@ test_bson_int64 (void)
       "BSON int64 element contents check");
 
   bson_free (b);
+
+  b = bson_new ();
+  ok (bson_append_int64 (b, NULL, l) == FALSE,
+      "bson_append_int64() with a NULL key should fail");
+  ok (bson_append_int64 (NULL, "i64", l) == FALSE,
+      "bson_append_int64() without a BSON object should fail");
+  bson_finish (b);
+  cmp_ok (bson_size (b), "==", 5,
+	  "BSON object should be empty");
+  bson_free (b);
 }
 
-RUN_TEST (3, bson_int64);
+RUN_TEST (6, bson_int64);
