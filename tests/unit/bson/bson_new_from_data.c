@@ -11,7 +11,6 @@ test_bson_new_from_data (void)
   bson *orig, *new;
 
   orig = test_bson_generate_nested ();
-  bson_finish (orig);
 
   ok (bson_new_from_data (NULL, 0) == NULL,
       "bson_new_from_data (NULL, 0) fails");

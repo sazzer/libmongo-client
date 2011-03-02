@@ -9,7 +9,6 @@ test_bson_reset (void)
   bson *b;
 
   b = test_bson_generate_nested ();
-  bson_finish (b);
 
   cmp_ok (bson_size (b), "!=", -1,
 	  "bson_size() != -1 on a non-empty document");
