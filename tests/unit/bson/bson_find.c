@@ -1,6 +1,5 @@
 #include "tap.h"
 #include "test.h"
-#include "test-generator.h"
 #include "bson.h"
 
 #include <string.h>
@@ -20,12 +19,12 @@ test_bson_find (void)
       "bson_find() with an unfinished BSON object should fail");
   bson_free (b);
 
-  b = test_bson_generate_flat ();
+  b = test_bson_generate_full ();
   ok (bson_find (b, NULL) == FALSE,
       "bson_find() with a NULL key should fail");
   ok (bson_find (b, "__invalid__") == FALSE,
       "bson_find() with a non-existent key should fail");
-  ok ((c = bson_find (b, "goodbye")) != NULL,
+  ok ((c = bson_find (b, "alert")) != NULL,
       "bson_find() works");
 
   bson_cursor_free (c);

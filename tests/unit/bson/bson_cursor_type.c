@@ -1,6 +1,5 @@
 #include "tap.h"
 #include "test.h"
-#include "test-generator.h"
 #include "bson.h"
 
 #include <string.h>
@@ -14,14 +13,14 @@ test_bson_cursor_type (void)
   cmp_ok (bson_cursor_type (NULL), "==", BSON_TYPE_NONE,
 	  "bson_cursor_type(NULL) should fail");
 
-  b = test_bson_generate_flat ();
+  b = test_bson_generate_full ();
   c = bson_cursor_new (b);
 
   cmp_ok (bson_cursor_type (c), "==", BSON_TYPE_NONE,
 	  "bson_cursor_type() should fail at the beginning of the BSON "
 	  "object");
   bson_cursor_next (c);
-  cmp_ok (bson_cursor_type (c), "==", BSON_TYPE_INT32,
+  cmp_ok (bson_cursor_type (c), "==", BSON_TYPE_DOUBLE,
 	  "bson_cursor_type() works");
 
   bson_cursor_free (c);

@@ -1,7 +1,6 @@
 #include "bson.h"
 #include "test.h"
 #include "tap.h"
-#include "test-generator.h"
 
 #include <string.h>
 
@@ -10,7 +9,7 @@ test_bson_new_from_data (void)
 {
   bson *orig, *new;
 
-  orig = test_bson_generate_nested ();
+  orig = test_bson_generate_full ();
 
   ok (bson_new_from_data (NULL, 0) == NULL,
       "bson_new_from_data (NULL, 0) fails");

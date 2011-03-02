@@ -1,6 +1,5 @@
 #include "tap.h"
 #include "test.h"
-#include "test-generator.h"
 #include "bson.h"
 
 #include <string.h>
@@ -24,7 +23,7 @@ test_bson_cursor_next (void)
   bson_cursor_free (c);
   bson_free (b);
 
-  b = test_bson_generate_flat ();
+  b = test_bson_generate_full ();
   c = bson_cursor_new (b);
   ok (bson_cursor_next (c),
       "initial bson_cursor_next() works");

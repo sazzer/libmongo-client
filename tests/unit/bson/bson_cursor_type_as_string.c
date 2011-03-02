@@ -1,6 +1,5 @@
 #include "tap.h"
 #include "test.h"
-#include "test-generator.h"
 #include "bson.h"
 
 #include <string.h>
@@ -14,7 +13,7 @@ test_bson_cursor_type_as_string (void)
   is (bson_cursor_type_as_string (NULL), NULL,
       "bson_cursor_type_as_string(NULL) should fail");
 
-  b = test_bson_generate_flat ();
+  b = test_bson_generate_full ();
   c = bson_cursor_new (b);
 
   is (bson_cursor_type_as_string (c), NULL,

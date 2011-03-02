@@ -1,14 +1,13 @@
 #include "bson.h"
 #include "test.h"
 #include "tap.h"
-#include "test-generator.h"
 
 void
 test_bson_reset (void)
 {
   bson *b;
 
-  b = test_bson_generate_nested ();
+  b = test_bson_generate_full ();
 
   cmp_ok (bson_size (b), "!=", -1,
 	  "bson_size() != -1 on a non-empty document");

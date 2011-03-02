@@ -1,6 +1,5 @@
 #include "tap.h"
 #include "test.h"
-#include "test-generator.h"
 #include "bson.h"
 
 #include <string.h>
@@ -14,14 +13,14 @@ test_bson_cursor_key (void)
   is (bson_cursor_key (NULL), NULL,
       "bson_cursor_key(NULL) should fail");
 
-  b = test_bson_generate_flat ();
+  b = test_bson_generate_full ();
   c = bson_cursor_new (b);
 
   is (bson_cursor_key (c), NULL,
       "bson_cursor_key() should fail at the initial position");
   bson_cursor_next (c);
 
-  is (bson_cursor_key (c), "int32",
+  is (bson_cursor_key (c), "double",
       "bson_cursor_key() works");
 
   bson_cursor_free (c);

@@ -1,6 +1,5 @@
 #include "tap.h"
 #include "test.h"
-#include "test-generator.h"
 #include "bson.h"
 
 #include <string.h>
@@ -19,7 +18,7 @@ test_bson_cursor_new (void)
       "bson_cursor_new() should fail with an unfinished BSON object");
   bson_free (b);
 
-  b = test_bson_generate_flat ();
+  b = test_bson_generate_full ();
   ok ((c = bson_cursor_new (b)) != NULL,
       "bson_cursor_new() works");
   bson_cursor_free (c);
