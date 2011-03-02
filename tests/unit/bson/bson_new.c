@@ -10,6 +10,10 @@ test_bson_new (void)
   bson *b;
 
   ok ((b = bson_new ()) != NULL, "bson_new() works");
+  ok (bson_data (b) == NULL,
+      "bson_data() with an unfished object should fail");
+  ok (bson_size (b) == -1,
+      "bson_size() with an unfinished object should fail");
   ok (bson_finish (b), "bson_finish() works");
   bson_free (b);
 
@@ -19,4 +23,4 @@ test_bson_new (void)
   bson_free (NULL);
 }
 
-RUN_TEST (5, bson_new);
+RUN_TEST (7, bson_new);
