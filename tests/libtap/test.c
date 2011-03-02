@@ -30,6 +30,7 @@ test_bson_generate_full (void)
   bson_append_oid (b, "_id", oid);
   bson_append_boolean (b, "TRUE", FALSE);
   bson_append_utc_datetime (b, "date", 1294860709000);
+  bson_append_timestamp (b, "ts", 1294860709000);
   bson_append_null (b, "null");
   bson_append_regex (b, "foobar", "s/foo.*bar/", "i");
   bson_append_javascript (b, "alert", "alert (\"hello world!\");", -1);

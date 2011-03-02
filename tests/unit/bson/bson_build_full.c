@@ -32,6 +32,7 @@ test_bson_build_full (void)
 		       BSON_TYPE_OID, "_id", FALSE, "1234567890ab",
 		       BSON_TYPE_BOOLEAN, "TRUE", FALSE, FALSE,
 		       BSON_TYPE_UTC_DATETIME, "date", FALSE, 1294860709000,
+		       BSON_TYPE_TIMESTAMP, "ts", FALSE, 1294860709000,
 		       BSON_TYPE_NULL, "null", FALSE,
 		       BSON_TYPE_REGEXP, "foobar", FALSE, "s/foo.*bar/", "i",
 		       BSON_TYPE_JS_CODE, "alert", FALSE, "alert (\"hello world!\");", -1,
