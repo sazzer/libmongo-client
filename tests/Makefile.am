@@ -50,7 +50,13 @@ bson_unit_tests	= \
 		unit/bson/bson_cursor_get_timestamp \
 		unit/bson/bson_cursor_get_int64
 
-UNIT_TESTS	= ${bson_unit_tests}
+mongo_utils_unit_tests	= \
+		unit/mongo/utils/oid_init \
+		unit/mongo/utils/oid_new \
+		unit/mongo/utils/oid_new_with_time \
+		unit/mongo/utils/parse_addr
+
+UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests}
 TESTCASES	= ${UNIT_TESTS}
 
 check_PROGRAMS = ${TESTCASES}
