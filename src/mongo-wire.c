@@ -303,7 +303,7 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
       pos += bson_size (d);
     }
 
-  if (!p->data)
+  if (!p->data || p->data_size == sizeof (gint32) + strlen (ns) + 1)
     {
       mongo_wire_packet_free (p);
       errno = -EINVAL;

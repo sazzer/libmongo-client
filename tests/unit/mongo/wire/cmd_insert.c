@@ -22,6 +22,8 @@ test_mongo_wire_cmd_insert (void)
 
   ok (mongo_wire_cmd_insert (1, NULL, ins, NULL) == NULL,
       "mongo_wire_cmd_insert() fails with a NULL namespace");
+  ok (mongo_wire_cmd_insert (1, "test.ns", NULL) == NULL,
+      "mongo_wire_cmd_insert() fails with no documents");
   ok (mongo_wire_cmd_insert (1, "test.ns", tmp, NULL) == NULL,
       "mongo_wire_cmd_insert() with an unfinished document");
   bson_finish (tmp);
@@ -78,4 +80,4 @@ test_mongo_wire_cmd_insert (void)
   mongo_wire_packet_free (p);
 }
 
-RUN_TEST (14, mongo_wire_cmd_insert);
+RUN_TEST (15, mongo_wire_cmd_insert);
