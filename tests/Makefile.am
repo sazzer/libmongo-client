@@ -56,7 +56,13 @@ mongo_utils_unit_tests	= \
 		unit/mongo/utils/oid_new_with_time \
 		unit/mongo/utils/parse_addr
 
-UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests}
+mongo_wire_unit_tests	= \
+		unit/mongo/wire/packet_new \
+		unit/mongo/wire/packet_get_set_header \
+		unit/mongo/wire/packet_get_set_data
+
+UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
+		${mongo_wire_unit_tests}
 TESTCASES	= ${UNIT_TESTS}
 
 check_PROGRAMS = ${TESTCASES}
