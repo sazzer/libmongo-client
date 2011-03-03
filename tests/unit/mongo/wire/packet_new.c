@@ -11,8 +11,8 @@ test_mongo_wire_packet_new (void)
 
   ok ((p = mongo_wire_packet_new ()) != NULL,
       "mongo_wire_packet_new() works");
-  lives_ok ({ mongo_wire_packet_free (NULL); },
-	    "mongo_wire_packet_free(NULL) works");
+  mongo_wire_packet_free (NULL);
+  pass ("mongo_wire_packet_free(NULL) works");
   mongo_wire_packet_free (p);
   pass ("mongo_wire_packet_free() works");
 }
