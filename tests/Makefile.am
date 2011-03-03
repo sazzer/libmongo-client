@@ -59,7 +59,15 @@ mongo_utils_unit_tests	= \
 mongo_wire_unit_tests	= \
 		unit/mongo/wire/packet_new \
 		unit/mongo/wire/packet_get_set_header \
-		unit/mongo/wire/packet_get_set_data
+		unit/mongo/wire/packet_get_set_data \
+		\
+		unit/mongo/wire/cmd_update \
+		unit/mongo/wire/cmd_insert \
+		unit/mongo/wire/cmd_query \
+		unit/mongo/wire/cmd_get_more \
+		unit/mongo/wire/cmd_delete \
+		unit/mongo/wire/cmd_kill_cursors \
+		unit/mongo/wire/cmd_custom
 
 UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
 		${mongo_wire_unit_tests}
