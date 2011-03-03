@@ -127,6 +127,14 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
       errno = ERANGE;
       return FALSE;
     }
+  if (p < 0 || p > INT_MAX)
+    {
+      g_free (*host);
+      *host = NULL;
+      *port = -1;
+      errno = ERANGE;
+      return FALSE;
+    }
   *port = (gint)p;
 
   if (ep && *ep)

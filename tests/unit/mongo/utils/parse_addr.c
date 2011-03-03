@@ -87,6 +87,35 @@ test_mongo_utils_parse_addr (void)
       "Failed parsing sets host to NULL");
   cmp_ok (port, "==", -1,
 	  "Failed parsing sets port to -1");
+  host = "deadbeef";
+  port = 42;
+
+  ok (mongo_util_parse_addr ("localhost:-10", &host, &port) == FALSE,
+      "mongo_util_parse_addr() should fail if the port is out of bounds");
+  is (host, NULL,
+      "Failed parsing sets host to NULL");
+  cmp_ok (port, "==", -1,
+	  "Failed parsing sets port to -1");
+  host = "deadbeef";
+  port = 42;
+
+  ok (mongo_util_parse_addr ("localhost:9999999999999999999",
+			     &host, &port) == FALSE,
+      "mongo_util_parse_addr() should fail if the port is out of bounds");
+  is (host, NULL,
+      "Failed parsing sets host to NULL");
+  cmp_ok (port, "==", -1,
+	  "Failed parsing sets port to -1");
+  host = "deadbeef";
+  port = 42;
+
+  ok (mongo_util_parse_addr ("localhost:9999999999",
+			     &host, &port) == FALSE,
+      "mongo_util_parse_addr() should fail if the port is out of bounds");
+  is (host, NULL,
+      "Failed parsing sets host to NULL");
+  cmp_ok (port, "==", -1,
+	  "Failed parsing sets port to -1");
 }
 
-RUN_TEST (25, mongo_utils_parse_addr);
+RUN_TEST (34, mongo_utils_parse_addr);
