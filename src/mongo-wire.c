@@ -112,6 +112,11 @@ mongo_wire_packet_set_header (mongo_packet *p,
       errno = EINVAL;
       return FALSE;
     }
+  if (header->length < sizeof (mongo_packet_header))
+    {
+      errno = ERANGE;
+      return FALSE;
+    }
 
   p->header.length = GINT32_TO_LE (header->length);
   p->header.id = GINT32_TO_LE (header->id);
