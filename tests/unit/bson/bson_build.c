@@ -38,6 +38,8 @@ test_bson_build (void)
 		  BSON_TYPE_INT64, "int64", (gint64)-42,
 		  BSON_TYPE_NONE);
   bson_finish (b);
+  bson_free (d);
+  bson_free (a);
 
   o = test_bson_generate_full ();
 
