@@ -4,6 +4,8 @@
 #include "tap.h"
 #include "bson.h"
 
+#define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
+
 #define RUN_TEST(n, t) \
   int		       \
   main (void)	       \
