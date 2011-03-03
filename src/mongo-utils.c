@@ -90,17 +90,28 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
   gchar *port_s, *ep;
   glong p;
 
-  if (!addr)
+  if (!addr || !host || !port)
     {
-      *host = NULL;
-      *port = -1;
+      if (host)
+	*host = NULL;
+      if (port)
+	*port = -1;
       return FALSE;
     }
 
   /* Split up to host:port */
   port_s = g_strrstr (addr, ":");
   if (!port_s)
-    return FALSE;
+    {
+      *host = g_strdup (addr);
+      return TRUE;
+    }
+  if (port_s == addr)
+    {
+      *host = NULL;
+      *port = -1;
+      return FALSE;
+    }
   port_s++;
   *host = g_strndup (addr, port_s - addr - 1);
 
