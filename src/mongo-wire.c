@@ -59,7 +59,12 @@ typedef enum
 mongo_packet *
 mongo_wire_packet_new (void)
 {
-  return (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  mongo_packet *p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+
+  if (!p)
+    return NULL;
+  p->header.length = GINT32_TO_LE (sizeof (mongo_packet_header));
+  return p;
 }
 
 gboolean
