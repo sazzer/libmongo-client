@@ -5,54 +5,6 @@
 #include <glib.h>
 
 void
-test_invalid_bson_cursor ()
-{
-  bson *b;
-  bson_cursor *c;
-
-  b = bson_new ();
-  g_assert (bson_append_string (b, "hello", "world", -1));
-
-  TEST (bson_invalid_cursor_new_null);
-  g_assert ((c = bson_cursor_new (NULL)) == NULL);
-  PASS ();
-
-  TEST (bson_invalid_cursor_next);
-  g_assert (bson_cursor_next (NULL) == FALSE);
-  PASS ();
-
-  TEST (bson_invalid_cursor_find_params);
-  g_assert (bson_find (NULL, NULL) == FALSE);
-  g_assert ((c = bson_find (b, NULL)) == FALSE);
-  g_assert ((c = bson_find (b, "hello")) == FALSE);
-  bson_finish (b);
-  g_assert ((c = bson_find (b, "hello")));
-  PASS ();
-
-  bson_cursor_free (c);
-
-  TEST (bson_invalid_cursor_type);
-  g_assert ((c = bson_cursor_new (b)));
-  g_assert_cmpint (bson_cursor_type (c), ==, BSON_TYPE_NONE);
-  PASS ();
-
-  TEST (bson_invalid_cursor_key);
-  g_assert (bson_cursor_key (NULL) == NULL);
-  g_assert (bson_cursor_key (c) == NULL);
-  PASS ();
-
-  TEST (bson_invalid_cursor_get);
-  g_assert (bson_cursor_get_string (NULL, NULL) == FALSE);
-  g_assert (bson_cursor_get_string (c, NULL) == FALSE);
-  g_assert (bson_cursor_next (c));
-  g_assert (bson_cursor_get_string (c, NULL) == FALSE);
-  PASS ();
-
-  bson_cursor_free (c);
-  bson_free (b);
-}
-
-void
 test_invalid_mongo_wire (void)
 {
   bson *sel, *data, *u;
@@ -112,7 +64,6 @@ main (void)
 {
   PLAN (1, 18);
 
-  test_invalid_bson_cursor ();
   test_invalid_mongo_wire ();
 
   return 0;
