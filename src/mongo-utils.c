@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 
 static guint32 machine_id = 0;
 static gint16 pid = 0;
@@ -96,6 +97,7 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
 	*host = NULL;
       if (port)
 	*port = -1;
+      errno = EINVAL;
       return FALSE;
     }
 
@@ -110,6 +112,7 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
     {
       *host = NULL;
       *port = -1;
+      errno = EINVAL;
       return FALSE;
     }
   port_s++;
@@ -121,6 +124,7 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
       g_free (*host);
       *host = NULL;
       *port = -1;
+      errno = ERANGE;
       return FALSE;
     }
   *port = (gint)p;
@@ -130,6 +134,7 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
       g_free (*host);
       *host = NULL;
       *port = -1;
+      errno = EINVAL;
       return FALSE;
     }
   return TRUE;
