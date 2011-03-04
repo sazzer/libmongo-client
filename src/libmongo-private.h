@@ -19,6 +19,8 @@
  * Private types and functions, for internal use in libmongo-client only.
  */
 
+#include "mongo.h"
+
 /** @internal Mongo Connection state object. */
 struct _mongo_connection
 {
