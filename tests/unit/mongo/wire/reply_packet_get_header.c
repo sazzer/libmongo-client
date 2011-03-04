@@ -14,6 +14,7 @@ test_mongo_wire_reply_packet_get_header (void)
   p = mongo_wire_packet_new ();
   memset (&h, 0, sizeof (mongo_packet_header));
   h.opcode = 1;
+  h.length = sizeof (mongo_packet_header);
 
   mongo_wire_packet_set_header (p, &h);
 
