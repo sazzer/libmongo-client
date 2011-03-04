@@ -61,6 +61,10 @@ mongo_wire_unit_tests	= \
 		unit/mongo/wire/packet_get_set_header \
 		unit/mongo/wire/packet_get_set_data \
 		\
+		unit/mongo/wire/reply_packet_get_header \
+		unit/mongo/wire/reply_packet_get_data \
+		unit/mongo/wire/reply_packet_get_nth_document \
+		\
 		unit/mongo/wire/cmd_update \
 		unit/mongo/wire/cmd_insert \
 		unit/mongo/wire/cmd_query \
