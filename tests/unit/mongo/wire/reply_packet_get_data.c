@@ -1,5 +1,6 @@
 #include "test.h"
 #include "tap.h"
+#include "bson.h"
 #include "mongo-wire.h"
 
 #include <string.h>
@@ -10,6 +11,7 @@ test_mongo_wire_reply_packet_get_data (void)
   mongo_packet *p;
   mongo_packet_header h;
   const guint8 *data;
+  bson *b;
 
   p = mongo_wire_packet_new ();
   memset (&h, 0, sizeof (mongo_packet_header));
@@ -32,6 +34,19 @@ test_mongo_wire_reply_packet_get_data (void)
       "no data");
 
   mongo_wire_packet_free (p);
+
+  p = test_mongo_wire_generate_reply (TRUE, TRUE);
+
+  ok (mongo_wire_reply_packet_get_data (p, &data),
+      "mongo_wire_reply_packet_get_data() works");
+
+  b = test_bson_generate_full ();
+
+  ok (memcmp (data, bson_data (b), bson_size (b)) == 0,
+      "The returned data is correct");
+
+  bson_free (b);
+  mongo_wire_packet_free (p);
 }
 
-RUN_TEST (4, mongo_wire_reply_packet_get_data);
+RUN_TEST (6, mongo_wire_reply_packet_get_data);

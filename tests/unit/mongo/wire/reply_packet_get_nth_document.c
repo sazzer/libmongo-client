@@ -9,7 +9,7 @@ void
 test_mongo_wire_reply_packet_get_nth_document (void)
 {
   mongo_packet *p;
-  bson *doc;
+  bson *b, *doc;
   mongo_packet_header h;
 
   p = mongo_wire_packet_new ();
@@ -40,6 +40,29 @@ test_mongo_wire_reply_packet_get_nth_document (void)
       "incomplete reply packet");
 
   mongo_wire_packet_free (p);
+
+  p = test_mongo_wire_generate_reply (TRUE, FALSE);
+  ok (mongo_wire_reply_packet_get_nth_document (p, 1, &doc) == FALSE,
+      "mongo_wire_reply_packet_get_nth_document() fails if there are "
+      "no documents to return");
+  mongo_wire_packet_free (p);
+
+  p = test_mongo_wire_generate_reply (TRUE, TRUE);
+  ok (mongo_wire_reply_packet_get_nth_document (p, 1, &doc),
+      "mongo_wire_reply_packet_get_nth_document() works");
+  b = test_bson_generate_full ();
+  bson_finish (doc);
+
+  ok (memcmp (bson_data (b), bson_data (doc), bson_size (doc)) == 0,
+      "Returned document is correct");
+  bson_free (doc);
+  bson_free (b);
+
+  ok (mongo_wire_reply_packet_get_nth_document (p, 2, &doc) == FALSE,
+      "mongo_wire_reply_packet_get_nth_document() fails if the requested "
+      "document does not exist");
+
+  mongo_wire_packet_free (p);
 }
 
-RUN_TEST (6, mongo_wire_reply_packet_get_nth_document);
+RUN_TEST (10, mongo_wire_reply_packet_get_nth_document);

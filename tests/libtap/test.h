@@ -3,6 +3,7 @@
 
 #include "tap.h"
 #include "bson.h"
+#include "mongo-wire.h"
 
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
@@ -16,5 +17,7 @@
   }
 
 bson *test_bson_generate_full (void);
+mongo_packet *test_mongo_wire_generate_reply (gboolean valid,
+					      gboolean with_doc);
 
 #endif
