@@ -27,7 +27,13 @@ test_mongo_wire_reply_packet_get_header (void)
       "mongo_wire_reply_packet_get_header() fails if the packet has "
       "no reply header");
 
+  h.opcode = 2;
+  mongo_wire_packet_set_header (p, &h);
+  ok (mongo_wire_reply_packet_get_header (p, &rh) == FALSE,
+      "mongo_wire_reply_packet_get_header() fails if the packet is "
+      "not a reply packet");
+
   mongo_wire_packet_free (p);
 }
 
-RUN_TEST (3, mongo_wire_reply_packet_get_header);
+RUN_TEST (4, mongo_wire_reply_packet_get_header);
