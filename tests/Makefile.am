@@ -50,6 +50,9 @@ bson_unit_tests	= \
 		unit/bson/bson_cursor_get_timestamp \
 		unit/bson/bson_cursor_get_int64
 
+bson_func_tests	= \
+		func/bson/huge_doc
+
 mongo_utils_unit_tests	= \
 		unit/mongo/utils/oid_init \
 		unit/mongo/utils/oid_new \
@@ -76,7 +79,8 @@ mongo_wire_unit_tests	= \
 
 UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
 		${mongo_wire_unit_tests}
-TESTCASES	= ${UNIT_TESTS}
+FUNC_TESTS	= ${bson_func_tests}
+TESTCASES	= ${UNIT_TESTS} ${FUNC_TESTS}
 
 check_PROGRAMS = ${TESTCASES}
 
