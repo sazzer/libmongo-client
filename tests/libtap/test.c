@@ -46,24 +46,26 @@ test_bson_generate_full (void)
 }
 
 mongo_packet *
-test_mongo_wire_generate_reply (gboolean valid, gboolean with_doc)
+test_mongo_wire_generate_reply (gboolean valid, gint32 nreturn,
+				gboolean with_docs)
 {
   mongo_reply_packet_header rh;
   mongo_packet_header h;
   mongo_packet *p;
   guint8 *data;
   gint data_size = sizeof (mongo_reply_packet_header);
-  bson *b = NULL;
+  bson *b1 = NULL, *b2 = NULL;
 
   p = mongo_wire_packet_new ();
 
   h.opcode = (valid) ? 1 : 42;
   h.id = 1984;
   h.resp_to = 42;
-  if (with_doc)
+  if (with_docs)
     {
-      b = test_bson_generate_full ();
-      data_size += bson_size (b);
+      b1 = test_bson_generate_full ();
+      b2 = test_bson_generate_full ();
+      data_size += bson_size (b1) + bson_size (b2);
     }
   h.length = sizeof (mongo_packet_header) + data_size;
 
@@ -74,16 +76,21 @@ test_mongo_wire_generate_reply (gboolean valid, gboolean with_doc)
   rh.flags = GINT32_TO_LE (0);
   rh.cursor_id = GINT64_TO_LE (12345);
   rh.start = 0;
-  rh.returned = (with_doc) ? GINT32_TO_LE (1) : 0;
+  rh.returned = GINT32_TO_LE (nreturn);
 
   memcpy (data, &rh, sizeof (mongo_reply_packet_header));
-  if (with_doc)
-    memcpy (data + sizeof (mongo_reply_packet_header),
-	    bson_data (b), bson_size (b));
+  if (with_docs)
+    {
+      memcpy (data + sizeof (mongo_reply_packet_header),
+	      bson_data (b1), bson_size (b1));
+      memcpy (data + sizeof (mongo_reply_packet_header) + bson_size (b1),
+	      bson_data (b2), bson_size (b2));
+    }
 
   mongo_wire_packet_set_data (p, data, data_size);
   g_free (data);
-  bson_free (b);
+  bson_free (b1);
+  bson_free (b2);
 
   return p;
 }

@@ -41,14 +41,14 @@ test_mongo_wire_reply_packet_get_nth_document (void)
 
   mongo_wire_packet_free (p);
 
-  p = test_mongo_wire_generate_reply (TRUE, FALSE);
+  p = test_mongo_wire_generate_reply (TRUE, 0, FALSE);
   ok (mongo_wire_reply_packet_get_nth_document (p, 1, &doc) == FALSE,
       "mongo_wire_reply_packet_get_nth_document() fails if there are "
       "no documents to return");
   mongo_wire_packet_free (p);
 
-  p = test_mongo_wire_generate_reply (TRUE, TRUE);
-  ok (mongo_wire_reply_packet_get_nth_document (p, 1, &doc),
+  p = test_mongo_wire_generate_reply (TRUE, 2, TRUE);
+  ok (mongo_wire_reply_packet_get_nth_document (p, 2, &doc),
       "mongo_wire_reply_packet_get_nth_document() works");
   b = test_bson_generate_full ();
   bson_finish (doc);
@@ -58,7 +58,7 @@ test_mongo_wire_reply_packet_get_nth_document (void)
   bson_free (doc);
   bson_free (b);
 
-  ok (mongo_wire_reply_packet_get_nth_document (p, 2, &doc) == FALSE,
+  ok (mongo_wire_reply_packet_get_nth_document (p, 3, &doc) == FALSE,
       "mongo_wire_reply_packet_get_nth_document() fails if the requested "
       "document does not exist");
 

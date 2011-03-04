@@ -18,6 +18,7 @@
 
 bson *test_bson_generate_full (void);
 mongo_packet *test_mongo_wire_generate_reply (gboolean valid,
-					      gboolean with_doc);
+					      gint32 nreturn,
+					      gboolean with_docs);
 
 #endif

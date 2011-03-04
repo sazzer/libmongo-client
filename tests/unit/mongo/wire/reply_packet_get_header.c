@@ -35,7 +35,7 @@ test_mongo_wire_reply_packet_get_header (void)
 
   mongo_wire_packet_free (p);
 
-  p = test_mongo_wire_generate_reply (TRUE, FALSE);
+  p = test_mongo_wire_generate_reply (TRUE, 0, FALSE);
 
   ok (mongo_wire_reply_packet_get_header (p, &rh),
       "mongo_wire_reply_packet_get_header() works");
