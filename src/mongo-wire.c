@@ -156,6 +156,11 @@ mongo_wire_packet_get_data (const mongo_packet *p, const guint8 **data)
       errno = EINVAL;
       return -1;
     }
+  if (p->data == NULL)
+    {
+      errno = EINVAL;
+      return -1;
+    }
 
   *data = (const guint8 *)p->data;
   return p->data_size;

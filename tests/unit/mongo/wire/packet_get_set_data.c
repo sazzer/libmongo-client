@@ -19,6 +19,8 @@ test_mongo_wire_packet_get_set_data (void)
       "mongo_wire_packet_get_data() with a NULL packet should fail");
   ok (mongo_wire_packet_get_data (p, NULL) == -1,
       "mongo_wire_packet_get_data() with NULL destination should fail");
+  ok (mongo_wire_packet_get_data (p, &idata) == -1,
+      "mongo_wire_packet_get_data() with an empty packet should fail");
   ok (mongo_wire_packet_set_data (NULL, (const guint8 *)&data,
 				  sizeof (data)) == FALSE,
       "mongo_wire_packet_set_data() with a NULL packet should fail");
@@ -60,4 +62,4 @@ test_mongo_wire_packet_get_set_data (void)
   mongo_wire_packet_free (p);
 }
 
-RUN_TEST (14, mongo_wire_packet_get_set_data);
+RUN_TEST (15, mongo_wire_packet_get_set_data);
