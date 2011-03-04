@@ -59,6 +59,7 @@ mongo_utils_unit_tests	= \
 mongo_wire_unit_tests	= \
 		unit/mongo/wire/packet_new \
 		unit/mongo/wire/packet_get_set_header \
+		unit/mongo/wire/packet_get_set_header_raw \
 		unit/mongo/wire/packet_get_set_data \
 		\
 		unit/mongo/wire/reply_packet_get_header \
