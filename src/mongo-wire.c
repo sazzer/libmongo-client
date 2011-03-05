@@ -59,7 +59,12 @@ typedef enum
 mongo_packet *
 mongo_wire_packet_new (void)
 {
-  return (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  mongo_packet *p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+
+  if (!p)
+    return NULL;
+  p->header.length = GINT32_TO_LE (sizeof (mongo_packet_header));
+  return p;
 }
 
 gboolean
@@ -107,6 +112,11 @@ mongo_wire_packet_set_header (mongo_packet *p,
       errno = EINVAL;
       return FALSE;
     }
+  if (header->length < sizeof (mongo_packet_header))
+    {
+      errno = ERANGE;
+      return FALSE;
+    }
 
   p->header.length = GINT32_TO_LE (header->length);
   p->header.id = GINT32_TO_LE (header->id);
@@ -142,6 +152,11 @@ gint32
 mongo_wire_packet_get_data (const mongo_packet *p, const guint8 **data)
 {
   if (!p || !data)
+    {
+      errno = EINVAL;
+      return -1;
+    }
+  if (p->data == NULL)
     {
       errno = EINVAL;
       return -1;
@@ -293,7 +308,7 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
       pos += bson_size (d);
     }
 
-  if (!p->data)
+  if (!p->data || p->data_size == sizeof (gint32) + strlen (ns) + 1)
     {
       mongo_wire_packet_free (p);
       errno = -EINVAL;

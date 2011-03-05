@@ -117,7 +117,7 @@ _bson_append_int64 (bson *b, const gint64 i)
 static inline gboolean
 _bson_append_element_header (bson *b, bson_type type, const gchar *name)
 {
-  if (!name)
+  if (!name || !b)
     return FALSE;
 
   if (b->finished)
@@ -155,7 +155,7 @@ _bson_append_string_element (bson *b, bson_type type, const gchar *name,
 {
   gint32 len;
 
-  if (!val || !length)
+  if (!val || !length || length < -1)
     return FALSE;
 
   len = (length != -1) ? length + 1: strlen (val) + 1;
@@ -670,7 +670,7 @@ gboolean
 bson_append_binary (bson *b, const gchar *name, bson_binary_subtype subtype,
 		    const guint8 *data, gint32 size)
 {
-  if (!data || !size)
+  if (!data || !size || size <= 0)
     return FALSE;
 
   if (!_bson_append_element_header (b, BSON_TYPE_BINARY, name))
