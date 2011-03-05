@@ -79,6 +79,7 @@ mongo_wire_unit_tests	= \
 
 mongo_client_unit_tests	= \
 		unit/mongo/client/connect \
+		unit/mongo/client/disconnect \
 		unit/mongo/client/packet_send \
 		unit/mongo/client/packet_recv \
 		unit/mongo/client/connection_get_requestid
