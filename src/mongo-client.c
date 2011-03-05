@@ -64,13 +64,19 @@ mongo_connect (const char *host, int port)
   gchar *port_s;
   mongo_connection *conn;
 
+  if (!host)
+    {
+      errno = EINVAL;
+      return NULL;
+    }
+
   conn = g_try_new0 (mongo_connection, 1);
   if (!conn)
     {
       errno = ENOMEM;
       return NULL;
     }
-  
+
   memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_STREAM;
 
