@@ -497,7 +497,7 @@ mongo_sync_cmd_get_more (mongo_sync_connection *conn,
   if (rh.flags & MONGO_REPLY_FLAG_NO_CURSOR)
     {
       mongo_wire_packet_free (p);
-      errno = ESTALE;
+      errno = EPROTO;
       return NULL;
     }
 
