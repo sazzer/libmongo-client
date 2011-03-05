@@ -311,7 +311,7 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
   if (!p->data || p->data_size == sizeof (gint32) + strlen (ns) + 1)
     {
       mongo_wire_packet_free (p);
-      errno = -EINVAL;
+      errno = EINVAL;
       return NULL;
     }
 
@@ -329,7 +329,7 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...)
 
   if (!ns)
     {
-      errno = -EINVAL;
+      errno = EINVAL;
       return NULL;
     }
 
@@ -350,13 +350,13 @@ mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
 
   if (!ns || !query)
     {
-      errno = -EINVAL;
+      errno = EINVAL;
       return NULL;
     }
 
   if (bson_size (query) < 0 || (sel && bson_size (sel) < 0))
     {
-      errno = -EINVAL;
+      errno = EINVAL;
       return NULL;
     }
 
