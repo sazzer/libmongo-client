@@ -77,8 +77,14 @@ mongo_wire_unit_tests	= \
 		unit/mongo/wire/cmd_kill_cursors \
 		unit/mongo/wire/cmd_custom
 
+mongo_client_unit_tests	= \
+		unit/mongo/client/connect \
+		unit/mongo/client/packet_send \
+		unit/mongo/client/packet_recv \
+		unit/mongo/client/connection_get_requestid
+
 UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
-		${mongo_wire_unit_tests}
+		${mongo_wire_unit_tests} ${mongo_client_unit_tests}
 FUNC_TESTS	= ${bson_func_tests}
 TESTCASES	= ${UNIT_TESTS} ${FUNC_TESTS}
 
