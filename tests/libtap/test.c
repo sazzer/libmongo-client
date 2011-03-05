@@ -58,23 +58,23 @@ test_mongo_wire_generate_reply (gboolean valid, gint32 nreturn,
 
   p = mongo_wire_packet_new ();
 
-  h.opcode = (valid) ? 1 : 42;
-  h.id = 1984;
-  h.resp_to = 42;
+  h.opcode = (valid) ? GINT32_TO_LE (1) : GINT32_TO_LE (42);
+  h.id = GINT32_TO_LE (1984);
+  h.resp_to = GINT32_TO_LE (42);
   if (with_docs)
     {
       b1 = test_bson_generate_full ();
       b2 = test_bson_generate_full ();
       data_size += bson_size (b1) + bson_size (b2);
     }
-  h.length = sizeof (mongo_packet_header) + data_size;
+  h.length = GINT32_TO_LE (sizeof (mongo_packet_header) + data_size);
 
   mongo_wire_packet_set_header (p, &h);
 
   data = g_try_malloc (data_size);
 
-  rh.flags = GINT32_TO_LE (0);
-  rh.cursor_id = GINT64_TO_LE (12345);
+  rh.flags = 0;
+  rh.cursor_id = GINT64_TO_LE ((gint64)12345);
   rh.start = 0;
   rh.returned = GINT32_TO_LE (nreturn);
 

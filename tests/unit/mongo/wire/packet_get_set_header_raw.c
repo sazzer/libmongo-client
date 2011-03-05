@@ -25,7 +25,8 @@ test_mongo_wire_packet_get_set_header_raw (void)
 
   ok (mongo_wire_packet_get_header_raw (p, &ph2),
       "mongo_wire_packet_get_header_raw() works on a fresh packet");
-  cmp_ok (ph2.length, "==", sizeof (mongo_packet_header),
+  /* Need to convert from LE, because _new() sets the length to LE. */
+  cmp_ok (GINT32_FROM_LE (ph2.length), "==", sizeof (mongo_packet_header),
 	  "Initial packet length is the length of the header");
 
   ph1.length = sizeof (mongo_packet_header);
