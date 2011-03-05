@@ -1,8 +1,11 @@
 #include "test.h"
 #include "bson.h"
+#include "mongo-utils.h"
 
 #include <glib.h>
 #include <string.h>
+
+func_config_t config;
 
 bson *
 test_bson_generate_full (void)
@@ -93,4 +96,25 @@ test_mongo_wire_generate_reply (gboolean valid, gint32 nreturn,
   bson_free (b2);
 
   return p;
+}
+
+gboolean
+test_env_setup (void)
+{
+  config.primary_host = config.secondary_host = NULL;
+  config.primary_port = config.secondary_port = 27017;
+
+  if (!mongo_util_parse_addr (getenv ("TEST_PRIMARY"), &config.primary_host,
+			      &config.primary_port))
+    return FALSE;
+  mongo_util_parse_addr (getenv ("TEST_SECONDARY"), &config.secondary_host,
+			 &config.secondary_port);
+  return TRUE;
+}
+
+void
+test_env_free (void)
+{
+  g_free (config.primary_host);
+  g_free (config.secondary_host);
 }

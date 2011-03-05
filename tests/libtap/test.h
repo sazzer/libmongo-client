@@ -5,6 +5,17 @@
 #include "bson.h"
 #include "mongo-wire.h"
 
+typedef struct
+{
+  gchar *primary_host;
+  gint primary_port;
+
+  gchar *secondary_host;
+  gint secondary_port;
+} func_config_t;
+
+extern func_config_t config;
+
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
 #define RUN_TEST(n, t) \
@@ -14,6 +25,22 @@
     plan (n);	       \
     test_##t ();       \
     return 0;	       \
+  }
+
+gboolean test_env_setup (void);
+void test_env_free (void);
+
+#define RUN_NET_TEST(n, t)						\
+  int									\
+  main (void)								\
+  {									\
+    plan (n);								\
+    skip(!test_env_setup (), n,						\
+	 "Environment not set up for network tests");			\
+    test_##t ();							\
+    test_env_free ();							\
+    endskip;								\
+    return 0;								\
   }
 
 bson *test_bson_generate_full (void);
