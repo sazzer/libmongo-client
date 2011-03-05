@@ -103,12 +103,27 @@ test_env_setup (void)
 {
   config.primary_host = config.secondary_host = NULL;
   config.primary_port = config.secondary_port = 27017;
+  config.db = g_strdup ("test");
+  config.coll = g_strdup ("libmongo");
 
   if (!mongo_util_parse_addr (getenv ("TEST_PRIMARY"), &config.primary_host,
 			      &config.primary_port))
     return FALSE;
   mongo_util_parse_addr (getenv ("TEST_SECONDARY"), &config.secondary_host,
 			 &config.secondary_port);
+
+  if (getenv ("TEST_DB"))
+    {
+      g_free (config.db);
+      config.db = g_strdup (getenv ("TEST_DB"));
+    }
+  if (getenv ("TEST_COLLECTION"))
+    {
+      g_free (config.coll);
+      config.coll = g_strdup (getenv ("TEST_COLLECTION"));
+    }
+  config.ns = g_strconcat (config.db, ".", config.coll, NULL);
+
   return TRUE;
 }
 
@@ -117,4 +132,7 @@ test_env_free (void)
 {
   g_free (config.primary_host);
   g_free (config.secondary_host);
+  g_free (config.db);
+  g_free (config.coll);
+  g_free (config.ns);
 }

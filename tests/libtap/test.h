@@ -12,6 +12,10 @@ typedef struct
 
   gchar *secondary_host;
   gint secondary_port;
+
+  gchar *db;
+  gchar *coll;
+  gchar *ns;
 } func_config_t;
 
 extern func_config_t config;
@@ -34,12 +38,14 @@ void test_env_free (void);
   int									\
   main (void)								\
   {									\
-    plan (n);								\
-    skip(!test_env_setup (), n,						\
-	 "Environment not set up for network tests");			\
-    test_##t ();							\
-    test_env_free ();							\
-    endskip;								\
+    if (!test_env_setup ())						\
+      printf ("1..0 # skip, Environment not set up for network tests"); \
+    else								\
+      {									\
+	plan (n);							\
+	test_##t ();							\
+	test_env_free ();						\
+      }									\
     return 0;								\
   }
 
