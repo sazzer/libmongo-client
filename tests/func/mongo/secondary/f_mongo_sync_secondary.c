@@ -1,6 +1,4 @@
-#include "test-network.h"
-#include "test-generator.h"
-
+#include "test.h"
 #include "mongo.h"
 
 #include <errno.h>
@@ -8,6 +6,18 @@
 #include <glib.h>
 #include <unistd.h>
 #include <sys/socket.h>
+
+#define TEST(n)
+#define PASS() pass()
+
+#define TEST_SERVER_IP config.primary_host
+#define TEST_SERVER_PORT config.primary_port
+#define TEST_SERVER_DB config.db
+#define TEST_SERVER_COLLECTION config.coll
+#define TEST_SERVER_NS config.ns
+
+#define TEST_SECONDARY_IP config.secondary_host
+#define TEST_SECONDARY_PORT config.secondary_port
 
 void
 test_mongo_slave_setup (void)
@@ -20,7 +30,7 @@ test_mongo_slave_setup (void)
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
-  doc = test_bson_generate_flat ();
+  doc = test_bson_generate_full ();
 
   g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, NULL));
   bson_free (doc);
@@ -355,35 +365,21 @@ test_mongo_slave_auto_reconnect_from_dc (void)
   PASS ();
 }
 
-void
-do_plan (int max)
+static void
+ignore_sigpipe (void)
 {
-  mongo_sync_connection *conn;
+  struct sigaction sa;
 
-  if (!test_getenv_server ())
-    SKIP_ALL ("TEST_SERVER variable not set");
-  if (!test_getenv_secondary ())
-    SKIP_ALL ("TEST_SECONDARY variable not set");
-
-  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
-  if (!conn)
-    SKIP_ALL ("cannot connect to mongodb");
-  mongo_sync_disconnect (conn);
-
-  conn = mongo_sync_connect (TEST_SECONDARY_IP, TEST_SECONDARY_PORT, FALSE);
-  if (!conn)
-    SKIP_ALL ("cannot connect to mongodb");
-
-  PLAN (1, max);
-  mongo_sync_disconnect (conn);
+  sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
 }
 
-int
-main (void)
+void
+test_f_mongo_sync_secondary_monolithic_mess (void)
 {
   mongo_util_oid_init (0);
-  do_plan (20);
-
   ignore_sigpipe ();
 
   test_mongo_slave_setup ();
@@ -396,8 +392,6 @@ main (void)
   test_mongo_slave_auto_reconnect_from_dc ();
 
   test_mongo_slave_teardown ();
-
-  test_env_free ();
-
-  return 0;
 }
+
+RUN_NET_TEST (20, f_mongo_sync_secondary_monolithic_mess);

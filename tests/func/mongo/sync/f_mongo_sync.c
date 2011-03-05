@@ -1,11 +1,21 @@
-#include "test-network.h"
-#include "test-generator.h"
-
+#include "test.h"
 #include "mongo.h"
 
 #include <errno.h>
 #include <string.h>
 #include <glib.h>
+
+#define TEST(n)
+#define PASS() pass()
+
+#define TEST_SERVER_IP config.primary_host
+#define TEST_SERVER_PORT config.primary_port
+#define TEST_SERVER_DB config.db
+#define TEST_SERVER_COLLECTION config.coll
+#define TEST_SERVER_NS config.ns
+
+#define TEST_SECONDARY_IP config.secondary_host
+#define TEST_SECONDARY_PORT config.secondary_port
 
 void
 test_mongo_sync_cmd_insert (void)
@@ -17,7 +27,7 @@ test_mongo_sync_cmd_insert (void)
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
-  doc = test_bson_generate_nested ();
+  doc = test_bson_generate_full ();
 
   g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, NULL));
   g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, NULL));
@@ -48,7 +58,7 @@ test_mongo_sync_cmd_update (void)
   g_free (oid);
   bson_finish (sel);
 
-  upd = test_bson_generate_nested ();
+  upd = test_bson_generate_full ();
 
   g_assert (mongo_sync_cmd_update (conn, TEST_SERVER_NS,
 				   MONGO_WIRE_FLAG_UPDATE_UPSERT,
@@ -80,13 +90,13 @@ test_mongo_sync_cmd_query (void)
   conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
   g_assert (conn);
 
-  doc = test_bson_generate_flat ();
+  doc = test_bson_generate_full ();
   g_assert (mongo_sync_cmd_insert (conn, TEST_SERVER_NS, doc, doc, NULL));
   bson_free (doc);
   g_assert_cmpint (mongo_connection_get_requestid ((mongo_connection *)conn), >=, 1);
 
   sel = bson_new ();
-  bson_append_int32 (sel, "int32", 1984);
+  bson_append_int32 (sel, "int32", 32);
   bson_finish (sel);
   g_assert ((p = mongo_sync_cmd_query (conn, TEST_SERVER_NS,
 				       0, 0, 1, sel, NULL)) != NULL);
@@ -99,7 +109,7 @@ test_mongo_sync_cmd_query (void)
   bson_finish (doc);
   g_assert ((c = bson_find (doc, "int32")));
   g_assert (bson_cursor_get_int32 (c, &i));
-  g_assert_cmpint (i, ==, 1984);
+  g_assert_cmpint (i, ==, 32);
   bson_free (doc);
   bson_cursor_free (c);
 
@@ -450,9 +460,10 @@ test_mongo_sync_connect (void)
   else
     {
       printf ("# %s\n", strerror (errno));
-      SKIP ("Connecting via secondary failed, but it's optional.");
+      //SKIP ("Connecting via secondary failed, but it's optional.");
     }
 
+  /*
   TEST (mongo_sync.connect.by_host);
   if (!TEST_SERVER_HOST)
     SKIP ("TEST_SERVER_HOST variable not set")
@@ -482,6 +493,7 @@ test_mongo_sync_connect (void)
 	  SKIP ("IPv6 connection failed, but it's optional.");
 	}
     }
+  */
 }
 
 void
@@ -537,6 +549,7 @@ test_mongo_sync_cmd_ping (void)
 void
 test_mongo_sync_cmd_authenticate (void)
 {
+/*
   mongo_sync_connection *conn;
 
   TEST (mongo_sync.cmd.authenticate.setup);
@@ -578,31 +591,13 @@ test_mongo_sync_cmd_authenticate (void)
     PASS ();
 
   mongo_sync_disconnect (conn);
+  */
 }
 
 void
-do_plan (int max)
-{
-  mongo_sync_connection *conn;
-
-  if (!test_getenv_server ())
-    SKIP_ALL ("TEST_SERVER variable not set");
-  test_getenv_server_extra ();
-  test_getenv_secondary ();
-
-  conn = mongo_sync_connect (TEST_SERVER_IP, TEST_SERVER_PORT, FALSE);
-  if (!conn)
-    SKIP_ALL ("cannot connect to mongodb");
-
-  PLAN (1, max);
-  mongo_sync_disconnect (conn);
-}
-
-int
-main (void)
+test_f_mongo_sync_monolithic_mess (void)
 {
   mongo_util_oid_init (0);
-  do_plan (22);
 
   test_mongo_sync_set_slaveok ();
   test_mongo_sync_cmd_insert ();
@@ -621,8 +616,6 @@ main (void)
   test_mongo_sync_cmd_authenticate ();
 
   test_mongo_sync_connect ();
-
-  test_env_free ();
-
-  return 0;
 }
+
+RUN_NET_TEST (16, f_mongo_sync_monolithic_mess);

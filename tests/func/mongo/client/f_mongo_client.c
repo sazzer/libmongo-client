@@ -1,5 +1,4 @@
-#include "test-network.h"
-#include "test-generator.h"
+#include "test.h"
 
 #include "mongo-client.h"
 #include "mongo-wire.h"
@@ -7,6 +6,15 @@
 #include "bson.h"
 
 #include <glib.h>
+
+#define TEST(n)
+#define PASS() pass()
+
+#define TEST_SERVER_IP config.primary_host
+#define TEST_SERVER_PORT config.primary_port
+#define TEST_SERVER_DB config.db
+#define TEST_SERVER_COLLECTION config.coll
+#define TEST_SERVER_NS config.ns
 
 void
 test_mongo_client (void)
@@ -24,7 +32,7 @@ test_mongo_client (void)
   bson_append_null (sel, "_id");
   bson_finish (sel);
 
-  upd = test_bson_generate_nested ();
+  upd = test_bson_generate_full ();
 
   p = mongo_wire_cmd_update (1, TEST_SERVER_NS, 1, sel, upd);
 
@@ -434,26 +442,8 @@ test_mongo_client_drop (void)
 }
 
 void
-do_plan (int max)
+test_f_mongo_client_monolithic_mess (void)
 {
-  mongo_connection *conn;
-
-  if (!test_getenv_server ())
-    SKIP_ALL ("TEST_SERVER variable not set");
-
-  conn = mongo_connect (TEST_SERVER_IP, TEST_SERVER_PORT);
-  if (!conn)
-    SKIP_ALL ("cannot connect to mongodb");
-
-  PLAN (1, max);
-  mongo_disconnect (conn);
-}
-
-int
-main (void)
-{
-  do_plan (9);
-
   test_mongo_client ();
   test_mongo_client_recv ();
   test_mongo_client_recv_custom ();
@@ -461,8 +451,6 @@ main (void)
   test_mongo_client_cursors ();
   test_mongo_client_delete ();
   test_mongo_client_drop ();
-
-  test_env_free ();
-
-  return 0;
 }
+
+RUN_NET_TEST (9, f_mongo_client_monolithic_mess);
