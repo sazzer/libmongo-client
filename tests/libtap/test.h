@@ -4,6 +4,7 @@
 #include "tap.h"
 #include "bson.h"
 #include "mongo-wire.h"
+#include "mongo-sync.h"
 
 typedef struct
 {
@@ -53,5 +54,7 @@ bson *test_bson_generate_full (void);
 mongo_packet *test_mongo_wire_generate_reply (gboolean valid,
 					      gint32 nreturn,
 					      gboolean with_docs);
+mongo_sync_connection *test_make_fake_sync_conn (gint fd,
+						 gboolean slaveok);
 
 #endif

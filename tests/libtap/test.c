@@ -5,6 +5,8 @@
 #include <glib.h>
 #include <string.h>
 
+#include "libmongo-private.h"
+
 func_config_t config;
 
 bson *
@@ -96,6 +98,21 @@ test_mongo_wire_generate_reply (gboolean valid, gint32 nreturn,
   bson_free (b2);
 
   return p;
+}
+
+mongo_sync_connection *
+test_make_fake_sync_conn (gint fd, gboolean slaveok)
+{
+  mongo_sync_connection *c;
+
+  c = g_try_new0 (mongo_sync_connection, 1);
+  if (!c)
+    return NULL;
+
+  c->super.fd = fd;
+  c->slaveok = slaveok;
+
+  return c;
 }
 
 gboolean
