@@ -772,7 +772,7 @@ mongo_sync_cmd_count (mongo_sync_connection *conn,
       if (!mongo_sync_reconnect (conn, TRUE))
 	{
 	  errno = ENOTCONN;
-	  return FALSE;
+	  return -1;
 	}
     }
   else if (!mongo_sync_cmd_ping (conn))
@@ -780,7 +780,7 @@ mongo_sync_cmd_count (mongo_sync_connection *conn,
       if (!mongo_sync_reconnect (conn, FALSE))
 	{
 	  errno = ENOTCONN;
-	  return FALSE;
+	  return -1;
 	}
     }
 
