@@ -21,6 +21,12 @@ typedef struct
 
 extern func_config_t config;
 
+#define begin_network_tests(n)						\
+  skip(!test_env_setup (), n, "Environment not set up for network tests")
+#define end_network_tests()			\
+  do { test_env_free (); } while (0);		\
+  endskip
+
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
 #define RUN_TEST(n, t) \
