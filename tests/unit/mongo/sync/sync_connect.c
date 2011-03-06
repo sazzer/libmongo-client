@@ -4,6 +4,8 @@
 void
 test_mongo_sync_connect (void)
 {
+  ok (mongo_sync_connect (NULL, 27017, FALSE) == NULL,
+      "mongo_sync_connect() fails with a NULL host");
 }
 
-RUN_TEST (0, mongo_sync_connect);
+RUN_TEST (1, mongo_sync_connect);
