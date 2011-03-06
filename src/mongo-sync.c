@@ -206,6 +206,7 @@ mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn)
       return FALSE;
     }
 
+  errno = 0;
   return conn->slaveok;
 }
 
