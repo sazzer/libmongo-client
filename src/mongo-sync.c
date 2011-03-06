@@ -628,6 +628,9 @@ _mongo_sync_get_error (const bson *rep, gchar **error)
 {
   bson_cursor *c;
 
+  if (!error)
+    return FALSE;
+
   c = bson_find (rep, "err");
   if (!c)
     {
@@ -884,6 +887,11 @@ mongo_sync_cmd_get_last_error (mongo_sync_connection *conn,
   if (!conn)
     {
       errno = ENOTCONN;
+      return FALSE;
+    }
+  if (!error)
+    {
+      errno = EINVAL;
       return FALSE;
     }
 
