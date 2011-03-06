@@ -408,6 +408,13 @@ mongo_sync_cmd_query (mongo_sync_connection *conn,
   if (rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL)
     {
       mongo_wire_packet_free (p);
+      errno = EPROTO;
+      return NULL;
+    }
+
+  if (rh.returned == 0)
+    {
+      mongo_wire_packet_free (p);
       errno = ENOENT;
       return NULL;
     }
