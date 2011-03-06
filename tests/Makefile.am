@@ -90,12 +90,35 @@ mongo_client_func_tests	= \
 		func/mongo/client/f_mongo_packet_recv \
 		func/mongo/client/f_mongo_connection_get_requestid
 
+mongo_sync_unit_tests	= \
+		unit/mongo/sync/sync_connect \
+		unit/mongo/sync/sync_reconnect \
+		unit/mongo/sync/sync_disconnect \
+		unit/mongo/sync/sync_get_set_slaveok \
+		unit/mongo/sync/sync_cmd_update \
+		unit/mongo/sync/sync_cmd_insert \
+		unit/mongo/sync/sync_cmd_query \
+		unit/mongo/sync/sync_cmd_get_more \
+		unit/mongo/sync/sync_cmd_delete \
+		unit/mongo/sync/sync_cmd_kill_cursors \
+		unit/mongo/sync/sync_cmd_custom \
+		unit/mongo/sync/sync_cmd_count \
+		unit/mongo/sync/sync_cmd_drop \
+		unit/mongo/sync/sync_cmd_get_last_error \
+		unit/mongo/sync/sync_cmd_reset_error \
+		unit/mongo/sync/sync_cmd_is_master \
+		unit/mongo/sync/sync_cmd_ping \
+		unit/mongo/sync/sync_cmd_user_add \
+		unit/mongo/sync/sync_cmd_user_remove \
+		unit/mongo/sync/sync_cmd_authenticate
+
 mongo_sync_func_tests	= \
 		func/mongo/sync/f_mongo_sync \
 		func/mongo/secondary/f_mongo_sync_secondary
 
 UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
-		${mongo_wire_unit_tests} ${mongo_client_unit_tests}
+		${mongo_wire_unit_tests} ${mongo_client_unit_tests} \
+		${mongo_sync_unit_tests}
 FUNC_TESTS	= ${bson_func_tests} ${mongo_client_func_tests} \
 		${mongo_sync_func_tests}
 TESTCASES	= ${UNIT_TESTS} ${FUNC_TESTS}
