@@ -22,9 +22,18 @@ typedef struct
 extern func_config_t config;
 
 #define begin_network_tests(n)						\
-  skip(!test_env_setup (), n, "Environment not set up for network tests")
+  do									\
+    {									\
+      struct sigaction sa;						\
+      sa.sa_handler = SIG_IGN;						\
+      sigemptyset(&sa.sa_mask);						\
+      sa.sa_flags = 0;							\
+      sigaction(SIGPIPE, &sa, NULL);					\
+      skip(!test_env_setup (), n, "Environment not set up for network tests")
+
 #define end_network_tests()			\
-  do { test_env_free (); } while (0);		\
+      test_env_free ();				\
+    } while (0);				\
   endskip
 
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
