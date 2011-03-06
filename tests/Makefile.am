@@ -85,7 +85,10 @@ mongo_client_unit_tests	= \
 		unit/mongo/client/connection_get_requestid
 
 mongo_client_func_tests	= \
-		func/mongo/client/f_mongo_client
+		func/mongo/client/f_mongo_connect \
+		func/mongo/client/f_mongo_packet_send \
+		func/mongo/client/f_mongo_packet_recv \
+		func/mongo/client/f_mongo_connection_get_requestid
 
 mongo_sync_func_tests	= \
 		func/mongo/sync/f_mongo_sync \
