@@ -97,14 +97,14 @@ test_mongo_sync_cmd_query (void)
   c = mongo_sync_connect (config.secondary_host, config.secondary_port, TRUE);
   ok (c && mongo_sync_cmd_is_master (c) == FALSE,
       "Connected to a secondary");
-  p = mongo_sync_cmd_query (c, config.ns, 0, 0, 1, s, NULL);
+  p = mongo_sync_cmd_query (c, config.ns, 0, 0, 1, q, NULL);
   ok (p != NULL,
       "mongo_sync_cmd_query() works on secondary");
   mongo_wire_packet_free (p);
 
   mongo_sync_conn_set_slaveok (c, FALSE);
 
-  p = mongo_sync_cmd_query (c, config.ns, 0, 0, 1, s, NULL);
+  p = mongo_sync_cmd_query (c, config.ns, 0, 0, 1, q, NULL);
   ok (p != NULL && mongo_sync_cmd_is_master (c) == TRUE,
       "mongo_sync_cmd_query() can resync to master");
   mongo_wire_packet_free (p);
