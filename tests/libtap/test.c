@@ -5,6 +5,8 @@
 #include <glib.h>
 #include <string.h>
 
+#include "libmongo-private.h"
+
 func_config_t config;
 
 bson *
@@ -98,6 +100,21 @@ test_mongo_wire_generate_reply (gboolean valid, gint32 nreturn,
   return p;
 }
 
+mongo_sync_connection *
+test_make_fake_sync_conn (gint fd, gboolean slaveok)
+{
+  mongo_sync_connection *c;
+
+  c = g_try_new0 (mongo_sync_connection, 1);
+  if (!c)
+    return NULL;
+
+  c->super.fd = fd;
+  c->slaveok = slaveok;
+
+  return c;
+}
+
 gboolean
 test_env_setup (void)
 {
@@ -105,12 +122,6 @@ test_env_setup (void)
   config.primary_port = config.secondary_port = 27017;
   config.db = g_strdup ("test");
   config.coll = g_strdup ("libmongo");
-
-  if (!mongo_util_parse_addr (getenv ("TEST_PRIMARY"), &config.primary_host,
-			      &config.primary_port))
-    return FALSE;
-  mongo_util_parse_addr (getenv ("TEST_SECONDARY"), &config.secondary_host,
-			 &config.secondary_port);
 
   if (getenv ("TEST_DB"))
     {
@@ -123,6 +134,12 @@ test_env_setup (void)
       config.coll = g_strdup (getenv ("TEST_COLLECTION"));
     }
   config.ns = g_strconcat (config.db, ".", config.coll, NULL);
+
+  if (!mongo_util_parse_addr (getenv ("TEST_PRIMARY"), &config.primary_host,
+			      &config.primary_port))
+    return FALSE;
+  mongo_util_parse_addr (getenv ("TEST_SECONDARY"), &config.secondary_host,
+			 &config.secondary_port);
 
   return TRUE;
 }

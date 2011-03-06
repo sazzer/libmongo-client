@@ -4,6 +4,7 @@
 #include "tap.h"
 #include "bson.h"
 #include "mongo-wire.h"
+#include "mongo-sync.h"
 
 typedef struct
 {
@@ -19,6 +20,21 @@ typedef struct
 } func_config_t;
 
 extern func_config_t config;
+
+#define begin_network_tests(n)						\
+  do									\
+    {									\
+      struct sigaction sa;						\
+      sa.sa_handler = SIG_IGN;						\
+      sigemptyset(&sa.sa_mask);						\
+      sa.sa_flags = 0;							\
+      sigaction(SIGPIPE, &sa, NULL);					\
+      skip(!test_env_setup (), n, "Environment not set up for network tests")
+
+#define end_network_tests()			\
+      test_env_free ();				\
+    } while (0);				\
+  endskip
 
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
@@ -53,5 +69,7 @@ bson *test_bson_generate_full (void);
 mongo_packet *test_mongo_wire_generate_reply (gboolean valid,
 					      gint32 nreturn,
 					      gboolean with_docs);
+mongo_sync_connection *test_make_fake_sync_conn (gint fd,
+						 gboolean slaveok);
 
 #endif
