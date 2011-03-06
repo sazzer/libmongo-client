@@ -84,12 +84,6 @@ mongo_client_unit_tests	= \
 		unit/mongo/client/packet_recv \
 		unit/mongo/client/connection_get_requestid
 
-mongo_client_func_tests	= \
-		func/mongo/client/f_mongo_connect \
-		func/mongo/client/f_mongo_packet_send \
-		func/mongo/client/f_mongo_packet_recv \
-		func/mongo/client/f_mongo_connection_get_requestid
-
 mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_connect \
 		unit/mongo/sync/sync_reconnect \
@@ -119,7 +113,7 @@ mongo_sync_func_tests	= \
 UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
 		${mongo_wire_unit_tests} ${mongo_client_unit_tests} \
 		${mongo_sync_unit_tests}
-FUNC_TESTS	= ${bson_func_tests} ${mongo_client_func_tests} \
+FUNC_TESTS	= ${bson_func_tests} \
 		${mongo_sync_func_tests}
 TESTCASES	= ${UNIT_TESTS} ${FUNC_TESTS}
 
