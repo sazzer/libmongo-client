@@ -5,10 +5,7 @@ We're not so strict on dependencies (we're using glib), and the API is
 very different too.
 
 Apart from glib, there are no other hard dependencies. Though, one
-will need OpenSSL for authentication support, and a mongodb
-installation (or at least bsondump) for the full test suite run. Most
-of the test suite runs without it. For more information about the test
-suite, check the README in the tests subdirectory.
+will need OpenSSL for authentication support
 
 The main purpose of this library is to provide a well maintained
 implementation, that suits a wider range of needs than the original:
