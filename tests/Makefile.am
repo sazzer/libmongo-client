@@ -128,6 +128,6 @@ check:
 	@${MAKE} ${AM_MAKEFLAGS} check-HARNESS
 
 check-HARNESS: ${TESTS}
-	$(AM_V_GEN)srcdir=${srcdir} prove -e '' ${PROVE_OPTIONS} ${TESTCASES}
+	$(AM_V_GEN)srcdir=${srcdir} prove -e "${PROVE_ENV}" ${PROVE_OPTIONS} ${TESTCASES}
 
 .PHONY: check-HARNESS
