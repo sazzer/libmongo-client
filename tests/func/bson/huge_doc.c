@@ -27,6 +27,8 @@ test_bson_huge_doc (void)
   bson_finish (b);
   ds1 = bson_size (b);
 
+  g_free (buffer);
+
   s = bson_new ();
   bson_append_document (s, "hugedoc", b);
   bson_finish (s);
