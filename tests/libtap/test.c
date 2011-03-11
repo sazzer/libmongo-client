@@ -135,11 +135,16 @@ test_env_setup (void)
     }
   config.ns = g_strconcat (config.db, ".", config.coll, NULL);
 
+  if (!getenv ("TEST_PRIMARY") || strlen (getenv ("TEST_PRIMARY")) == 0)
+    return FALSE;
+
   if (!mongo_util_parse_addr (getenv ("TEST_PRIMARY"), &config.primary_host,
 			      &config.primary_port))
     return FALSE;
-  mongo_util_parse_addr (getenv ("TEST_SECONDARY"), &config.secondary_host,
-			 &config.secondary_port);
+
+  if (getenv ("TEST_SECONDARY") && strlen (getenv ("TEST_SECONDARY")) > 0)
+    mongo_util_parse_addr (getenv ("TEST_SECONDARY"), &config.secondary_host,
+			   &config.secondary_port);
 
   return TRUE;
 }
