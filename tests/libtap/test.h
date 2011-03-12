@@ -32,9 +32,9 @@ extern func_config_t config;
       skip(!test_env_setup (), n, "Environment not set up for network tests")
 
 #define end_network_tests()			\
-      test_env_free ();				\
-    } while (0);				\
-  endskip
+      endskip;					\
+      test_env_free();				\
+    } while (0)
 
 #define _DOC_SIZE(doc,pos) GINT32_FROM_LE (*(gint32 *)(&doc[pos]))
 
@@ -60,8 +60,8 @@ void test_env_free (void);
       {									\
 	plan (n);							\
 	test_##t ();							\
-	test_env_free ();						\
       }									\
+    test_env_free ();							\
     return 0;								\
   }
 

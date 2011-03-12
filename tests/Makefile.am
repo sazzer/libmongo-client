@@ -106,9 +106,7 @@ mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_cmd_user_remove \
 		unit/mongo/sync/sync_cmd_authenticate
 
-mongo_sync_func_tests	= \
-		func/mongo/sync/f_mongo_sync \
-		func/mongo/secondary/f_mongo_sync_secondary
+mongo_sync_func_tests	=
 
 UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
 		${mongo_wire_unit_tests} ${mongo_client_unit_tests} \
@@ -128,6 +126,6 @@ check:
 	@${MAKE} ${AM_MAKEFLAGS} check-HARNESS
 
 check-HARNESS: ${TESTS}
-	$(AM_V_GEN)srcdir=${srcdir} prove -e '' ${PROVE_OPTIONS} ${TESTCASES}
+	$(AM_V_GEN)srcdir=${srcdir} prove -e "${PROVE_ENV}" ${PROVE_OPTIONS} ${TESTCASES}
 
 .PHONY: check-HARNESS
