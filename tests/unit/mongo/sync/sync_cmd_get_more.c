@@ -40,7 +40,7 @@ test_mongo_sync_cmd_get_more_net_secondary (void)
   mongo_sync_reconnect (conn, TRUE);
 
   p = mongo_sync_cmd_get_more (conn, config.db, 10, cid);
-  ok (p == NULL && errno == ESTALE,
+  ok (p == NULL && errno == EPROTO,
       "mongo_sync_cmd_get_more() can't jump servers");
   mongo_wire_packet_free (p);
 
