@@ -20,12 +20,16 @@
 #include <mongo-sync.h>
 #include <glib.h>
 
-/** @defgroup mongo_sync_pool Mongo Sync Pool API
+/** @defgroup mongo_sync_pool_api Mongo Sync Pool API
  *
  * These commands implement connection pooling over the mongo_sync
  * family of commands.
  *
- * @addtogroup mongo_sync_pool
+ * Once a pool is set up, one can pick and return connections at one's
+ * leisure. Picking is done in a round-robin fashion (excluding
+ * connections that have been picked but not returned yet).
+ *
+ * @addtogroup mongo_sync_pool_api
  * @{
  */
 

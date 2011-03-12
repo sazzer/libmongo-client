@@ -43,7 +43,7 @@
  *   - mongo-sync: Wrappers around the wire commands, that talk to the
  *     network aswell, in a synchronous, blocking manner. @see mongo_sync.
  *   - mongo-sync-pool: Simple connection pooling on top of
- *     mongo-sync, @see mongo_sync_pool.
+ *     mongo-sync, @see mongo_sync_pool_api.
  *
  * The intended way to use the library to work with MongoDB is to
  * first construct the BSON objects, then construct the packets, and
