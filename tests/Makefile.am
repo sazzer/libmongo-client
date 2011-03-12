@@ -108,11 +108,20 @@ mongo_sync_unit_tests	= \
 
 mongo_sync_func_tests	=
 
+mongo_sync_pool_unit_tests	= \
+		unit/mongo/sync-pool/sync_pool_new \
+		unit/mongo/sync-pool/sync_pool_free \
+		unit/mongo/sync-pool/sync_pool_pick \
+		unit/mongo/sync-pool/sync_pool_return
+
+mongo_sync_pool_func_tests	= \
+		func/mongo/sync-pool/f_sync_pool
+
 UNIT_TESTS	= ${bson_unit_tests} ${mongo_utils_unit_tests} \
 		${mongo_wire_unit_tests} ${mongo_client_unit_tests} \
-		${mongo_sync_unit_tests}
-FUNC_TESTS	= ${bson_func_tests} \
-		${mongo_sync_func_tests}
+		${mongo_sync_unit_tests} ${mongo_sync_pool_unit_tests}
+FUNC_TESTS	= ${bson_func_tests} ${mongo_sync_func_tests} \
+		${mongo_sync_pool_func_tests}
 TESTCASES	= ${UNIT_TESTS} ${FUNC_TESTS}
 
 check_PROGRAMS = ${TESTCASES}

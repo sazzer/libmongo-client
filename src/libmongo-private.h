@@ -46,6 +46,15 @@ struct _mongo_sync_connection
 			during queries. */
 };
 
+/** @internal Synchronous pool connection object. */
+struct _mongo_sync_pool_connection
+{
+  mongo_sync_connection super; /**< The parent object. */
+
+  guint pool_id; /**< ID of the connection. */
+  gboolean in_use; /**< Whether the object is in use or not. */
+};
+
 /** @internal Construct an insert command, using a va_list.
  *
  * @param id is the sequence id.
