@@ -521,14 +521,14 @@ mongo_sync_cmd_kill_cursors (mongo_sync_connection *conn,
   gint32 rid;
   va_list ap;
 
-  if (!_mongo_cmd_chk_conn (conn, FALSE))
-    return FALSE;
-
   if (n <= 0)
     {
       errno = EINVAL;
       return FALSE;
     }
+
+  if (!_mongo_cmd_chk_conn (conn, FALSE))
+    return FALSE;
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
