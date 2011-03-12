@@ -1,4 +1,4 @@
-/* mongo-sync.h - libmongo-sync synchronous wrapper API
+/* mongo-sync.h - libmongo-client synchronous wrapper API
  * Copyright 2011 Gergely Nagy <algernon@balabit.hu>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
