@@ -112,6 +112,8 @@ mongo_connect (const char *host, int port)
 
   if (fd == -1)
     {
+      g_free (conn);
+
       errno = EADDRNOTAVAIL;
       return NULL;
     }
