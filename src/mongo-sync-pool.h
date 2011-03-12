@@ -56,6 +56,9 @@ typedef struct _mongo_sync_pool mongo_sync_pool;
  * @note Either @a nmasters or @a nslaves can be zero, but not both at
  * the same time.
  *
+ * @note The @a host MUST be a master, otherwise the function will
+ * return an error.
+ *
  * @returns A newly allocated mongo_sync_pool object, or NULL on
  * error. It is the responsibility of the caller to close and free the
  * pool when appropriate.

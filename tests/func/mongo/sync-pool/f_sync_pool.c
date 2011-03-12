@@ -13,8 +13,12 @@ test_func_mongo_sync_pool_secondary (void)
   gint i = 0;
   gboolean ret = TRUE;
 
-  skip (!config.secondary_host, 11,
+  skip (!config.secondary_host, 12,
 	"Secondary server not configured");
+
+  ok (mongo_sync_pool_new (config.secondary_host,
+			   config.secondary_port, 1, 10) == NULL,
+      "mongo_sync_pool_new() should fail when connecting to a secondary");
 
   pool = mongo_sync_pool_new (config.primary_host,
 			      config.primary_port, 1, 10);
@@ -153,4 +157,4 @@ test_func_mongo_sync_pool (void)
   test_func_mongo_sync_pool_secondary ();
 }
 
-RUN_NET_TEST (21, func_mongo_sync_pool);
+RUN_NET_TEST (22, func_mongo_sync_pool);

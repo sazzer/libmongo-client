@@ -78,8 +78,12 @@ mongo_sync_pool_new (const gchar *host,
   if (!conn)
     return FALSE;
 
-  mongo_sync_cmd_is_master ((mongo_sync_connection *)conn);
-  mongo_sync_reconnect ((mongo_sync_connection *)conn, TRUE);
+  if (!mongo_sync_cmd_is_master ((mongo_sync_connection *)conn))
+    {
+      mongo_sync_disconnect ((mongo_sync_connection *)conn);
+      errno = EPROTO;
+      return NULL;
+    }
 
   pool = g_try_new0 (mongo_sync_pool, 1);
   if (!pool)
@@ -99,8 +103,6 @@ mongo_sync_pool_new (const gchar *host,
       mongo_sync_pool_connection *c;
 
       c = _mongo_sync_pool_connect (host, port, FALSE);
-      mongo_sync_cmd_is_master ((mongo_sync_connection *)c);
-      mongo_sync_reconnect ((mongo_sync_connection *)c, TRUE);
       c->pool_id = i;
 
       pool->masters = g_list_append (pool->masters, c);
