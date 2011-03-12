@@ -302,14 +302,14 @@ mongo_sync_cmd_insert (mongo_sync_connection *conn,
   gint32 rid;
   va_list ap;
 
-  if (!_mongo_cmd_chk_conn (conn, TRUE))
-    return FALSE;
-
   if (!ns)
     {
       errno = EINVAL;
       return FALSE;
     }
+
+  if (!_mongo_cmd_chk_conn (conn, TRUE))
+    return FALSE;
 
   rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
