@@ -6,6 +6,72 @@
 #include "libmongo-private.h"
 
 void
+test_func_mongo_sync_pool_secondary (void)
+{
+  mongo_sync_pool *pool;
+  mongo_sync_pool_connection *conn[11], *m, *s1, *s2;
+  gint i = 0;
+  gboolean ret = TRUE;
+
+  skip (!config.secondary_host, 11,
+	"Secondary server not configured");
+
+  pool = mongo_sync_pool_new (config.primary_host,
+			      config.primary_port, 1, 10);
+  ok (pool != NULL,
+      "mongo_sync_pool_new() works with slaves too");
+
+  m = mongo_sync_pool_pick (pool, TRUE);
+  ok (m != NULL,
+      "mongo_sync_pool_pick() can pick a master from a mixed pool");
+  ok (mongo_sync_pool_pick (pool, TRUE) == NULL,
+      "mongo_sync_pool_pick() should fail if there are no more masters, and "
+      "a master was requested");
+
+  while ((conn[i] = mongo_sync_pool_pick (pool, FALSE)) != NULL)
+    i++;
+  cmp_ok (i, "==", 10,
+	  "Successfully connect to secondaries on 10 sockets");
+  ok (mongo_sync_pool_pick (pool, FALSE) == NULL,
+      "mongo_sync_pool_pick() should fail if there are no free connections");
+
+  ok (mongo_sync_pool_return (pool, m) == TRUE,
+      "Returning the master to the pool works");
+
+  m = mongo_sync_pool_pick (pool, FALSE);
+  ok (m != NULL,
+      "mongo_sync_pool_pick() will return a master, if no more slaves are "
+      "available");
+
+  for (i = 0; i < 10; i++)
+    ret = ret && mongo_sync_pool_return (pool, conn[i]);
+
+  ok (ret == TRUE,
+      "mongo_sync_pool_return() works when returning slaves");
+
+  mongo_sync_pool_return (pool, m);
+
+  /* Test whether masters and slaves are different. */
+  m = mongo_sync_pool_pick (pool, TRUE);
+  s1 = mongo_sync_pool_pick (pool, FALSE);
+  s2 = mongo_sync_pool_pick (pool, FALSE);
+
+  ok (m != s1 && m != s2,
+      "Picked master and slaves are different");
+
+  ok (mongo_sync_cmd_is_master ((mongo_sync_connection *)m) == TRUE,
+      "Picked master is, indeed, a master");
+  ok (mongo_sync_cmd_is_master ((mongo_sync_connection *)s1) == FALSE,
+      "Picked secondary is a secondary");
+  ok (mongo_sync_cmd_is_master ((mongo_sync_connection *)s2) == FALSE,
+      "Picked secondary is a secondary");
+
+  mongo_sync_pool_free (pool);
+
+  endskip;
+}
+
+void
 test_func_mongo_sync_pool (void)
 {
   mongo_sync_pool *pool;
@@ -16,7 +82,15 @@ test_func_mongo_sync_pool (void)
   mongo_packet *p;
 
   /*
-   * First, we test whether the basics work, like connecting, picking
+   * First we test that connecting to an invalid host fails.
+   */
+  pool = mongo_sync_pool_new ("invalid.example.com",
+			      config.primary_port, 10, 10);
+  ok (pool == NULL,
+      "mongo_sync_pool_new() should fail with an invalid host");
+
+  /*
+   * Next, we test whether the basics work, like connecting, picking
    * & returning.
    */
 
@@ -72,6 +146,11 @@ test_func_mongo_sync_pool (void)
   mongo_wire_packet_free (p);
 
   mongo_sync_pool_free (pool);
+
+  /*
+   * Test pools with a secondary aswell.
+   */
+  test_func_mongo_sync_pool_secondary ();
 }
 
-RUN_NET_TEST (8, func_mongo_sync_pool);
+RUN_NET_TEST (21, func_mongo_sync_pool);

@@ -15,6 +15,7 @@
  */
 
 #include <errno.h>
+#include <string.h>
 #include <glib.h>
 #include <mongo.h>
 #include "libmongo-private.h"
@@ -55,7 +56,7 @@ mongo_sync_pool_new (const gchar *host,
 {
   mongo_sync_pool *pool;
   mongo_sync_pool_connection *conn;
-  gint i;
+  gint i, j = 0;
 
   if (!host || port < 0)
     {
@@ -73,13 +74,10 @@ mongo_sync_pool_new (const gchar *host,
       return NULL;
     }
 
-  if (nslaves > 0)
-    {
-      errno = ENOSYS;
-      return NULL;
-    }
-
   conn = _mongo_sync_pool_connect (host, port, FALSE);
+  if (!conn)
+    return FALSE;
+
   mongo_sync_cmd_is_master ((mongo_sync_connection *)conn);
   mongo_sync_reconnect ((mongo_sync_connection *)conn, TRUE);
 
@@ -94,7 +92,7 @@ mongo_sync_pool_new (const gchar *host,
     }
 
   pool->nmasters = nmasters;
-  pool->nslaves = 0;
+  pool->nslaves = nslaves;
 
   for (i = 0; i < pool->nmasters; i++)
     {
@@ -108,6 +106,53 @@ mongo_sync_pool_new (const gchar *host,
       pool->masters = g_list_append (pool->masters, c);
     }
 
+  for (i = 0; i < pool->nslaves; i++)
+    {
+      mongo_sync_pool_connection *c;
+      gchar *shost = NULL;
+      gint sport = 27017;
+      GList *l;
+      gboolean found = FALSE;
+      gboolean need_restart = (j != 0);
+
+      /* Select the next secondary */
+      l = g_list_nth (conn->super.rs.hosts, j);
+
+      do
+	{
+	  j++;
+	  if (l && mongo_util_parse_addr ((gchar *)l->data, &shost, &sport))
+	    {
+	      if (sport != port || strcmp (host, shost) != 0)
+		{
+		  found = TRUE;
+		  break;
+		}
+	    }
+	  l = g_list_next (l);
+	  if (!l && need_restart)
+	    {
+	      need_restart = FALSE;
+	      j = 0;
+	      l = g_list_nth (conn->super.rs.hosts, j);
+	    }
+	}
+      while (l);
+
+      if (!found)
+	{
+	  pool->nslaves = i - 1;
+	  break;
+	}
+
+      /* Connect to it*/
+      c = _mongo_sync_pool_connect (shost, sport, TRUE);
+      c->pool_id = pool->nmasters + i + 1;
+
+      pool->slaves = g_list_append (pool->slaves, c);
+    }
+
+  mongo_sync_disconnect ((mongo_sync_connection *)conn);
   return pool;
 }
 
@@ -150,8 +195,20 @@ mongo_sync_pool_pick (mongo_sync_pool *pool,
 
   if (!want_master)
     {
-      errno = ENOSYS;
-      return NULL;
+      l = pool->slaves;
+
+      while (l)
+	{
+	  mongo_sync_pool_connection *c;
+
+	  c = (mongo_sync_pool_connection *)l->data;
+	  if (!c->in_use)
+	    {
+	      c->in_use = TRUE;
+	      return c;
+	    }
+	  l = g_list_next (l);
+	}
     }
 
   l = pool->masters;
@@ -199,7 +256,7 @@ mongo_sync_pool_return (mongo_sync_pool *pool,
 	}
 
       c = (mongo_sync_pool_connection *)g_list_nth_data
-	(pool->slaves, conn->pool_id - pool->nmasters);
+	(pool->slaves, conn->pool_id - pool->nmasters - 1);
       c->in_use = FALSE;
       return TRUE;
     }
