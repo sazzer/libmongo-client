@@ -879,10 +879,10 @@ _bson_get_block_size (bson_type type, const guint8 *data)
     case BSON_TYPE_STRING:
     case BSON_TYPE_JS_CODE:
     case BSON_TYPE_SYMBOL:
-    case BSON_TYPE_JS_CODE_W_SCOPE:
       return _DOC_SIZE (data, 0) + sizeof (gint32);
     case BSON_TYPE_DOCUMENT:
     case BSON_TYPE_ARRAY:
+    case BSON_TYPE_JS_CODE_W_SCOPE:
       return _DOC_SIZE (data, 0);
     case BSON_TYPE_DOUBLE:
       return sizeof (gdouble);
