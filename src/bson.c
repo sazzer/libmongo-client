@@ -627,7 +627,8 @@ bson_free (bson *b)
   if (!b)
     return;
 
-  g_byte_array_free (b->data, TRUE);
+  if (b->data)
+    g_byte_array_free (b->data, TRUE);
   g_free (b);
 }
 
