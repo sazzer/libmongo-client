@@ -12,7 +12,7 @@ func_config_t config;
 bson *
 test_bson_generate_full (void)
 {
-  bson *b, *d, *a;
+  bson *b, *d, *a, *scope;
   guint8 oid[] = "1234567890ab";
 
   a = bson_new ();
@@ -24,6 +24,10 @@ test_bson_generate_full (void)
   bson_append_string (d, "name", "sub-document", -1);
   bson_append_int32 (d, "answer", 42);
   bson_finish (d);
+
+  scope = bson_new ();
+  bson_append_string (scope, "v", "hello world", -1);
+  bson_finish (scope);
 
   b = bson_new ();
   bson_append_double (b, "double", 3.14);
@@ -40,12 +44,14 @@ test_bson_generate_full (void)
   bson_append_regex (b, "foobar", "s/foo.*bar/", "i");
   bson_append_javascript (b, "alert", "alert (\"hello world!\");", -1);
   bson_append_symbol (b, "sex", "Marilyn Monroe", -1);
+  bson_append_javascript_w_scope (b, "print", "alert (v);", -1, scope);
   bson_append_int32 (b, "int32", 32);
   bson_append_int64 (b, "int64", (gint64)-42);
   bson_finish (b);
 
   bson_free (d);
   bson_free (a);
+  bson_free (scope);
 
   return b;
 }

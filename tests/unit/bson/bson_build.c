@@ -8,7 +8,7 @@
 void
 test_bson_build (void)
 {
-  bson *b, *o, *d, *a;
+  bson *b, *o, *d, *a, *scope;
   guint8 oid[] = "1234567890ab";
 
   a = bson_build (BSON_TYPE_INT32, "0", 32,
@@ -19,6 +19,10 @@ test_bson_build (void)
 		  BSON_TYPE_INT32, "answer", 42,
 		  BSON_TYPE_NONE);
   bson_finish (d);
+
+  scope = bson_build (BSON_TYPE_STRING, "v", "hello world", -1,
+		      BSON_TYPE_NONE);
+  bson_finish (scope);
 
   b = bson_build (BSON_TYPE_DOUBLE, "double", 3.14,
 		  BSON_TYPE_STRING, "str", "hello world", -1,
@@ -34,12 +38,14 @@ test_bson_build (void)
 		  BSON_TYPE_REGEXP, "foobar", "s/foo.*bar/", "i",
 		  BSON_TYPE_JS_CODE, "alert", "alert (\"hello world!\");", -1,
 		  BSON_TYPE_SYMBOL, "sex", "Marilyn Monroe", -1,
+		  BSON_TYPE_JS_CODE_W_SCOPE, "print", "alert (v);", -1, scope,
 		  BSON_TYPE_INT32, "int32", 32,
 		  BSON_TYPE_INT64, "int64", (gint64)-42,
 		  BSON_TYPE_NONE);
   bson_finish (b);
   bson_free (d);
   bson_free (a);
+  bson_free (scope);
 
   o = test_bson_generate_full ();
 
