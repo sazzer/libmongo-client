@@ -15,6 +15,7 @@ bson_unit_tests	= \
 		unit/bson/bson_append_binary \
 		unit/bson/bson_append_js_code \
 		unit/bson/bson_append_symbol \
+		unit/bson/bson_append_js_code_w_scope \
 		unit/bson/bson_append_timestamp \
 		unit/bson/bson_append_oid \
 		unit/bson/bson_append_document \
@@ -46,6 +47,7 @@ bson_unit_tests	= \
 		unit/bson/bson_cursor_get_regex \
 		unit/bson/bson_cursor_get_javascript \
 		unit/bson/bson_cursor_get_symbol \
+		unit/bson/bson_cursor_get_javascript_w_scope \
 		unit/bson/bson_cursor_get_int32 \
 		unit/bson/bson_cursor_get_timestamp \
 		unit/bson/bson_cursor_get_int64
