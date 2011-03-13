@@ -6,6 +6,8 @@
 #include "mongo-wire.h"
 #include "mongo-sync.h"
 
+#include <dlfcn.h>
+
 typedef struct
 {
   gchar *primary_host;
@@ -71,5 +73,13 @@ mongo_packet *test_mongo_wire_generate_reply (gboolean valid,
 					      gboolean with_docs);
 mongo_sync_connection *test_make_fake_sync_conn (gint fd,
 						 gboolean slaveok);
+
+#define SAVE_OLD_FUNC(n)				\
+  static void *(*func_##n)();				\
+  if (!func_##n)					\
+    func_##n = (void *(*)())dlsym (RTLD_NEXT, #n);
+
+#define CALL_OLD_FUNC(n, ...)			\
+  func_##n (__VA_ARGS__)
 
 #endif
