@@ -5,7 +5,8 @@ We're not so strict on dependencies (we're using glib), and the API is
 very different too.
 
 Apart from glib, there are no other hard dependencies. Though, one
-will need OpenSSL for authentication support
+will need OpenSSL for authentication support, and Perl to run the test
+suite.
 
 The main purpose of this library is to provide a well maintained
 implementation, that suits a wider range of needs than the original:
@@ -17,6 +18,7 @@ implementation, that suits a wider range of needs than the original:
 * Comprehensive test suite.
 * Strict error handling.
 * ReplicaSet support, and automatic reconnecting and discovery.
+* Connection pooling.
 * Well documented API.
 
 Although the code is not based on any other driver, it is released
