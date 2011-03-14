@@ -53,8 +53,7 @@ bson_unit_tests	= \
 		unit/bson/bson_cursor_get_int64
 
 bson_func_tests	= \
-		func/bson/huge_doc \
-		func/bson/bson_oom
+		func/bson/huge_doc
 
 mongo_utils_unit_tests	= \
 		unit/mongo/utils/oid_init \
