@@ -21,6 +21,12 @@
 
 #include <glib.h>
 
+#if __GNUC__ >= 4
+#define GNUC_SENTINEL __attribute__((sentinel))
+#else
+#define GNUC_SENTINEL
+#endif
+
 /** @defgroup mongo_sync Mongo Sync API
  *
  * These commands provide wrappers for the most often used MongoDB
@@ -127,8 +133,7 @@ gboolean mongo_sync_cmd_update (mongo_sync_connection *conn,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean mongo_sync_cmd_insert (mongo_sync_connection *conn,
-				const gchar *ns, ...)
-  __attribute__((sentinel));
+				const gchar *ns, ...) GNUC_SENTINEL;
 
 /** Send a query command to MongoDB.
  *
