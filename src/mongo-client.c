@@ -184,9 +184,9 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   if (data_size == -1)
     return FALSE;
 
-  iov[0].iov_base = &h;
+  iov[0].iov_base = (void *)&h;
   iov[0].iov_len = sizeof (h);
-  iov[1].iov_base = (guint8 *)data;
+  iov[1].iov_base = (void *)data;
   iov[1].iov_len = data_size;
 
   if (writev (conn->fd, iov, 2) != sizeof (h) + data_size)
