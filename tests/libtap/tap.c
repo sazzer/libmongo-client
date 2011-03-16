@@ -248,7 +248,7 @@ tap_test_died (int status) {
     static int *test_died = NULL;
     int prev;
     if (!test_died) {
-        test_died = mmap(0, sizeof (int), PROT_READ | PROT_WRITE,
+        test_died = (int *)mmap(0, sizeof (int), PROT_READ | PROT_WRITE,
                          MAP_SHARED | MAP_ANON, -1, 0);
         *test_died = 0;
     }
