@@ -60,9 +60,8 @@ AC_CACHE_CHECK(for struct sockaddr_in6, blb_cv_c_struct_sockaddr_in6,
 
 dnl ***************************************************************************
 dnl Checks for libraries
-AC_CHECK_LIB(socket, socket, BASE_LIBS="$BASE_LIBS -lsocket")
-AC_CHECK_LIB(nsl, gethostbyname, BASE_LIBS="$BASE_LIBS -lnsl")
-AC_CHECK_LIB(resolv, res_init, RESOLV_LIBS="-lresolv")
+AC_CHECK_LIB(socket, socket)
+AC_CHECK_LIB(nsl, gethostbyname)
 
 AC_FUNC_MMAP
 AC_TYPE_OFF_T
