@@ -5,8 +5,9 @@ We're not so strict on dependencies (we're using glib), and the API is
 very different too.
 
 Apart from glib, there are no other hard dependencies. Though, one
-will need OpenSSL for authentication support, and Perl to run the test
-suite.
+will need OpenSSL for authentication support, and Perl (with a
+suitable version of Test::Harness, along with the prove utility) to
+run the test suite.
 
 The main purpose of this library is to provide a well maintained
 implementation, that suits a wider range of needs than the original:
