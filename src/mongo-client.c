@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 static const int one = 1;
 
 static int
@@ -158,6 +162,7 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   gint32 data_size;
   mongo_packet_header h;
   struct iovec iov[2];
+  struct msghdr msg;
 
   if (!conn)
     {
@@ -189,7 +194,11 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   iov[1].iov_base = (void *)data;
   iov[1].iov_len = data_size;
 
-  if (writev (conn->fd, iov, 2) != sizeof (h) + data_size)
+  memset (&msg, 0, sizeof (struct msghdr));
+  msg.msg_iov = iov;
+  msg.msg_iovlen = 2;
+
+  if (sendmsg (conn->fd, &msg, MSG_NOSIGNAL) != sizeof (h) + data_size)
     return FALSE;
 
   conn->request_id = h.id;
