@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 static const int one = 1;
 
 static int
