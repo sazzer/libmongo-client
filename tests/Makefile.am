@@ -73,6 +73,7 @@ mongo_wire_unit_tests	= \
 		\
 		unit/mongo/wire/cmd_update \
 		unit/mongo/wire/cmd_insert \
+		unit/mongo/wire/cmd_insert_n \
 		unit/mongo/wire/cmd_query \
 		unit/mongo/wire/cmd_get_more \
 		unit/mongo/wire/cmd_delete \
