@@ -259,11 +259,34 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
 }
 
 mongo_packet *
-mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
+mongo_wire_cmd_insert_n (gint32 id, const gchar *ns, gint32 n,
+			 const bson **docs)
 {
   mongo_packet *p;
-  bson *d;
-  gint32 pos;
+  gint32 pos, dsize = 0;
+  gint32 i;
+
+  if (!ns || !docs)
+    {
+      errno = EINVAL;
+      return NULL;
+    }
+
+  if (n <= 0)
+    {
+      errno = ERANGE;
+      return NULL;
+    }
+
+  for (i = 0; i < n; i++)
+    {
+      if (bson_size (docs[i]) <= 0)
+	{
+	  errno = EINVAL;
+	  return NULL;
+	}
+      dsize += bson_size (docs[i]);
+    }
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
   if (!p)
@@ -271,7 +294,8 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
   p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_INSERT);
 
-  p->data_size = pos = sizeof (gint32) + strlen (ns) + 1;
+  pos = sizeof (gint32) + strlen (ns) + 1;
+  p->data_size = pos + dsize;
   p->data = (guint8 *)g_try_malloc (p->data_size);
   if (!p->data)
     {
@@ -285,39 +309,45 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
   memcpy (p->data, (void *)&zero, sizeof (gint32));
   memcpy (p->data + sizeof (gint32), (void *)ns, strlen (ns) + 1);
 
+  for (i = 0; i < n; i++)
+    {
+      memcpy (p->data + pos, bson_data (docs[i]), bson_size (docs[i]));
+      pos += bson_size (docs[i]);
+    }
+
+  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data_size);
+
+  return p;
+}
+
+mongo_packet *
+mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
+{
+  mongo_packet *p;
+  bson **docs, *d;
+  gint32 n = 0;
+
+  docs = (bson **)g_try_new0 (bson *, 1);
+  if (!docs)
+    return NULL;
+
   while ((d = (bson *)va_arg (ap, gpointer)))
     {
       if (bson_size (d) < 0)
 	{
-	  mongo_wire_packet_free (p);
+	  g_free (docs);
 	  errno = EINVAL;
 	  return NULL;
 	}
 
-      p->data_size += bson_size (d);
-      p->data = (guint8 *)g_try_realloc (p->data, p->data_size);
-      if (!p->data)
-	{
-	  int e = errno;
-
-	  mongo_wire_packet_free (p);
-	  errno = e;
-	  return NULL;
-	}
-      memcpy (p->data + pos, bson_data (d), bson_size (d));
-      pos += bson_size (d);
+      docs = (bson **)g_try_realloc (docs, n + 1);
+      if (!docs)
+	return NULL;
+      docs[n++] = d;
     }
 
-  if (!p->data || p->data_size == sizeof (gint32) + strlen (ns) + 1)
-    {
-      mongo_wire_packet_free (p);
-      errno = EINVAL;
-      return NULL;
-    }
-
-  p->data_size = pos;
-  p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data_size);
-
+  p = mongo_wire_cmd_insert_n (id, ns, n, (const bson **)docs);
+  g_free (docs);
   return p;
 }
 

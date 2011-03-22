@@ -135,6 +135,23 @@ gboolean mongo_sync_cmd_update (mongo_sync_connection *conn,
 gboolean mongo_sync_cmd_insert (mongo_sync_connection *conn,
 				const gchar *ns, ...) GNUC_SENTINEL;
 
+
+/** Send an insert command to MongoDB.
+ *
+ * Constructs and sends an insert command to MongodB.
+ *
+ * @param conn is the connection to work with.
+ * @param ns is the namespace to work in.
+ * @param n is the number of documents to insert.
+ * @param docs is the array the documents to insert. There must be at
+ * least @a n documents in the array.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
+				  const gchar *ns, gint32 n,
+				  const bson **docs);
+
 /** Send a query command to MongoDB.
  *
  * @param conn is the connection to work with.

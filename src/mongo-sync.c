@@ -295,6 +295,46 @@ mongo_sync_cmd_update (mongo_sync_connection *conn,
 }
 
 gboolean
+mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
+			 const gchar *ns, gint32 n,
+			 const bson **docs)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  if (!ns || !docs)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+  if (n <= 0)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  if (!_mongo_cmd_chk_conn (conn, TRUE))
+    return FALSE;
+
+  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+  p = mongo_wire_cmd_insert_n (rid, ns, n, docs);
+  if (!p)
+    return FALSE;
+
+  if (!mongo_packet_send ((mongo_connection *)conn, p))
+    {
+      int e = errno;
+
+      mongo_wire_packet_free (p);
+      errno = e;
+      return FALSE;
+    }
+  mongo_wire_packet_free (p);
+  return TRUE;
+}
+
+gboolean
 mongo_sync_cmd_insert (mongo_sync_connection *conn,
 		       const char *ns, ...)
 {
