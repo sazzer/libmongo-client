@@ -94,6 +94,7 @@ mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_get_set_slaveok \
 		unit/mongo/sync/sync_cmd_update \
 		unit/mongo/sync/sync_cmd_insert \
+		unit/mongo/sync/sync_cmd_insert_n \
 		unit/mongo/sync/sync_cmd_query \
 		unit/mongo/sync/sync_cmd_get_more \
 		unit/mongo/sync/sync_cmd_delete \
