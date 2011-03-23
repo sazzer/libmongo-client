@@ -27,6 +27,12 @@
 #define GNUC_SENTINEL
 #endif
 
+/** Default maximum size for a single bulk insert.
+ *
+ * Defaults to somewhat shy of 4Mb.
+ */
+#define MONGO_SYNC_DEFAULT_MAX_INSERT_SIZE 4 * 1000 * 1000
+
 /** @defgroup mongo_sync Mongo Sync API
  *
  * These commands provide wrappers for the most often used MongoDB
@@ -101,6 +107,28 @@ gboolean mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn);
  */
 void mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
 				  gboolean slaveok);
+
+/* Get the maximum size of a bulk insert package.
+ *
+ * @param conn is the connection to get the maximum size from.
+ *
+ * @returns The maximum size, or -1 on failiure.
+ */
+gint32 mongo_sync_conn_get_max_insert_size (mongo_sync_connection *conn);
+
+/** Set the maximum size of a bulk insert package.
+ *
+ * When inserting multiple documents at a time, the library can
+ * automatically split the pack up into smaller chunks. With this
+ * function, one can set the maximum size, past which, the request
+ * will be split into smaller chunks.
+ *
+ * @param conn is the connection to set the maximum size for.
+ * @param max_size is the maximum size, in bytes.
+ *
+ */
+void mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
+					  gint32 max_size);
 
 /** Send an update command to MongoDB.
  *

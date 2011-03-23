@@ -45,6 +45,7 @@ mongo_sync_connect (const gchar *host, int port,
   s->rs.hosts = NULL;
   s->rs.primary = NULL;
   s->last_error = NULL;
+  s->max_insert_size = MONGO_SYNC_DEFAULT_MAX_INSERT_SIZE;
 
   return s;
 }
@@ -195,6 +196,36 @@ mongo_sync_disconnect (mongo_sync_connection *conn)
     }
 
   mongo_disconnect ((mongo_connection *)conn);
+}
+
+gint32
+mongo_sync_conn_get_max_insert_size (mongo_sync_connection *conn)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return -1;
+    }
+  return conn->max_insert_size;
+}
+
+void
+mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
+				     gint32 max_size)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return;
+    }
+  if (max_size <= 0)
+    {
+      errno = ERANGE;
+      return;
+    }
+
+  errno = 0;
+  conn->max_insert_size = max_size;
 }
 
 gboolean
