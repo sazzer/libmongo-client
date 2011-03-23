@@ -44,6 +44,9 @@ struct _mongo_sync_connection
 
   gchar *last_error; /**< The last error from the server, caught
 			during queries. */
+  gint32 max_insert_size; /**< Maximum number of bytes an insert
+			     command can be before being split to
+			     smaller chunks. Used for bulk inserts. */
 };
 
 /** @internal Synchronous pool connection object. */

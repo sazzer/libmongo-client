@@ -92,6 +92,7 @@ mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_reconnect \
 		unit/mongo/sync/sync_disconnect \
 		unit/mongo/sync/sync_get_set_slaveok \
+		unit/mongo/sync/sync_get_set_max_insert_size \
 		unit/mongo/sync/sync_cmd_update \
 		unit/mongo/sync/sync_cmd_insert \
 		unit/mongo/sync/sync_cmd_insert_n \
@@ -110,7 +111,8 @@ mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_cmd_user_remove \
 		unit/mongo/sync/sync_cmd_authenticate
 
-mongo_sync_func_tests	=
+mongo_sync_func_tests	= \
+		func/mongo/sync/f_sync_max_insert_size
 
 mongo_sync_pool_unit_tests	= \
 		unit/mongo/sync-pool/sync_pool_new \
