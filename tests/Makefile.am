@@ -111,7 +111,8 @@ mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_cmd_user_remove \
 		unit/mongo/sync/sync_cmd_authenticate
 
-mongo_sync_func_tests	=
+mongo_sync_func_tests	= \
+		func/mongo/sync/f_sync_max_insert_size
 
 mongo_sync_pool_unit_tests	= \
 		unit/mongo/sync-pool/sync_pool_new \

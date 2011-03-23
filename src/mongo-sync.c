@@ -332,6 +332,8 @@ mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
 {
   mongo_packet *p;
   gint32 rid;
+  gint32 pos = 0, c = n, i = 0;
+  gint32 size = 0;
 
   if (!ns || !docs)
     {
@@ -347,21 +349,44 @@ mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
   if (!_mongo_cmd_chk_conn (conn, TRUE))
     return FALSE;
 
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-  p = mongo_wire_cmd_insert_n (rid, ns, n, docs);
-  if (!p)
-    return FALSE;
-
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
+  do
     {
-      int e = errno;
+      i = pos;
+      c = 0;
 
+      while (i < n && size < conn->max_insert_size)
+	{
+	  size += bson_size (docs[i++]);
+	  c++;
+	}
+      size = 0;
+      if (i < n)
+	c--;
+
+      if (c == 0)
+	{
+	  errno = EMSGSIZE;
+	  return FALSE;
+	}
+
+      rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+      p = mongo_wire_cmd_insert_n (rid, ns, c, &docs[pos]);
+      if (!p)
+	return FALSE;
+
+      if (!mongo_packet_send ((mongo_connection *)conn, p))
+	{
+	  int e = errno;
+
+	  mongo_wire_packet_free (p);
+	  errno = e;
+	  return FALSE;
+	}
       mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
-  mongo_wire_packet_free (p);
+      pos += c;
+    } while (pos < n);
+
   return TRUE;
 }
 
@@ -369,8 +394,9 @@ gboolean
 mongo_sync_cmd_insert (mongo_sync_connection *conn,
 		       const char *ns, ...)
 {
-  mongo_packet *p;
-  gint32 rid;
+  gboolean b;
+  bson **docs, *d;
+  gint32 n = 0;
   va_list ap;
 
   if (!ns)
@@ -379,33 +405,30 @@ mongo_sync_cmd_insert (mongo_sync_connection *conn,
       return FALSE;
     }
 
-  if (!_mongo_cmd_chk_conn (conn, TRUE))
+  docs = (bson **)g_try_new0 (bson *, 1);
+  if (!docs)
     return FALSE;
 
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
   va_start (ap, ns);
-  p = mongo_wire_cmd_insert_va (rid, ns, ap);
-  if (!p)
+  while ((d = (bson *)va_arg (ap, gpointer)))
     {
-      int e = errno;
+      if (bson_size (d) < 0)
+	{
+	  g_free (docs);
+	  errno = EINVAL;
+	  return FALSE;
+	}
 
-      va_end (ap);
-      errno = e;
-      return FALSE;
+      docs = (bson **)g_try_realloc (docs, n + 1);
+      if (!docs)
+	return FALSE;
+      docs[n++] = d;
     }
   va_end (ap);
 
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
-  mongo_wire_packet_free (p);
-  return TRUE;
+  b = mongo_sync_cmd_insert_n (conn, ns, n, (const bson **)docs);
+  g_free (docs);
+  return b;
 }
 
 mongo_packet *
