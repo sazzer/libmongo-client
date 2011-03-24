@@ -58,21 +58,6 @@ struct _mongo_sync_pool_connection
   gboolean in_use; /**< Whether the object is in use or not. */
 };
 
-/** @internal Construct an insert command, using a va_list.
- *
- * @param id is the sequence id.
- * @param ns is the namespace, the database and collection name
- * concatenaded, and separated with a single dot.
- * @param ap is the stdarg list of BSON documents to insert,
- * terminated with a NULL value.
- *
- * @returns A newly allocated packet, or NULL on error. It is the
- * responsibility of the caller to free the packet once it is not used
- * anymore.
- */
-mongo_packet *mongo_wire_cmd_insert_va (gint32 id, const gchar *ns,
-					va_list ap);
-
 /** @internal Construct a kill cursors command, using a va_list.
  *
  * @param id is the sequence id.

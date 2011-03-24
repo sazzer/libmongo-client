@@ -321,16 +321,24 @@ mongo_wire_cmd_insert_n (gint32 id, const gchar *ns, gint32 n,
 }
 
 mongo_packet *
-mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
+mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...)
 {
   mongo_packet *p;
   bson **docs, *d;
   gint32 n = 0;
+  va_list ap;
+
+  if (!ns)
+    {
+      errno = EINVAL;
+      return NULL;
+    }
 
   docs = (bson **)g_try_new0 (bson *, 1);
   if (!docs)
     return NULL;
 
+  va_start (ap, ns);
   while ((d = (bson *)va_arg (ap, gpointer)))
     {
       if (bson_size (d) < 0)
@@ -345,28 +353,10 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
 	return NULL;
       docs[n++] = d;
     }
+  va_end (ap);
 
   p = mongo_wire_cmd_insert_n (id, ns, n, (const bson **)docs);
   g_free (docs);
-  return p;
-}
-
-mongo_packet *
-mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...)
-{
-  va_list ap;
-  mongo_packet *p;
-
-  if (!ns)
-    {
-      errno = EINVAL;
-      return NULL;
-    }
-
-  va_start (ap, ns);
-  p = mongo_wire_cmd_insert_va (id, ns, ap);
-  va_end (ap);
-
   return p;
 }
 
