@@ -335,6 +335,12 @@ mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
   gint32 pos = 0, c = n, i = 0;
   gint32 size = 0;
 
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
   if (!ns || !docs)
     {
       errno = EINVAL;
@@ -344,6 +350,15 @@ mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
     {
       errno = EINVAL;
       return FALSE;
+    }
+
+  for (i = 0; i < n; i++)
+    {
+      if (bson_size (docs[i]) >= conn->max_insert_size)
+	{
+	  errno = EMSGSIZE;
+	  return FALSE;
+	}
     }
 
   if (!_mongo_cmd_chk_conn (conn, TRUE))
@@ -362,12 +377,6 @@ mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
       size = 0;
       if (i < n)
 	c--;
-
-      if (c == 0)
-	{
-	  errno = EMSGSIZE;
-	  return FALSE;
-	}
 
       rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
 
