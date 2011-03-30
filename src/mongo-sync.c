@@ -1164,8 +1164,9 @@ digest2hex (guint8 digest[16], guint8 hex_digest[33])
   hex_digest[32] = '\0';
 }
 
-static void _pass_digest (const gchar *user, const gchar *pw,
-			  guint8 hex_digest[33])
+static void
+_pass_digest (const gchar *user, const gchar *pw,
+	      guint8 hex_digest[33])
 {
   MD5_CTX mc;
   guint8 digest[16];

@@ -149,7 +149,7 @@ _bson_append_element_header (bson *b, bson_type type, const gchar *name)
  *
  * @returns TRUE on success, FALSE otherwise.
  */
-gboolean
+static gboolean
 _bson_append_string_element (bson *b, bson_type type, const gchar *name,
 			     const gchar *val, gint32 length)
 {
