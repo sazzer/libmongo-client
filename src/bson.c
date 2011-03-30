@@ -41,9 +41,9 @@ struct _bson_cursor
   const bson *obj; /**< The BSON object this is a cursor for. */
   const gchar *key; /**< Pointer within the BSON object to the
 		       current key. */
-  gint32 pos; /**< Position within the BSON object, pointing at the
+  size_t pos; /**< Position within the BSON object, pointing at the
 		 element type. */
-  gint32 value_pos; /**< The start of the value within the BSON
+  size_t value_pos; /**< The start of the value within the BSON
 		       object, pointing right after the end of the
 		       key. */
 };
@@ -153,12 +153,12 @@ gboolean
 _bson_append_string_element (bson *b, bson_type type, const gchar *name,
 			     const gchar *val, gint32 length)
 {
-  gint32 len;
+  size_t len;
 
   if (!val || !length || length < -1)
     return FALSE;
 
-  len = (length != -1) ? length + 1: strlen (val) + 1;
+  len = (length != -1) ? (size_t)length + 1: strlen (val) + 1;
 
   if (!_bson_append_element_header (b, type, name))
     return FALSE;
@@ -770,7 +770,7 @@ bson_append_javascript_w_scope (bson *b, const gchar *name,
 				const bson *scope)
 {
   gint size;
-  gint32 length;
+  size_t length;
 
   if (!js || !scope || bson_size (scope) < 0 || len < -1)
     return FALSE;
@@ -778,7 +778,7 @@ bson_append_javascript_w_scope (bson *b, const gchar *name,
   if (!_bson_append_element_header (b, BSON_TYPE_JS_CODE_W_SCOPE, name))
     return FALSE;
 
-  length = (len != -1) ? len + 1: strlen (js) + 1;
+  length = (len != -1) ? (size_t)len + 1: strlen (js) + 1;
 
   size = length + sizeof (gint32) + sizeof (gint32) + bson_size (scope);
 

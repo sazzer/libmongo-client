@@ -25,8 +25,7 @@ typedef struct
 #define VLOG(...) { if (config->verbose) fprintf (stderr, __VA_ARGS__); }
 
 gdouble
-mongo_dump_packet (config_t *config, mongo_packet *p, gdouble pos, gdouble cnt,
-		   int fd)
+mongo_dump_packet (config_t *config, mongo_packet *p, gdouble pos, int fd)
 {
   gint32 i;
   mongo_reply_packet_header rh;
@@ -39,13 +38,6 @@ mongo_dump_packet (config_t *config, mongo_packet *p, gdouble pos, gdouble cnt,
 
       mongo_wire_reply_packet_get_nth_document (p, i, &b);
       bson_finish (b);
-
-#if 0
-      VLOG ("\rDumping object %.0f/%.0f, size=%d", pos + i, cnt,
-	    bson_size (b));
-      if (config->verbose)
-	fflush (stderr);
-#endif
 
       write (fd, bson_data (b), bson_size (b));
       bson_free (b);
@@ -134,7 +126,7 @@ mongo_dump (config_t *config)
 
   mongo_wire_reply_packet_get_header (p, &rh);
   cid = rh.cursor_id;
-  pos = mongo_dump_packet (config, p, pos, cnt, fd);
+  pos = mongo_dump_packet (config, p, pos, fd);
   mongo_wire_packet_free (p);
 
   while (pos < cnt)
@@ -155,7 +147,7 @@ mongo_dump (config_t *config)
 	  mongo_sync_disconnect (conn);
 	  exit (1);
 	}
-      pos = mongo_dump_packet (config, p, pos, cnt, fd);
+      pos = mongo_dump_packet (config, p, pos, fd);
       mongo_wire_packet_free (p);
     }
 
@@ -180,7 +172,8 @@ main (int argc, char *argv[])
 	"Host to connect to", "HOST" },
       { "port", 'p', 0, G_OPTION_ARG_INT, &config.port, "Port", "PORT" },
       { "db", 'd', 0, G_OPTION_ARG_STRING, &config.db, "Database", "DB" },
-      { "collection", 'c', 0, G_OPTION_ARG_STRING, &config.coll, "CONN" },
+      { "collection", 'c', 0, G_OPTION_ARG_STRING, &config.coll, "CONN",
+	NULL },
       { "verbose", 'v', 0, G_OPTION_ARG_NONE, &config.verbose,
 	"Be verbose", NULL },
       { "output", 'o', 0, G_OPTION_ARG_STRING, &config.output,
@@ -189,7 +182,7 @@ main (int argc, char *argv[])
 	"Connecting to slaves is ok", NULL },
       { "master-sync", 'm', 0, G_OPTION_ARG_NONE, &config.master_sync,
 	"Reconnect to the replica master", NULL },
-      { NULL }
+      { NULL, 0, 0, 0, NULL, NULL, NULL }
     };
 
   context = g_option_context_new ("- dump a complete mongo collection");

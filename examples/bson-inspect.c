@@ -247,7 +247,7 @@ main (int argc, char *argv[])
     {
       { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 	"Be verbose", NULL },
-      { NULL }
+      { NULL, 0, 0, 0, NULL, NULL, NULL }
     };
 
   context = g_option_context_new ("- inspect a BSON dump");

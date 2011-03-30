@@ -198,7 +198,7 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   msg.msg_iov = iov;
   msg.msg_iovlen = 2;
 
-  if (sendmsg (conn->fd, &msg, MSG_NOSIGNAL) != sizeof (h) + data_size)
+  if (sendmsg (conn->fd, &msg, MSG_NOSIGNAL) != (gint32)sizeof (h) + data_size)
     return FALSE;
 
   conn->request_id = h.id;

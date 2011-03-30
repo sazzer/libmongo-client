@@ -220,7 +220,7 @@ skippy (int n, const char *fmt, ...) {
 }
 
 void
-ctodo (int ignore, const char *fmt, ...) {
+ctodo (int ignore __attribute__((unused)), const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     todo_mesg = vstrdupf(fmt, args);

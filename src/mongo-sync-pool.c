@@ -23,8 +23,8 @@
 /** @internal A connection pool object. */
 struct _mongo_sync_pool
 {
-  guint nmasters; /**< Number of master connections in the pool. */
-  guint nslaves; /**< Number of slave connections in the pool. */
+  gint nmasters; /**< Number of master connections in the pool. */
+  gint nslaves; /**< Number of slave connections in the pool. */
 
   GList *masters; /**< List of master connections in the pool. */
   GList *slaves; /**< List of slave connections in the pool. */
