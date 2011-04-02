@@ -251,7 +251,7 @@ mongo_packet_recv (mongo_connection *conn)
 
   size = h.length - sizeof (mongo_packet_header);
   data = g_try_new0 (guint8, size);
-  if (recv (conn->fd, data, size, MSG_NOSIGNAL) != size)
+  if ((guint32)recv (conn->fd, data, size, MSG_NOSIGNAL) != size)
     {
       int e = errno;
 
