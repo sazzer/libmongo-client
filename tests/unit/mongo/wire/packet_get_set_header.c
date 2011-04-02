@@ -47,7 +47,7 @@ test_mongo_wire_packet_get_set_header (void)
   cmp_ok (ph1.opcode, "==", ph2.opcode,
 	  "OPCodes match");
 
-  ph1.length = 1;
+  ph1.length = GINT32_TO_LE (1);
   ok (mongo_wire_packet_set_header (p, &ph1) == FALSE,
       "Setting a packet with length shorter than the header "
       "returns an error");

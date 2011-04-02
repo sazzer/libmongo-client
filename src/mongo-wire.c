@@ -112,7 +112,7 @@ mongo_wire_packet_set_header (mongo_packet *p,
       errno = EINVAL;
       return FALSE;
     }
-  if (header->length < (gint32)sizeof (mongo_packet_header))
+  if (GINT32_FROM_LE (header->length) < (gint32)sizeof (mongo_packet_header))
     {
       errno = ERANGE;
       return FALSE;
