@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 static const int one = 1;
 
 static int
@@ -56,12 +60,26 @@ unset_nonblock (int fd)
 }
 
 mongo_connection *
-_mongo_connect (const char *host, int port, mongo_connection *c)
+mongo_connect (const char *host, int port)
 {
   struct addrinfo *res = NULL, *r;
   struct addrinfo hints;
   int e, fd = -1;
   gchar *port_s;
+  mongo_connection *conn;
+
+  if (!host)
+    {
+      errno = EINVAL;
+      return NULL;
+    }
+
+  conn = g_try_new0 (mongo_connection, 1);
+  if (!conn)
+    {
+      errno = ENOMEM;
+      return NULL;
+    }
 
   memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_STREAM;
@@ -76,6 +94,7 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
     {
       int err = errno;
 
+      g_free (conn);
       g_free (port_s);
       errno = err;
       return NULL;
@@ -97,6 +116,8 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
 
   if (fd == -1)
     {
+      g_free (conn);
+
       errno = EADDRNOTAVAIL;
       return NULL;
     }
@@ -107,35 +128,15 @@ _mongo_connect (const char *host, int port, mongo_connection *c)
     {
       int err = errno;
 
+      g_free (conn);
       close (fd);
       errno = err;
       return NULL;
     }
 
-  c->fd = fd;
+  conn->fd = fd;
 
-  return c;
-}
-
-mongo_connection *
-mongo_connect (const gchar *host, int port)
-{
-  mongo_connection *conn;
-
-  conn = g_try_new0 (mongo_connection, 1);
-  if (!conn)
-    {
-      errno = ENOTCONN;
-      return NULL;
-    }
-  return _mongo_connect (host, port, conn);
-}
-
-mongo_connection *
-mongo_connection_new (const char *host, int port,
-		      mongo_connection **conn)
-{
-  return _mongo_connect (host, port, *conn);
+  return conn;
 }
 
 void
@@ -161,6 +162,7 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   gint32 data_size;
   mongo_packet_header h;
   struct iovec iov[2];
+  struct msghdr msg;
 
   if (!conn)
     {
@@ -187,12 +189,16 @@ mongo_packet_send (mongo_connection *conn, const mongo_packet *p)
   if (data_size == -1)
     return FALSE;
 
-  iov[0].iov_base = &h;
+  iov[0].iov_base = (void *)&h;
   iov[0].iov_len = sizeof (h);
-  iov[1].iov_base = (guint8 *)data;
+  iov[1].iov_base = (void *)data;
   iov[1].iov_len = data_size;
 
-  if (writev (conn->fd, iov, 2) != sizeof (h) + data_size)
+  memset (&msg, 0, sizeof (struct msghdr));
+  msg.msg_iov = iov;
+  msg.msg_iovlen = 2;
+
+  if (sendmsg (conn->fd, &msg, MSG_NOSIGNAL) != (gint32)sizeof (h) + data_size)
     return FALSE;
 
   conn->request_id = h.id;
@@ -221,7 +227,7 @@ mongo_packet_recv (mongo_connection *conn)
     }
 
   memset (&h, 0, sizeof (h));
-  if (recv (conn->fd, &h, sizeof (mongo_packet_header), 0) !=
+  if (recv (conn->fd, &h, sizeof (mongo_packet_header), MSG_NOSIGNAL) !=
       sizeof (mongo_packet_header))
     {
       return NULL;
@@ -245,7 +251,7 @@ mongo_packet_recv (mongo_connection *conn)
 
   size = h.length - sizeof (mongo_packet_header);
   data = g_try_new0 (guint8, size);
-  if (recv (conn->fd, data, size, 0) != size)
+  if ((guint32)recv (conn->fd, data, size, MSG_NOSIGNAL) != size)
     {
       int e = errno;
 

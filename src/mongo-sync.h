@@ -1,4 +1,4 @@
-/* mongo-sync.h - libmongo-sync synchronous wrapper API
+/* mongo-sync.h - libmongo-client synchronous wrapper API
  * Copyright 2011 Gergely Nagy <algernon@balabit.hu>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,18 @@
 #include <mongo-client.h>
 
 #include <glib.h>
+
+#if __GNUC__ >= 4
+#define GNUC_SENTINEL __attribute__((sentinel))
+#else
+#define GNUC_SENTINEL
+#endif
+
+/** Default maximum size for a single bulk insert.
+ *
+ * Defaults to somewhat shy of 4Mb.
+ */
+#define MONGO_SYNC_DEFAULT_MAX_INSERT_SIZE 4 * 1000 * 1000
 
 /** @defgroup mongo_sync Mongo Sync API
  *
@@ -96,6 +108,28 @@ gboolean mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn);
 void mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
 				  gboolean slaveok);
 
+/* Get the maximum size of a bulk insert package.
+ *
+ * @param conn is the connection to get the maximum size from.
+ *
+ * @returns The maximum size, or -1 on failiure.
+ */
+gint32 mongo_sync_conn_get_max_insert_size (mongo_sync_connection *conn);
+
+/** Set the maximum size of a bulk insert package.
+ *
+ * When inserting multiple documents at a time, the library can
+ * automatically split the pack up into smaller chunks. With this
+ * function, one can set the maximum size, past which, the request
+ * will be split into smaller chunks.
+ *
+ * @param conn is the connection to set the maximum size for.
+ * @param max_size is the maximum size, in bytes.
+ *
+ */
+void mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
+					  gint32 max_size);
+
 /** Send an update command to MongoDB.
  *
  * Constructs and sends an update command to MongoDB.
@@ -127,8 +161,24 @@ gboolean mongo_sync_cmd_update (mongo_sync_connection *conn,
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean mongo_sync_cmd_insert (mongo_sync_connection *conn,
-				const gchar *ns, ...)
-  __attribute__((sentinel));
+				const gchar *ns, ...) GNUC_SENTINEL;
+
+
+/** Send an insert command to MongoDB.
+ *
+ * Constructs and sends an insert command to MongodB.
+ *
+ * @param conn is the connection to work with.
+ * @param ns is the namespace to work in.
+ * @param n is the number of documents to insert.
+ * @param docs is the array the documents to insert. There must be at
+ * least @a n documents in the array.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
+				  const gchar *ns, gint32 n,
+				  const bson **docs);
 
 /** Send a query command to MongoDB.
  *

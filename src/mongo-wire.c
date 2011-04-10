@@ -59,7 +59,12 @@ typedef enum
 mongo_packet *
 mongo_wire_packet_new (void)
 {
-  return (mongo_packet *)g_try_new0 (mongo_packet, 1);
+  mongo_packet *p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
+
+  if (!p)
+    return NULL;
+  p->header.length = GINT32_TO_LE (sizeof (mongo_packet_header));
+  return p;
 }
 
 gboolean
@@ -107,6 +112,11 @@ mongo_wire_packet_set_header (mongo_packet *p,
       errno = EINVAL;
       return FALSE;
     }
+  if (GINT32_FROM_LE (header->length) < (gint32)sizeof (mongo_packet_header))
+    {
+      errno = ERANGE;
+      return FALSE;
+    }
 
   p->header.length = GINT32_TO_LE (header->length);
   p->header.id = GINT32_TO_LE (header->id);
@@ -142,6 +152,11 @@ gint32
 mongo_wire_packet_get_data (const mongo_packet *p, const guint8 **data)
 {
   if (!p || !data)
+    {
+      errno = EINVAL;
+      return -1;
+    }
+  if (p->data == NULL)
     {
       errno = EINVAL;
       return -1;
@@ -244,11 +259,34 @@ mongo_wire_cmd_update (gint32 id, const gchar *ns, gint32 flags,
 }
 
 mongo_packet *
-mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
+mongo_wire_cmd_insert_n (gint32 id, const gchar *ns, gint32 n,
+			 const bson **docs)
 {
   mongo_packet *p;
-  bson *d;
-  gint32 pos;
+  gint32 pos, dsize = 0;
+  gint32 i;
+
+  if (!ns || !docs)
+    {
+      errno = EINVAL;
+      return NULL;
+    }
+
+  if (n <= 0)
+    {
+      errno = ERANGE;
+      return NULL;
+    }
+
+  for (i = 0; i < n; i++)
+    {
+      if (bson_size (docs[i]) <= 0)
+	{
+	  errno = EINVAL;
+	  return NULL;
+	}
+      dsize += bson_size (docs[i]);
+    }
 
   p = (mongo_packet *)g_try_new0 (mongo_packet, 1);
   if (!p)
@@ -256,7 +294,8 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
   p->header.id = GINT32_TO_LE (id);
   p->header.opcode = GINT32_TO_LE (OP_INSERT);
 
-  p->data_size = pos = sizeof (gint32) + strlen (ns) + 1;
+  pos = sizeof (gint32) + strlen (ns) + 1;
+  p->data_size = pos + dsize;
   p->data = (guint8 *)g_try_malloc (p->data_size);
   if (!p->data)
     {
@@ -270,37 +309,12 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
   memcpy (p->data, (void *)&zero, sizeof (gint32));
   memcpy (p->data + sizeof (gint32), (void *)ns, strlen (ns) + 1);
 
-  while ((d = (bson *)va_arg (ap, gpointer)))
+  for (i = 0; i < n; i++)
     {
-      if (bson_size (d) < 0)
-	{
-	  mongo_wire_packet_free (p);
-	  errno = EINVAL;
-	  return NULL;
-	}
-
-      p->data_size += bson_size (d);
-      p->data = (guint8 *)g_try_realloc (p->data, p->data_size);
-      if (!p->data)
-	{
-	  int e = errno;
-
-	  mongo_wire_packet_free (p);
-	  errno = e;
-	  return NULL;
-	}
-      memcpy (p->data + pos, bson_data (d), bson_size (d));
-      pos += bson_size (d);
+      memcpy (p->data + pos, bson_data (docs[i]), bson_size (docs[i]));
+      pos += bson_size (docs[i]);
     }
 
-  if (!p->data)
-    {
-      mongo_wire_packet_free (p);
-      errno = -EINVAL;
-      return NULL;
-    }
-
-  p->data_size = pos;
   p->header.length = GINT32_TO_LE (sizeof (p->header) + p->data_size);
 
   return p;
@@ -309,19 +323,40 @@ mongo_wire_cmd_insert_va (gint32 id, const gchar *ns, va_list ap)
 mongo_packet *
 mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...)
 {
-  va_list ap;
   mongo_packet *p;
+  bson **docs, *d;
+  gint32 n = 0;
+  va_list ap;
 
   if (!ns)
     {
-      errno = -EINVAL;
+      errno = EINVAL;
       return NULL;
     }
 
+  docs = (bson **)g_try_new0 (bson *, 1);
+  if (!docs)
+    return NULL;
+
   va_start (ap, ns);
-  p = mongo_wire_cmd_insert_va (id, ns, ap);
+  while ((d = (bson *)va_arg (ap, gpointer)))
+    {
+      if (bson_size (d) < 0)
+	{
+	  g_free (docs);
+	  errno = EINVAL;
+	  return NULL;
+	}
+
+      docs = (bson **)g_try_realloc (docs, n + 1);
+      if (!docs)
+	return NULL;
+      docs[n++] = d;
+    }
   va_end (ap);
 
+  p = mongo_wire_cmd_insert_n (id, ns, n, (const bson **)docs);
+  g_free (docs);
   return p;
 }
 
@@ -335,13 +370,13 @@ mongo_wire_cmd_query (gint32 id, const gchar *ns, gint32 flags,
 
   if (!ns || !query)
     {
-      errno = -EINVAL;
+      errno = EINVAL;
       return NULL;
     }
 
   if (bson_size (query) < 0 || (sel && bson_size (sel) < 0))
     {
-      errno = -EINVAL;
+      errno = EINVAL;
       return NULL;
     }
 

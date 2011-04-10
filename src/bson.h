@@ -24,9 +24,6 @@
  * The types, functions and everything else within this module is
  * meant to allow one to work with BSON objects easily.
  *
- * @todo Retrieving BSON_TYPE_JS_CODE_W_SCOPE and BSON_TYPE_DBPOINTER
- * typed elements is unimplemented at this time.
- *
  * @addtogroup bson_mod
  * @{
  */
@@ -446,6 +443,21 @@ gboolean bson_append_javascript (bson *b, const gchar *name, const gchar *js,
 gboolean bson_append_symbol (bson *b, const gchar *name, const gchar *symbol,
 			     gint32 len);
 
+/** Append Javascript code (with scope) to a BSON object.
+ *
+ * @param b is the BSON object to append to.
+ * @param name is the key name.
+ * @param js is the javascript code as a C string.
+ * @param len is the length of the code, use @a -1 to use the full
+ * length of the string supplied in @a js.
+ * @param scope is scope to evaluate the javascript code in.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean bson_append_javascript_w_scope (bson *b, const gchar *name,
+					 const gchar *js, gint32 len,
+					 const bson *scope);
+
 /** Append a 32-bit integer to a BSON object.
  *
  * @param b is the BSON object to append to.
@@ -709,6 +721,23 @@ gboolean bson_cursor_get_javascript (const bson_cursor *c, const gchar **dest);
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean bson_cursor_get_symbol (const bson_cursor *c, const gchar **dest);
+
+/** Get the value stored at the cursor, as javascript code w/ scope.
+ *
+ * @param c is the cursor pointing at the appropriate element.
+ * @param js is a pointer to a variable where the javascript code can
+ * be stored.
+ * @param scope is a pointer to a variable where the scope can be
+ * stored.
+ *
+ * @note The @a scope pointer will be a newly allocated, finished
+ * BSON object: it is the responsibility of the caller to free it.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean bson_cursor_get_javascript_w_scope (const bson_cursor *c,
+					     const gchar **js,
+					     bson **scope);
 
 /** Get the value stored at the cursor, as a 32-bit integer.
  *

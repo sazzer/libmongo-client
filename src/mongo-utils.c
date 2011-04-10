@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 
 static guint32 machine_id = 0;
 static gint16 pid = 0;
@@ -90,17 +91,30 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
   gchar *port_s, *ep;
   glong p;
 
-  if (!addr)
+  if (!addr || !host || !port)
     {
-      *host = NULL;
-      *port = -1;
+      if (host)
+	*host = NULL;
+      if (port)
+	*port = -1;
+      errno = EINVAL;
       return FALSE;
     }
 
   /* Split up to host:port */
   port_s = g_strrstr (addr, ":");
   if (!port_s)
-    return FALSE;
+    {
+      *host = g_strdup (addr);
+      return TRUE;
+    }
+  if (port_s == addr)
+    {
+      *host = NULL;
+      *port = -1;
+      errno = EINVAL;
+      return FALSE;
+    }
   port_s++;
   *host = g_strndup (addr, port_s - addr - 1);
 
@@ -110,6 +124,15 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
       g_free (*host);
       *host = NULL;
       *port = -1;
+      errno = ERANGE;
+      return FALSE;
+    }
+  if (p < 0 || p > INT_MAX)
+    {
+      g_free (*host);
+      *host = NULL;
+      *port = -1;
+      errno = ERANGE;
       return FALSE;
     }
   *port = (gint)p;
@@ -119,6 +142,7 @@ mongo_util_parse_addr (const gchar *addr, gchar **host, gint *port)
       g_free (*host);
       *host = NULL;
       *port = -1;
+      errno = EINVAL;
       return FALSE;
     }
   return TRUE;

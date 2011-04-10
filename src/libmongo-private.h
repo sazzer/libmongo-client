@@ -19,6 +19,8 @@
  * Private types and functions, for internal use in libmongo-client only.
  */
 
+#include "mongo.h"
+
 /** @internal Mongo Connection state object. */
 struct _mongo_connection
 {
@@ -39,37 +41,22 @@ struct _mongo_sync_connection
     GList *hosts; /**< Replica set members, as a list of strings. */
     gchar *primary; /**< The replica master, if any. */
   } rs;
+
+  gchar *last_error; /**< The last error from the server, caught
+			during queries. */
+  gint32 max_insert_size; /**< Maximum number of bytes an insert
+			     command can be before being split to
+			     smaller chunks. Used for bulk inserts. */
 };
 
-/** @internal Connect to a MongoDB server, using an existing connection object.
- *
- * Connects to a MongoDB server, but uses an existing connection
- * object to store the connection info in.
- *
- * @param host is the address of the server.
- * @param port is the port to connect to.
- * @param conn is a pointer to an allocated mongo_connection object.
- *
- * @returns The conn object, or NULL on error. Upon error, the
- * contents of the conn pointer are unspecified.
- */
-mongo_connection *mongo_connection_new (const char *host, int port,
-					mongo_connection **conn);
+/** @internal Synchronous pool connection object. */
+struct _mongo_sync_pool_connection
+{
+  mongo_sync_connection super; /**< The parent object. */
 
-/** @internal Construct an insert command, using a va_list.
- *
- * @param id is the sequence id.
- * @param ns is the namespace, the database and collection name
- * concatenaded, and separated with a single dot.
- * @param ap is the stdarg list of BSON documents to insert,
- * terminated with a NULL value.
- *
- * @returns A newly allocated packet, or NULL on error. It is the
- * responsibility of the caller to free the packet once it is not used
- * anymore.
- */
-mongo_packet *mongo_wire_cmd_insert_va (gint32 id, const gchar *ns,
-					va_list ap);
+  gint pool_id; /**< ID of the connection. */
+  gboolean in_use; /**< Whether the object is in use or not. */
+};
 
 /** @internal Construct a kill cursors command, using a va_list.
  *
