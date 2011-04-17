@@ -124,6 +124,30 @@ gboolean mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn);
 gboolean mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
 				      gboolean slaveok);
 
+/** Retrieve the state of the safe mode flag from a sync connection.
+ *
+ * @param conn is the connection to check the flag on.
+ *
+ * @returns The state of the safe mode flag.
+ */
+gboolean mongo_sync_conn_get_safe_mode (const mongo_sync_connection *conn);
+
+/** Set the safe mode flag on a sync connection.
+ *
+ * Enabling safe mode will result in an additional getLastError() call
+ * after each insert or update, and extra checks performed on other
+ * commands aswell.
+ *
+ * The upside is more guarantees that the commands succeed, at the
+ * expense of network traffic and speed.
+ *
+ * @param conn is the connection to set the flag on.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_conn_set_safe_mode (mongo_sync_connection *conn,
+					gboolean safe_mode);
+
 /* Get the maximum size of a bulk insert package.
  *
  * @param conn is the connection to get the maximum size from.
