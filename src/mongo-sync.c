@@ -43,7 +43,7 @@ mongo_sync_connect (const gchar *host, int port,
 
   s->slaveok = slaveok;
   s->rs.seeds = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
-  s->rs.hosts = NULL;
+  s->rs.hosts = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.primary = NULL;
   s->last_error = NULL;
   s->max_insert_size = MONGO_SYNC_DEFAULT_MAX_INSERT_SIZE;
@@ -68,6 +68,8 @@ mongo_sync_conn_seed_add (mongo_sync_connection *conn,
 
   conn->rs.seeds = g_list_append (conn->rs.seeds,
 				  g_strdup_printf ("%s:%d", host, port));
+  conn->rs.hosts = g_list_prepend (conn->rs.hosts,
+				   g_strdup_printf ("%s:%d", host, port));
   return TRUE;
 }
 
@@ -89,6 +91,15 @@ _mongo_sync_connect_replace (mongo_sync_connection *old,
       g_free (l->data);
       l = g_list_delete_link (l, l);
     }
+  old->rs.hosts = NULL;
+
+  /* Repopulate it with the seed list */
+  l = old->rs.seeds;
+  while (l)
+    {
+      old->rs.hosts = g_list_append (old->rs.hosts, g_strdup (l->data));
+      l = g_list_next (l);
+    }
 
   if (old->super.fd)
     close (old->super.fd);
@@ -97,7 +108,6 @@ _mongo_sync_connect_replace (mongo_sync_connection *old,
   old->super.request_id = -1;
   old->slaveok = new->slaveok;
   old->rs.primary = NULL;
-  old->rs.hosts = NULL;
   g_free (old->last_error);
   old->last_error = NULL;
 
