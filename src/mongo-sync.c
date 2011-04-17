@@ -343,9 +343,6 @@ _mongo_cmd_ensure_conn (mongo_sync_connection *conn,
       return FALSE;
     }
 
-  if (!conn->safe_mode)
-    return TRUE;
-
   if (force_master || !conn->slaveok)
     {
       errno = 0;
@@ -415,14 +412,14 @@ _mongo_sync_packet_send (mongo_sync_connection *conn,
 	{
 	  int e = errno;
 
-	  if (!auto_reconnect || (conn && !conn->safe_mode))
+	  if (!auto_reconnect)
 	    {
 	      mongo_wire_packet_free (p);
 	      errno = e;
 	      return FALSE;
 	    }
 
-	  if (out || !_mongo_cmd_ensure_conn (conn, force_master))
+	  if (out || !mongo_sync_reconnect (conn, force_master))
 	    {
 	      mongo_wire_packet_free (p);
 	      errno = e;
