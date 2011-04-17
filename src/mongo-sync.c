@@ -304,9 +304,9 @@ mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
 
 #define _SLAVE_FLAG(c) ((c->slaveok) ? MONGO_WIRE_FLAG_QUERY_SLAVE_OK : 0)
 
-static gboolean
-_mongo_cmd_chk_conn (mongo_sync_connection *conn,
-		     gboolean force_master)
+static inline gboolean
+_mongo_cmd_ensure_conn (mongo_sync_connection *conn,
+			gboolean force_master)
 {
   if (!conn)
     {
@@ -342,183 +342,76 @@ _mongo_cmd_chk_conn (mongo_sync_connection *conn,
   return TRUE;
 }
 
-gboolean
-mongo_sync_cmd_update (mongo_sync_connection *conn,
-		       const gchar *ns,
-		       gint32 flags, const bson *selector,
-		       const bson *update)
+static inline gboolean
+_mongo_cmd_verify_slaveok (mongo_sync_connection *conn)
 {
-  mongo_packet *p;
-  gint32 rid;
-
-  if (!_mongo_cmd_chk_conn (conn, TRUE))
-    return FALSE;
-
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-  p = mongo_wire_cmd_update (rid, ns, flags, selector, update);
-  if (!p)
-    return FALSE;
-
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
-  mongo_wire_packet_free (p);
-  return TRUE;
-}
-
-gboolean
-mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
-			 const gchar *ns, gint32 n,
-			 const bson **docs)
-{
-  mongo_packet *p;
-  gint32 rid;
-  gint32 pos = 0, c = n, i = 0;
-  gint32 size = 0;
-
   if (!conn)
     {
       errno = ENOTCONN;
       return FALSE;
     }
 
-  if (!ns || !docs)
+  if (conn->slaveok)
+    return TRUE;
+
+  errno = 0;
+  if (!mongo_sync_cmd_is_master (conn))
     {
-      errno = EINVAL;
-      return FALSE;
-    }
-  if (n <= 0)
-    {
-      errno = EINVAL;
-      return FALSE;
-    }
-
-  for (i = 0; i < n; i++)
-    {
-      if (bson_size (docs[i]) >= conn->max_insert_size)
-	{
-	  errno = EMSGSIZE;
-	  return FALSE;
-	}
-    }
-
-  if (!_mongo_cmd_chk_conn (conn, TRUE))
-    return FALSE;
-
-  do
-    {
-      i = pos;
-      c = 0;
-
-      while (i < n && size < conn->max_insert_size)
-	{
-	  size += bson_size (docs[i++]);
-	  c++;
-	}
-      size = 0;
-      if (i < n)
-	c--;
-
-      rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-      p = mongo_wire_cmd_insert_n (rid, ns, c, &docs[pos]);
-      if (!p)
+      if (errno == EPROTO)
 	return FALSE;
+      if (!mongo_sync_reconnect (conn, TRUE))
+	return FALSE;
+    }
+  return TRUE;
+}
 
+static inline gboolean
+_mongo_sync_packet_send (mongo_sync_connection *conn,
+			 mongo_packet *p,
+			 gboolean force_master,
+			 gboolean auto_reconnect)
+{
+  gboolean out = FALSE;
+
+  if (force_master)
+    if (!_mongo_cmd_ensure_conn (conn, force_master))
+      return FALSE;
+
+  for (;;)
+    {
       if (!mongo_packet_send ((mongo_connection *)conn, p))
 	{
 	  int e = errno;
 
-	  mongo_wire_packet_free (p);
-	  errno = e;
-	  return FALSE;
-	}
-      mongo_wire_packet_free (p);
-      pos += c;
-    } while (pos < n);
+	  if (!auto_reconnect)
+	    {
+	      mongo_wire_packet_free (p);
+	      errno = e;
+	      return FALSE;
+	    }
 
+	  if (out || !_mongo_cmd_ensure_conn (conn, force_master))
+	    {
+	      mongo_wire_packet_free (p);
+	      errno = e;
+	      return FALSE;
+	    }
+
+	  out = TRUE;
+	  continue;
+	}
+      break;
+    }
+  mongo_wire_packet_free (p);
   return TRUE;
 }
 
-gboolean
-mongo_sync_cmd_insert (mongo_sync_connection *conn,
-		       const char *ns, ...)
-{
-  gboolean b;
-  bson **docs, *d;
-  gint32 n = 0;
-  va_list ap;
-
-  if (!ns)
-    {
-      errno = EINVAL;
-      return FALSE;
-    }
-
-  docs = (bson **)g_try_new0 (bson *, 1);
-  if (!docs)
-    return FALSE;
-
-  va_start (ap, ns);
-  while ((d = (bson *)va_arg (ap, gpointer)))
-    {
-      if (bson_size (d) < 0)
-	{
-	  g_free (docs);
-	  errno = EINVAL;
-	  return FALSE;
-	}
-
-      docs = (bson **)g_try_realloc (docs, n + 1);
-      if (!docs)
-	return FALSE;
-      docs[n++] = d;
-    }
-  va_end (ap);
-
-  b = mongo_sync_cmd_insert_n (conn, ns, n, (const bson **)docs);
-  g_free (docs);
-  return b;
-}
-
-mongo_packet *
-mongo_sync_cmd_query (mongo_sync_connection *conn,
-		      const gchar *ns, gint32 flags,
-		      gint32 skip, gint32 ret,
-		      const bson *query, const bson *sel)
+static inline mongo_packet *
+_mongo_sync_packet_recv (mongo_sync_connection *conn, gint32 rid, gint32 flags)
 {
   mongo_packet *p;
-  gint32 rid;
-
   mongo_packet_header h;
   mongo_reply_packet_header rh;
-
-  if (!_mongo_cmd_chk_conn (conn, !((conn && conn->slaveok) ||
-				    (flags & MONGO_WIRE_FLAG_QUERY_SLAVE_OK))))
-    return FALSE;
-
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-  p = mongo_wire_cmd_query (rid, ns, flags | _SLAVE_FLAG (conn),
-			    skip, ret, query, sel);
-  if (!p)
-    return NULL;
-
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return NULL;
-    }
-  mongo_wire_packet_free (p);
 
   p = mongo_packet_recv ((mongo_connection *)conn);
   if (!p)
@@ -549,7 +442,7 @@ mongo_sync_cmd_query (mongo_sync_connection *conn,
       return NULL;
     }
 
-  if (rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL)
+  if (rh.flags & flags)
     {
       mongo_wire_packet_free (p);
       errno = EPROTO;
@@ -564,146 +457,6 @@ mongo_sync_cmd_query (mongo_sync_connection *conn,
     }
 
   return p;
-}
-
-mongo_packet *
-mongo_sync_cmd_get_more (mongo_sync_connection *conn,
-			 const gchar *ns,
-			 gint32 ret, gint64 cursor_id)
-{
-  mongo_packet *p;
-  gint32 rid;
-
-  mongo_packet_header h;
-  mongo_reply_packet_header rh;
-
-  if (!_mongo_cmd_chk_conn (conn, FALSE))
-    return FALSE;
-
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-  p = mongo_wire_cmd_get_more (rid, ns, ret, cursor_id);
-  if (!p)
-    return NULL;
-
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return NULL;
-    }
-  mongo_wire_packet_free (p);
-
-  p = mongo_packet_recv ((mongo_connection *)conn);
-  if (!p)
-    return NULL;
-
-  if (!mongo_wire_packet_get_header_raw (p, &h))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return NULL;
-    }
-
-  if (h.resp_to != rid)
-    {
-      mongo_wire_packet_free (p);
-      errno = EPROTO;
-      return NULL;
-    }
-
-  if (!mongo_wire_reply_packet_get_header (p, &rh))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return NULL;
-    }
-
-  if (rh.flags & MONGO_REPLY_FLAG_NO_CURSOR)
-    {
-      mongo_wire_packet_free (p);
-      errno = EPROTO;
-      return NULL;
-    }
-
-  return p;
-}
-
-gboolean
-mongo_sync_cmd_delete (mongo_sync_connection *conn, const gchar *ns,
-		       gint32 flags, const bson *sel)
-{
-  mongo_packet *p;
-  gint32 rid;
-
-  if (!_mongo_cmd_chk_conn (conn, TRUE))
-    return FALSE;
-
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-  p = mongo_wire_cmd_delete (rid, ns, flags, sel);
-  if (!p)
-    return FALSE;
-
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
-  mongo_wire_packet_free (p);
-  return TRUE;
-}
-
-gboolean
-mongo_sync_cmd_kill_cursors (mongo_sync_connection *conn,
-			     gint32 n, ...)
-{
-  mongo_packet *p;
-  gint32 rid;
-  va_list ap;
-
-  if (n <= 0)
-    {
-      errno = EINVAL;
-      return FALSE;
-    }
-
-  if (!_mongo_cmd_chk_conn (conn, FALSE))
-    return FALSE;
-
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-  va_start (ap, n);
-  p = mongo_wire_cmd_kill_cursors_va (rid, n, ap);
-  if (!p)
-    {
-      int e = errno;
-
-      va_end (ap);
-      errno = e;
-      return FALSE;
-    }
-  va_end (ap);
-
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return FALSE;
-    }
-  mongo_wire_packet_free (p);
-  return TRUE;
 }
 
 static gboolean
@@ -748,7 +501,8 @@ _mongo_sync_get_error (const bson *rep, gchar **error)
 	  return FALSE;
 	}
     }
-  if (bson_cursor_type (c) == BSON_TYPE_NULL)
+  if (bson_cursor_type (c) == BSON_TYPE_NONE ||
+      bson_cursor_type (c) == BSON_TYPE_NULL)
     {
       *error = NULL;
       bson_cursor_free (c);
@@ -768,80 +522,14 @@ _mongo_sync_get_error (const bson *rep, gchar **error)
 }
 
 static mongo_packet *
-_mongo_sync_cmd_custom (mongo_sync_connection *conn,
-			const gchar *db,
-			const bson *command,
-			gboolean check_conn,
-			gboolean force_master)
+_mongo_sync_packet_check_error (mongo_sync_connection *conn, mongo_packet *p,
+				gboolean check_ok)
 {
-  mongo_packet *p;
-  gint32 rid;
-
-  mongo_packet_header h;
-  mongo_reply_packet_header rh;
   bson *b;
+  gboolean error;
 
-  if (!conn)
-    {
-      errno = ENOTCONN;
-      return NULL;
-    }
-
-  if (check_conn)
-    if (!_mongo_cmd_chk_conn (conn, force_master))
-      return NULL;
-
-  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
-
-  p = mongo_wire_cmd_custom (rid, db, _SLAVE_FLAG (conn), command);
   if (!p)
     return NULL;
-
-  if (!mongo_packet_send ((mongo_connection *)conn, p))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return NULL;
-    }
-  mongo_wire_packet_free (p);
-
-  p = mongo_packet_recv ((mongo_connection *)conn);
-  if (!p)
-    return NULL;
-
-  if (!mongo_wire_packet_get_header_raw (p, &h))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return NULL;
-    }
-
-  if (h.resp_to != rid)
-    {
-      mongo_wire_packet_free (p);
-      errno = EPROTO;
-      return NULL;
-    }
-
-  if (!mongo_wire_reply_packet_get_header (p, &rh))
-    {
-      int e = errno;
-
-      mongo_wire_packet_free (p);
-      errno = e;
-      return NULL;
-    }
-
-  if (rh.flags & MONGO_REPLY_FLAG_QUERY_FAIL)
-    {
-      mongo_wire_packet_free (p);
-      errno = ENOENT;
-      return NULL;
-    }
 
   if (!mongo_wire_reply_packet_get_nth_document (p, 1, &b))
     {
@@ -851,21 +539,294 @@ _mongo_sync_cmd_custom (mongo_sync_connection *conn,
     }
   bson_finish (b);
 
-  if (!_mongo_sync_check_ok (b))
+  if (check_ok)
+    {
+      if (!_mongo_sync_check_ok (b))
+	{
+	  int e = errno;
+
+	  g_free (conn->last_error);
+	  conn->last_error = NULL;
+	  _mongo_sync_get_error (b, &conn->last_error);
+	  bson_free (b);
+	  mongo_wire_packet_free (p);
+	  errno = e;
+	  return NULL;
+	}
+      bson_free (b);
+      return p;
+    }
+
+  g_free (conn->last_error);
+  conn->last_error = NULL;
+  error = _mongo_sync_get_error (b, &conn->last_error);
+  bson_free (b);
+
+  if (error)
+    {
+      mongo_wire_packet_free (p);
+      return NULL;
+    }
+  return p;
+}
+
+gboolean
+mongo_sync_cmd_update (mongo_sync_connection *conn,
+		       const gchar *ns,
+		       gint32 flags, const bson *selector,
+		       const bson *update)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+  p = mongo_wire_cmd_update (rid, ns, flags, selector, update);
+  if (!p)
+    return FALSE;
+
+  return _mongo_sync_packet_send (conn, p, TRUE, TRUE);
+}
+
+gboolean
+mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
+			 const gchar *ns, gint32 n,
+			 const bson **docs)
+{
+  mongo_packet *p;
+  gint32 rid;
+  gint32 pos = 0, c = n, i = 0;
+  gint32 size = 0;
+
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  if (!ns || !docs)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+  if (n <= 0)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  for (i = 0; i < n; i++)
+    {
+      if (bson_size (docs[i]) >= conn->max_insert_size)
+	{
+	  errno = EMSGSIZE;
+	  return FALSE;
+	}
+    }
+
+  do
+    {
+      i = pos;
+      c = 0;
+
+      while (i < n && size < conn->max_insert_size)
+	{
+	  size += bson_size (docs[i++]);
+	  c++;
+	}
+      size = 0;
+      if (i < n)
+	c--;
+
+      rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+      p = mongo_wire_cmd_insert_n (rid, ns, c, &docs[pos]);
+      if (!p)
+	return FALSE;
+
+      if (!_mongo_sync_packet_send (conn, p, TRUE, TRUE))
+	return FALSE;
+
+      pos += c;
+    } while (pos < n);
+
+  return TRUE;
+}
+
+gboolean
+mongo_sync_cmd_insert (mongo_sync_connection *conn,
+		       const char *ns, ...)
+{
+  gboolean b;
+  bson **docs, *d;
+  gint32 n = 0;
+  va_list ap;
+
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  if (!ns)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  docs = (bson **)g_try_new0 (bson *, 1);
+  if (!docs)
+    return FALSE;
+
+  va_start (ap, ns);
+  while ((d = (bson *)va_arg (ap, gpointer)))
+    {
+      if (bson_size (d) < 0)
+	{
+	  g_free (docs);
+	  errno = EINVAL;
+	  return FALSE;
+	}
+
+      docs = (bson **)g_try_realloc (docs, n + 1);
+      if (!docs)
+	return FALSE;
+      docs[n++] = d;
+    }
+  va_end (ap);
+
+  b = mongo_sync_cmd_insert_n (conn, ns, n, (const bson **)docs);
+  g_free (docs);
+  return b;
+}
+
+mongo_packet *
+mongo_sync_cmd_query (mongo_sync_connection *conn,
+		      const gchar *ns, gint32 flags,
+		      gint32 skip, gint32 ret,
+		      const bson *query, const bson *sel)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  if (!_mongo_cmd_verify_slaveok (conn))
+    return FALSE;
+
+  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+  p = mongo_wire_cmd_query (rid, ns, flags | _SLAVE_FLAG (conn),
+			    skip, ret, query, sel);
+  if (!p)
+    return NULL;
+
+  if (!_mongo_sync_packet_send (conn, p,
+				!((conn && conn->slaveok) ||
+				  (flags & MONGO_WIRE_FLAG_QUERY_SLAVE_OK)),
+				TRUE))
+    return NULL;
+
+  p = _mongo_sync_packet_recv (conn, rid, MONGO_REPLY_FLAG_QUERY_FAIL);
+  return _mongo_sync_packet_check_error (conn, p, FALSE);
+}
+
+mongo_packet *
+mongo_sync_cmd_get_more (mongo_sync_connection *conn,
+			 const gchar *ns,
+			 gint32 ret, gint64 cursor_id)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  if (!_mongo_cmd_verify_slaveok (conn))
+    return FALSE;
+
+  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+  p = mongo_wire_cmd_get_more (rid, ns, ret, cursor_id);
+  if (!p)
+    return NULL;
+
+  if (!_mongo_sync_packet_send (conn, p, FALSE, TRUE))
+    return FALSE;
+
+  p = _mongo_sync_packet_recv (conn, rid, MONGO_REPLY_FLAG_NO_CURSOR);
+  return _mongo_sync_packet_check_error (conn, p, FALSE);
+}
+
+gboolean
+mongo_sync_cmd_delete (mongo_sync_connection *conn, const gchar *ns,
+		       gint32 flags, const bson *sel)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+  p = mongo_wire_cmd_delete (rid, ns, flags, sel);
+  if (!p)
+    return FALSE;
+
+  return _mongo_sync_packet_send (conn, p, TRUE, TRUE);
+}
+
+gboolean
+mongo_sync_cmd_kill_cursors (mongo_sync_connection *conn,
+			     gint32 n, ...)
+{
+  mongo_packet *p;
+  gint32 rid;
+  va_list ap;
+
+  if (n <= 0)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+  va_start (ap, n);
+  p = mongo_wire_cmd_kill_cursors_va (rid, n, ap);
+  if (!p)
     {
       int e = errno;
 
-      g_free (conn->last_error);
-      conn->last_error = NULL;
-      _mongo_sync_get_error (b, &conn->last_error);
-      bson_free (b);
-      mongo_wire_packet_free (p);
+      va_end (ap);
       errno = e;
+      return FALSE;
+    }
+  va_end (ap);
+
+  return _mongo_sync_packet_send (conn, p, FALSE, TRUE);
+}
+
+static mongo_packet *
+_mongo_sync_cmd_custom (mongo_sync_connection *conn,
+			const gchar *db,
+			const bson *command,
+			gboolean check_conn,
+			gboolean force_master)
+{
+  mongo_packet *p;
+  gint32 rid;
+
+  if (!conn)
+    {
+      errno = ENOTCONN;
       return NULL;
     }
-  bson_free (b);
 
-  return p;
+  rid = mongo_connection_get_requestid ((mongo_connection *)conn) + 1;
+
+  p = mongo_wire_cmd_custom (rid, db, _SLAVE_FLAG (conn), command);
+  if (!p)
+    return NULL;
+
+  if (!_mongo_sync_packet_send (conn, p, force_master, check_conn))
+    return NULL;
+
+  p = _mongo_sync_packet_recv (conn, rid, MONGO_REPLY_FLAG_QUERY_FAIL);
+  return _mongo_sync_packet_check_error (conn, p, TRUE);
 }
 
 mongo_packet *
@@ -1032,18 +993,10 @@ mongo_sync_cmd_reset_error (mongo_sync_connection *conn,
   mongo_packet *p;
   bson *cmd;
 
-  if (!_mongo_cmd_chk_conn (conn, FALSE))
+  if (conn)
     {
-      int e = errno;
-
-      if (conn)
-	{
-	  g_free (conn->last_error);
-	  conn->last_error = NULL;
-	}
-
-      errno = e;
-      return FALSE;
+      g_free (conn->last_error);
+      conn->last_error = NULL;
     }
 
   cmd = bson_new_sized (32);
@@ -1242,9 +1195,6 @@ mongo_sync_cmd_user_add (mongo_sync_connection *conn,
       return FALSE;
     }
 
-  if (!_mongo_cmd_chk_conn (conn, TRUE))
-    return FALSE;
-
   userns = g_strconcat (db, ".system.users", NULL);
   if (!userns)
     return FALSE;
@@ -1291,9 +1241,6 @@ mongo_sync_cmd_user_remove (mongo_sync_connection *conn,
       errno = EINVAL;
       return FALSE;
     }
-
-  if (!_mongo_cmd_chk_conn (conn, TRUE))
-    return FALSE;
 
   userns = g_strconcat (db, ".system.users", NULL);
   if (!userns)
