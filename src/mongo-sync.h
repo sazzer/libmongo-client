@@ -67,6 +67,20 @@ mongo_sync_connection *mongo_sync_connect (const char *host,
 					   int port,
 					   gboolean slaveok);
 
+/** Add a seed to an existing MongoDB connection.
+ *
+ * The seed list will be used for reconnects, prioritized before the
+ * automatically discovered host list.
+ *
+ * @param conn is the connection to add a seed to.
+ * @param host is the seed host to add.
+ * @param port is the seed's port.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_conn_seed_add (mongo_sync_connection *conn,
+				   const gchar *host, gint port);
+
 /** Attempt to connect to another member of a replica set.
  *
  * Given an existing connection, this function will try to connect to

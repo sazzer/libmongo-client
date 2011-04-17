@@ -51,6 +51,26 @@ mongo_sync_connect (const gchar *host, int port,
   return s;
 }
 
+gboolean
+mongo_sync_conn_seed_add (mongo_sync_connection *conn,
+			  const gchar *host, gint port)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+  if (!host || port < 0)
+    {
+      errno = EINVAL;
+      return FALSE;
+    }
+
+  conn->rs.seeds = g_list_append (conn->rs.seeds,
+				  g_strdup_printf ("%s:%d", host, port));
+  return TRUE;
+}
+
 static void
 _mongo_sync_connect_replace (mongo_sync_connection *old,
 			     mongo_sync_connection *new)

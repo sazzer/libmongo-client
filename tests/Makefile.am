@@ -89,6 +89,7 @@ mongo_client_unit_tests	= \
 
 mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_connect \
+		unit/mongo/sync/sync_conn_seed_add \
 		unit/mongo/sync/sync_reconnect \
 		unit/mongo/sync/sync_disconnect \
 		unit/mongo/sync/sync_get_set_slaveok \
