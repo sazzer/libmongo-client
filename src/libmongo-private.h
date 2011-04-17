@@ -34,6 +34,7 @@ struct _mongo_sync_connection
   mongo_connection super; /**< The parent object. */
   gboolean slaveok; /**< Whether queries against slave nodes are
 		       acceptable. */
+  gboolean safe_mode; /**< Safe-mode signal flag. */
 
   /** Replica Set properties. */
   struct

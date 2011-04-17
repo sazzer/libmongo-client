@@ -42,6 +42,7 @@ mongo_sync_connect (const gchar *host, int port,
     return NULL;
 
   s->slaveok = slaveok;
+  s->safe_mode = FALSE;
   s->rs.seeds = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.hosts = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.primary = NULL;
@@ -275,6 +276,34 @@ mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
 }
 
 gboolean
+mongo_sync_conn_get_safe_mode (const mongo_sync_connection *conn)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  errno = 0;
+  return conn->safe_mode;
+}
+
+gboolean
+mongo_sync_conn_set_safe_mode (mongo_sync_connection *conn,
+			       gboolean safe_mode)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  errno = 0;
+  conn->safe_mode = safe_mode;
+  return TRUE;
+}
+
+gboolean
 mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn)
 {
   if (!conn)
@@ -351,7 +380,7 @@ _mongo_cmd_verify_slaveok (mongo_sync_connection *conn)
       return FALSE;
     }
 
-  if (conn->slaveok)
+  if (conn->slaveok || !conn->safe_mode)
     return TRUE;
 
   errno = 0;
@@ -390,7 +419,7 @@ _mongo_sync_packet_send (mongo_sync_connection *conn,
 	      return FALSE;
 	    }
 
-	  if (out || !_mongo_cmd_ensure_conn (conn, force_master))
+	  if (out || !mongo_sync_reconnect (conn, force_master))
 	    {
 	      mongo_wire_packet_free (p);
 	      errno = e;
@@ -570,6 +599,32 @@ _mongo_sync_packet_check_error (mongo_sync_connection *conn, mongo_packet *p,
   return p;
 }
 
+static inline gboolean
+_mongo_sync_cmd_verify_result (mongo_sync_connection *conn,
+			       const gchar *ns)
+{
+  gchar *error, *db, *tmp;
+  gboolean res;
+
+  if (!conn || !ns)
+    return FALSE;
+  if (!conn->safe_mode)
+    return TRUE;
+
+  tmp = g_strstr_len (ns, -1, ".");
+  if (tmp)
+    db = g_strndup (ns, tmp - ns);
+  else
+    db = g_strdup (ns);
+
+  mongo_sync_cmd_get_last_error (conn, db, &error);
+  g_free (db);
+  res = (error) ? FALSE : TRUE;
+  g_free (error);
+
+  return res;
+}
+
 gboolean
 mongo_sync_cmd_update (mongo_sync_connection *conn,
 		       const gchar *ns,
@@ -585,7 +640,10 @@ mongo_sync_cmd_update (mongo_sync_connection *conn,
   if (!p)
     return FALSE;
 
-  return _mongo_sync_packet_send (conn, p, TRUE, TRUE);
+  if (!_mongo_sync_packet_send (conn, p, TRUE, TRUE))
+    return FALSE;
+
+  return _mongo_sync_cmd_verify_result (conn, ns);
 }
 
 gboolean
@@ -645,6 +703,9 @@ mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
 	return FALSE;
 
       if (!_mongo_sync_packet_send (conn, p, TRUE, TRUE))
+	return FALSE;
+
+      if (!_mongo_sync_cmd_verify_result (conn, ns))
 	return FALSE;
 
       pos += c;
