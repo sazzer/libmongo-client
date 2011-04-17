@@ -117,7 +117,7 @@ test_make_fake_sync_conn (gint fd, gboolean slaveok)
 
   c->super.fd = fd;
   c->slaveok = slaveok;
-  c->safe_mode = TRUE;
+  c->safe_mode = FALSE;
   c->max_insert_size = MONGO_SYNC_DEFAULT_MAX_INSERT_SIZE;
 
   return c;

@@ -42,7 +42,7 @@ mongo_sync_connect (const gchar *host, int port,
     return NULL;
 
   s->slaveok = slaveok;
-  s->safe_mode = TRUE;
+  s->safe_mode = FALSE;
   s->rs.seeds = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.hosts = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.primary = NULL;
