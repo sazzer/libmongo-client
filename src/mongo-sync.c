@@ -602,6 +602,32 @@ _mongo_sync_packet_check_error (mongo_sync_connection *conn, mongo_packet *p,
   return p;
 }
 
+static inline gboolean
+_mongo_sync_cmd_verify_result (mongo_sync_connection *conn,
+			       const gchar *ns)
+{
+  gchar *error, *db, *tmp;
+  gboolean res;
+
+  if (!conn || !ns)
+    return FALSE;
+  if (!conn->safe_mode)
+    return TRUE;
+
+  tmp = g_strstr_len (ns, -1, ".");
+  if (tmp)
+    db = g_strndup (ns, tmp - ns);
+  else
+    db = g_strdup (ns);
+
+  mongo_sync_cmd_get_last_error (conn, db, &error);
+  g_free (db);
+  res = (error) ? FALSE : TRUE;
+  g_free (error);
+
+  return res;
+}
+
 gboolean
 mongo_sync_cmd_update (mongo_sync_connection *conn,
 		       const gchar *ns,
@@ -617,7 +643,10 @@ mongo_sync_cmd_update (mongo_sync_connection *conn,
   if (!p)
     return FALSE;
 
-  return _mongo_sync_packet_send (conn, p, TRUE, TRUE);
+  if (!_mongo_sync_packet_send (conn, p, TRUE, TRUE))
+    return FALSE;
+
+  return _mongo_sync_cmd_verify_result (conn, ns);
 }
 
 gboolean
@@ -677,6 +706,9 @@ mongo_sync_cmd_insert_n (mongo_sync_connection *conn,
 	return FALSE;
 
       if (!_mongo_sync_packet_send (conn, p, TRUE, TRUE))
+	return FALSE;
+
+      if (!_mongo_sync_cmd_verify_result (conn, ns))
 	return FALSE;
 
       pos += c;

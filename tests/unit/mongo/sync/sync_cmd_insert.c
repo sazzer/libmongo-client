@@ -29,7 +29,9 @@ test_mongo_sync_cmd_insert (void)
 
   begin_network_tests (4);
 
-  b1 = test_bson_generate_full ();
+  b1 = bson_new ();
+  bson_append_string (b1, "sync_cmd_insert", "works", -1);
+  bson_finish (b1);
   b2 = bson_new ();
   bson_append_int32 (b2, "int32", 1984);
   bson_finish (b2);
