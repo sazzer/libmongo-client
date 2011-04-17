@@ -415,7 +415,7 @@ _mongo_sync_packet_send (mongo_sync_connection *conn,
 	{
 	  int e = errno;
 
-	  if (!auto_reconnect || !conn->safe_mode)
+	  if (!auto_reconnect || (conn && !conn->safe_mode))
 	    {
 	      mongo_wire_packet_free (p);
 	      errno = e;
