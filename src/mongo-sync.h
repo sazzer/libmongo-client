@@ -118,9 +118,11 @@ gboolean mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn);
  *
  * @param conn is the connection to set the flag on.
  * @param slaveok is the state to set.
+ *
+ * @returns TRUE on sucess, FALSE otherwise.
  */
-void mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
-				  gboolean slaveok);
+gboolean mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
+				      gboolean slaveok);
 
 /* Get the maximum size of a bulk insert package.
  *
@@ -140,9 +142,10 @@ gint32 mongo_sync_conn_get_max_insert_size (mongo_sync_connection *conn);
  * @param conn is the connection to set the maximum size for.
  * @param max_size is the maximum size, in bytes.
  *
+ * @returns TRUE on success, FALSE otherwise.
  */
-void mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
-					  gint32 max_size);
+gboolean mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
+					      gint32 max_size);
 
 /** Send an update command to MongoDB.
  *

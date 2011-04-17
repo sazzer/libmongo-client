@@ -254,23 +254,24 @@ mongo_sync_conn_get_max_insert_size (mongo_sync_connection *conn)
   return conn->max_insert_size;
 }
 
-void
+gboolean
 mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
 				     gint32 max_size)
 {
   if (!conn)
     {
       errno = ENOTCONN;
-      return;
+      return FALSE;
     }
   if (max_size <= 0)
     {
       errno = ERANGE;
-      return;
+      return FALSE;
     }
 
   errno = 0;
   conn->max_insert_size = max_size;
+  return TRUE;
 }
 
 gboolean
@@ -286,18 +287,19 @@ mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn)
   return conn->slaveok;
 }
 
-void
+gboolean
 mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
 			     gboolean slaveok)
 {
   if (!conn)
     {
       errno = ENOTCONN;
-      return;
+      return FALSE;
     }
 
   errno = 0;
   conn->slaveok = slaveok;
+  return TRUE;
 }
 
 #define _SLAVE_FLAG(c) ((c->slaveok) ? MONGO_WIRE_FLAG_QUERY_SLAVE_OK : 0)
