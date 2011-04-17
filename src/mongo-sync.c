@@ -42,6 +42,7 @@ mongo_sync_connect (const gchar *host, int port,
     return NULL;
 
   s->slaveok = slaveok;
+  s->rs.seeds = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.hosts = NULL;
   s->rs.primary = NULL;
   s->last_error = NULL;
@@ -83,6 +84,12 @@ _mongo_sync_connect_replace (mongo_sync_connection *old,
   /* Free the replicaset struct in the new connection. These aren't
      copied, in order to avoid infinite loops. */
   l = new->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+  l = new->rs.seeds;
   while (l)
     {
       g_free (l->data);
@@ -189,6 +196,14 @@ mongo_sync_disconnect (mongo_sync_connection *conn)
 
   /* Delete the host list. */
   l = conn->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+
+  /* Delete the seed list. */
+  l = conn->rs.seeds;
   while (l)
     {
       g_free (l->data);
