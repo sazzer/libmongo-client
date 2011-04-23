@@ -293,9 +293,9 @@ mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...) GNUC_SENTI
  * @param n is the number of documents to insert.
  * @param docs is the array containing the bson documents to insert.
  *
- * @returnsA newly allocated packet, or NULL on error. It is the
+ * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
- * anymore. 
+ * anymore.
  */
 mongo_packet *mongo_wire_cmd_insert_n (gint32 id, const gchar *ns, gint32 n,
 				       const bson **docs);

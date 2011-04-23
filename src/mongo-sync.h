@@ -142,6 +142,7 @@ gboolean mongo_sync_conn_get_safe_mode (const mongo_sync_connection *conn);
  * expense of network traffic and speed.
  *
  * @param conn is the connection to set the flag on.
+ * @param safe_mode is the state to set it to.
  *
  * @returns TRUE on success, FALSE otherwise.
  */
@@ -166,12 +167,15 @@ gboolean mongo_sync_conn_get_auto_reconnect (const mongo_sync_connection *conn);
  * happen if the error is detected before a command is sent towards
  * the database.
  *
+ * @param conn is the connection to set auto-reconnect on.
+ * @param auto_reconnect is the state to set it to.
+ *
  * @returns TRUE on success, FALSE otherwise.
  */
 gboolean mongo_sync_conn_set_auto_reconnect (mongo_sync_connection *conn,
 					     gboolean auto_reconnect);
 
-/* Get the maximum size of a bulk insert package.
+/** Get the maximum size of a bulk insert package.
  *
  * @param conn is the connection to get the maximum size from.
  *
