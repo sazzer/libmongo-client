@@ -45,7 +45,7 @@ mongo_sync_connect (const gchar *host, int port,
   s->safe_mode = FALSE;
   s->auto_reconnect = TRUE;
   s->rs.seeds = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
-  s->rs.hosts = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
+  s->rs.hosts = NULL;
   s->rs.primary = NULL;
   s->last_error = NULL;
   s->max_insert_size = MONGO_SYNC_DEFAULT_MAX_INSERT_SIZE;
