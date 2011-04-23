@@ -35,6 +35,7 @@ struct _mongo_sync_connection
   gboolean slaveok; /**< Whether queries against slave nodes are
 		       acceptable. */
   gboolean safe_mode; /**< Safe-mode signal flag. */
+  gboolean auto_reconnect; /**< Auto-reconnect flag. */
 
   /** Replica Set properties. */
   struct

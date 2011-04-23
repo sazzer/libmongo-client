@@ -42,6 +42,7 @@ test_mongo_sync_cmd_custom_net (void)
 
   conn = mongo_sync_connect (config.primary_host, config.primary_port, TRUE);
   mongo_sync_cmd_is_master (conn);
+  mongo_sync_conn_set_auto_reconnect (conn, TRUE);
 
   cmd = bson_build (BSON_TYPE_INT32, "getnonce", 1,
 		    BSON_TYPE_NONE);

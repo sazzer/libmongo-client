@@ -43,8 +43,9 @@ mongo_sync_connect (const gchar *host, int port,
 
   s->slaveok = slaveok;
   s->safe_mode = FALSE;
+  s->auto_reconnect = FALSE;
   s->rs.seeds = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
-  s->rs.hosts = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
+  s->rs.hosts = NULL;
   s->rs.primary = NULL;
   s->last_error = NULL;
   s->max_insert_size = MONGO_SYNC_DEFAULT_MAX_INSERT_SIZE;
@@ -304,6 +305,33 @@ mongo_sync_conn_set_safe_mode (mongo_sync_connection *conn,
 }
 
 gboolean
+mongo_sync_conn_get_auto_reconnect (const mongo_sync_connection *conn)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  errno = 0;
+  return conn->auto_reconnect;
+}
+
+gboolean
+mongo_sync_conn_set_auto_reconnect (mongo_sync_connection *conn,
+				    gboolean auto_reconnect)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  conn->auto_reconnect = auto_reconnect;
+  return TRUE;
+}
+
+gboolean
 mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn)
 {
   if (!conn)
@@ -350,6 +378,11 @@ _mongo_cmd_ensure_conn (mongo_sync_connection *conn,
 	{
 	  if (errno == EPROTO)
 	    return FALSE;
+	  if (!conn->auto_reconnect)
+	    {
+	      errno = ENOTCONN;
+	      return FALSE;
+	    }
 	  if (!mongo_sync_reconnect (conn, TRUE))
 	    return FALSE;
 	}
@@ -361,6 +394,11 @@ _mongo_cmd_ensure_conn (mongo_sync_connection *conn,
     {
       if (errno == EPROTO)
 	return FALSE;
+      if (!conn->auto_reconnect)
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
       if (!mongo_sync_reconnect (conn, FALSE))
 	{
 	  errno = ENOTCONN;
@@ -388,6 +426,11 @@ _mongo_cmd_verify_slaveok (mongo_sync_connection *conn)
     {
       if (errno == EPROTO)
 	return FALSE;
+      if (!conn->auto_reconnect)
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
       if (!mongo_sync_reconnect (conn, TRUE))
 	return FALSE;
     }
@@ -412,7 +455,7 @@ _mongo_sync_packet_send (mongo_sync_connection *conn,
 	{
 	  int e = errno;
 
-	  if (!auto_reconnect)
+	  if (!auto_reconnect || (conn && !conn->auto_reconnect))
 	    {
 	      mongo_wire_packet_free (p);
 	      errno = e;

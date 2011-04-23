@@ -17,6 +17,7 @@ test_mongo_sync_cmd_user_add_net_secondary (void)
 	"Secondary server not configured");
 
   c = mongo_sync_connect (config.secondary_host, config.secondary_port, TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
 
   ret = mongo_sync_cmd_user_add (c, config.db, "test", "s3kr1+");
   ok (ret && mongo_sync_cmd_is_master (c),
@@ -35,6 +36,7 @@ test_mongo_sync_cmd_user_add_net (void)
   begin_network_tests (3);
 
   c = mongo_sync_connect (config.primary_host, config.primary_port, TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
 
   ok (mongo_sync_cmd_user_add (c, config.db, "test", "s3kr1+") == TRUE,
       "mongo_sync_cmd_user_add() works");

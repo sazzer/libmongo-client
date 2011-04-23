@@ -38,6 +38,7 @@ test_mongo_sync_cmd_insert (void)
 
   c = mongo_sync_connect (config.primary_host, config.primary_port,
 			  TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
 
   ok (mongo_sync_cmd_insert (c, config.ns, b1, b2, NULL) == TRUE,
       "mongo_sync_cmd_insert() works");
@@ -57,6 +58,8 @@ test_mongo_sync_cmd_insert (void)
 
   c = mongo_sync_connect (config.secondary_host, config.secondary_port,
 			  TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
+
   ok (c && mongo_sync_cmd_is_master (c) == FALSE,
       "Connected to a secondary");
 

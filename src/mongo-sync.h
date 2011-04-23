@@ -148,6 +148,29 @@ gboolean mongo_sync_conn_get_safe_mode (const mongo_sync_connection *conn);
 gboolean mongo_sync_conn_set_safe_mode (mongo_sync_connection *conn,
 					gboolean safe_mode);
 
+/** Get the state of the auto-reconnect flag from a sync connection.
+ *
+ * @param conn is the connection to check the flag on.
+ *
+ * @returns The state of the auto-reconnect flag.
+ */
+gboolean mongo_sync_conn_get_auto_reconnect (const mongo_sync_connection *conn);
+
+/** Set the state of the auto-reconnect flag on a sync connection.
+ *
+ * When auto-reconnect is enabled, the library will automatically
+ * attempt to reconnect to a server behind the scenes, when it detects
+ * an error.
+ *
+ * If safe-mode is turned on aswell, then auto-reconnect will only
+ * happen if the error is detected before a command is sent towards
+ * the database.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_conn_set_auto_reconnect (mongo_sync_connection *conn,
+					     gboolean auto_reconnect);
+
 /* Get the maximum size of a bulk insert package.
  *
  * @param conn is the connection to get the maximum size from.
