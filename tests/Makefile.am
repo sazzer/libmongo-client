@@ -117,7 +117,8 @@ mongo_sync_unit_tests	= \
 mongo_sync_func_tests	= \
 		func/mongo/sync/f_sync_max_insert_size \
 		func/mongo/sync/f_sync_conn_seed_add \
-		func/mongo/sync/f_sync_safe_mode
+		func/mongo/sync/f_sync_safe_mode \
+		func/mongo/sync/f_sync_auto_reconnect
 
 mongo_sync_pool_unit_tests	= \
 		unit/mongo/sync-pool/sync_pool_new \
