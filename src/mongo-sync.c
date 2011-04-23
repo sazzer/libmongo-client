@@ -378,6 +378,11 @@ _mongo_cmd_ensure_conn (mongo_sync_connection *conn,
 	{
 	  if (errno == EPROTO)
 	    return FALSE;
+	  if (!conn->auto_reconnect)
+	    {
+	      errno = ENOTCONN;
+	      return FALSE;
+	    }
 	  if (!mongo_sync_reconnect (conn, TRUE))
 	    return FALSE;
 	}
@@ -389,6 +394,11 @@ _mongo_cmd_ensure_conn (mongo_sync_connection *conn,
     {
       if (errno == EPROTO)
 	return FALSE;
+      if (!conn->auto_reconnect)
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
       if (!mongo_sync_reconnect (conn, FALSE))
 	{
 	  errno = ENOTCONN;
@@ -416,6 +426,11 @@ _mongo_cmd_verify_slaveok (mongo_sync_connection *conn)
     {
       if (errno == EPROTO)
 	return FALSE;
+      if (!conn->auto_reconnect)
+	{
+	  errno = ENOTCONN;
+	  return FALSE;
+	}
       if (!mongo_sync_reconnect (conn, TRUE))
 	return FALSE;
     }
@@ -440,7 +455,7 @@ _mongo_sync_packet_send (mongo_sync_connection *conn,
 	{
 	  int e = errno;
 
-	  if (!auto_reconnect)
+	  if (!auto_reconnect || (conn && !conn->auto_reconnect))
 	    {
 	      mongo_wire_packet_free (p);
 	      errno = e;
