@@ -17,20 +17,20 @@ test_mongo_sync_get_set_auto_reconnect (void)
   cmp_ok (errno, "==", ENOTCONN,
 	  "errno is now set to ENOTCONN");
 
-  ok (mongo_sync_conn_get_auto_reconnect (c) == TRUE,
+  ok (mongo_sync_conn_get_auto_reconnect (c) == FALSE,
       "mongo_sync_get_auto_reconnect() works");
   cmp_ok (errno, "==", 0,
 	  "errno is now cleared");
 
   errno = 0;
-  mongo_sync_conn_set_auto_reconnect (NULL, FALSE);
+  mongo_sync_conn_set_auto_reconnect (NULL, TRUE);
   cmp_ok (errno, "==", ENOTCONN,
 	  "errno is set to ENOTCONN after "
 	  "mongo_sync_conn_set_auto_reconnect(NULL)");
 
-  ok (mongo_sync_conn_set_auto_reconnect (c, FALSE),
+  ok (mongo_sync_conn_set_auto_reconnect (c, TRUE),
       "mongo_sync_auto_reconnect() works");
-  ok (mongo_sync_conn_get_auto_reconnect (c) == FALSE,
+  ok (mongo_sync_conn_get_auto_reconnect (c) == TRUE,
       "mongo_sync_set_auto_reconnect() worked");
 
   mongo_sync_disconnect (c);
