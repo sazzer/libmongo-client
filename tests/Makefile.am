@@ -92,6 +92,7 @@ mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_conn_seed_add \
 		unit/mongo/sync/sync_reconnect \
 		unit/mongo/sync/sync_disconnect \
+		unit/mongo/sync/sync_get_set_auto_reconnect \
 		unit/mongo/sync/sync_get_set_safe_mode \
 		unit/mongo/sync/sync_get_set_slaveok \
 		unit/mongo/sync/sync_get_set_max_insert_size \

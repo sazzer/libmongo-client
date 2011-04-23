@@ -43,6 +43,7 @@ mongo_sync_connect (const gchar *host, int port,
 
   s->slaveok = slaveok;
   s->safe_mode = FALSE;
+  s->auto_reconnect = TRUE;
   s->rs.seeds = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.hosts = g_list_append (NULL, g_strdup_printf ("%s:%d", host, port));
   s->rs.primary = NULL;
@@ -300,6 +301,33 @@ mongo_sync_conn_set_safe_mode (mongo_sync_connection *conn,
 
   errno = 0;
   conn->safe_mode = safe_mode;
+  return TRUE;
+}
+
+gboolean
+mongo_sync_conn_get_auto_reconnect (const mongo_sync_connection *conn)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  errno = 0;
+  return conn->auto_reconnect;
+}
+
+gboolean
+mongo_sync_conn_set_auto_reconnect (mongo_sync_connection *conn,
+				    gboolean auto_reconnect)
+{
+  if (!conn)
+    {
+      errno = ENOTCONN;
+      return FALSE;
+    }
+
+  conn->auto_reconnect = auto_reconnect;
   return TRUE;
 }
 
