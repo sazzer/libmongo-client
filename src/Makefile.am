@@ -24,3 +24,20 @@ libmongo_client_include_HEADERS = \
 
 pkgconfigdir            = $(libdir)/pkgconfig
 pkgconfig_DATA          = libmongo-client.pc
+
+CLEANFILES		= coverage *.gcda *.gcno *.gcov
+
+coverage:
+	$(AM_V_GEN)
+	rm -f "coverage"
+	@for src in $(SOURCES); do \
+		case "$$src" in \
+			*.c) \
+				obj=`echo $$src | sed 's|\.c|.o|'`; \
+				cov="$$src.gcov"; \
+				gcov $(srcdir)/$$src -o $(builddir)/libmongo_client_la-$$obj >>coverage; \
+				;;\
+		esac \
+	done
+
+.PHONY: coverage
