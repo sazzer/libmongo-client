@@ -1,3 +1,37 @@
+* 0.0.2 - UNRELEASED
+
+** Replica set seeding support
+It is now possible to add seeds to a connection, so that the library
+can try connecting to those in case automatic discovery fails (or if
+the seeds are hidden).
+
+** Failover redesign
+Instead of preemptively pinging & checking for a master before each
+and every command, the library does so only upon errors. This way,
+when everything's working as expected, there is no extra
+overhead. Yet, if things go wrong, failover will still work.
+
+By design, automatic failover only occurs when an error is detected
+during a write operation. When an error occurs during read, it will be
+propagated back to the application.
+
+Automatic failover is disabled by default, and can be turned on via
+the mongo_sync_conn_set_auto_reconnect() function.
+
+** safe-mode support
+With safe mode enabled, extra care will be taken to ensure that data
+gets to the server, and that the library does everything within its
+power to maintain a connection.
+
+This means that after insert and update operations, the library will
+issue a getLastError command, and only return successfully if that
+command did not signal an error.
+
+Safe-mode also enables the previously default preemptive connection
+checks (along with the post-mortem failover).
+
+Safe-mode is off by default.
+
 * 0.0.1 - 2011-04-10
 
 Initial public release.
