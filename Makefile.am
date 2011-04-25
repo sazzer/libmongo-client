@@ -1,7 +1,7 @@
-SUBDIRS = src tests examples
+SUBDIRS		= src tests examples
 
-ACLOCAL_AMFLAGS = -I m4 --install
-EXTRA_DIST = NEWS
+ACLOCAL_AMFLAGS	= -I m4 --install
+EXTRA_DIST	= NEWS
 
 coverage:
 	@echo "Making $@ in src"
