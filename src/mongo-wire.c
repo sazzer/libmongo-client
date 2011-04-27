@@ -348,7 +348,7 @@ mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...)
 	  return NULL;
 	}
 
-      docs = (bson **)g_try_realloc (docs, n + 1);
+      docs = (bson **)g_try_renew (bson *, docs, n + 1);
       if (!docs)
 	return NULL;
       docs[n++] = d;

@@ -792,7 +792,7 @@ mongo_sync_cmd_insert (mongo_sync_connection *conn,
 	  return FALSE;
 	}
 
-      docs = (bson **)g_try_realloc (docs, n + 1);
+      docs = (bson **)g_try_renew (bson *, docs, n + 1);
       if (!docs)
 	return FALSE;
       docs[n++] = d;
