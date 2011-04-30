@@ -136,7 +136,8 @@ FUNC_TESTS	= ${bson_func_tests} ${mongo_sync_func_tests} \
 		${mongo_sync_pool_func_tests}
 TESTCASES	= ${UNIT_TESTS} ${FUNC_TESTS}
 
-check_PROGRAMS = ${TESTCASES}
+check_PROGRAMS	= ${TESTCASES}
+noinst_PROGRAMS= test_cleanup
 
 AM_CFLAGS = -I$(top_srcdir)/src/ -I${top_srcdir}/tests/libtap/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la ${top_builddir}/tests/libtap/libtap.la @GLIB_LIBS@
@@ -146,7 +147,8 @@ EXTRA_DIST = README
 check:
 	@${MAKE} ${AM_MAKEFLAGS} check-HARNESS
 
-check-HARNESS: ${TESTS}
+check-HARNESS: ${TESTS} ${noinst_PROGRAMS}
 	$(AM_V_GEN)srcdir=${srcdir} prove -e "${PROVE_ENV}" ${PROVE_OPTIONS} ${TESTCASES}
+	@${builddir}/test_cleanup
 
 .PHONY: check-HARNESS
