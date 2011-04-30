@@ -319,7 +319,12 @@ enum
      * When set, the client is not allowed not to read all the data,
      * unless it closes connection.
      */
-    MONGO_WIRE_FLAG_QUERY_EXHAUST = 1 << 6
+    MONGO_WIRE_FLAG_QUERY_EXHAUST = 1 << 6,
+    /** Allow partial results in a sharded environment.
+     * In case one or more required shards are down, with this flag
+     * set, partial results will be returned instead of failing.
+     */
+    MONGO_WIRE_FLAG_QUERY_PARTIAL_RESULTS = 1 << 7
   };
 
 /** Construct a query command.
