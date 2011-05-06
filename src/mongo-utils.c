@@ -60,9 +60,7 @@ mongo_util_oid_new_with_time (gint32 ts, gint32 seq)
   if (machine_id == 0 || pid == 0)
     return NULL;
 
-  oid = (guint8 *)g_try_new0 (guint8, 12);
-  if (!oid)
-    return NULL;
+  oid = (guint8 *)g_new0 (guint8, 12);
 
   /* Sequence number, last 3 bytes
    * For simplicity's sake, we put this in first, and overwrite the
