@@ -24,15 +24,7 @@
 
 #include "bson.h"
 #include "libmongo-macros.h"
-
-/** @internal BSON structure.
- */
-struct _bson
-{
-  GByteArray *data; /**< The actual data of the BSON object. */
-  gboolean finished; /**< Flag to indicate whether the object is open
-			or finished. */
-};
+#include "libmongo-private.h"
 
 /** @internal BSON cursor structure.
  */
@@ -853,7 +845,7 @@ gboolean
 bson_cursor_next (bson_cursor *c)
 {
   const guint8 *d;
-  gint32 pos;
+  gint32 pos, bs;
 
   if (!c)
     return FALSE;
@@ -863,8 +855,12 @@ bson_cursor_next (bson_cursor *c)
   if (c->pos == 0)
     pos = sizeof (guint32);
   else
-    pos = c->value_pos +
-      _bson_get_block_size (bson_cursor_type (c), d + c->value_pos);
+    {
+      bs = _bson_get_block_size (bson_cursor_type (c), d + c->value_pos);
+      if (bs == -1)
+	return FALSE;
+      pos = c->value_pos + bs;
+    }
 
   if (pos >= bson_size (c->obj) - 1)
     return FALSE;
@@ -879,7 +875,7 @@ bson_cursor_next (bson_cursor *c)
 bson_cursor *
 bson_find (const bson *b, const gchar *name)
 {
-  gint32 pos = sizeof (guint32);
+  gint32 pos = sizeof (guint32), bs;
   const guint8 *d;
 
   if (bson_size (b) == -1 || !name)
@@ -906,7 +902,10 @@ bson_find (const bson *b, const gchar *name)
 
 	  return c;
 	}
-      pos = value_pos + _bson_get_block_size (t, &d[value_pos]);
+      bs = _bson_get_block_size (t, &d[value_pos]);
+      if (bs == -1)
+	return NULL;
+      pos = value_pos + bs;
     }
 
   return NULL;
