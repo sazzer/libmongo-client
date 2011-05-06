@@ -21,6 +21,15 @@
 
 #include "mongo.h"
 
+/** @internal BSON structure.
+ */
+struct _bson
+{
+  GByteArray *data; /**< The actual data of the BSON object. */
+  gboolean finished; /**< Flag to indicate whether the object is open
+			or finished. */
+};
+
 /** @internal Mongo Connection state object. */
 struct _mongo_connection
 {

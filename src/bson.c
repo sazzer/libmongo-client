@@ -24,15 +24,7 @@
 
 #include "bson.h"
 #include "libmongo-macros.h"
-
-/** @internal BSON structure.
- */
-struct _bson
-{
-  GByteArray *data; /**< The actual data of the BSON object. */
-  gboolean finished; /**< Flag to indicate whether the object is open
-			or finished. */
-};
+#include "libmongo-private.h"
 
 /** @internal BSON cursor structure.
  */
