@@ -1,3 +1,5 @@
+#+STARTUP: indent showall			-*- org -*-
+
 * 0.0.2 - UNRELEASED
 
 ** Replica set seeding support
