@@ -74,12 +74,7 @@ mongo_connect (const char *host, int port)
       return NULL;
     }
 
-  conn = g_try_new0 (mongo_connection, 1);
-  if (!conn)
-    {
-      errno = ENOMEM;
-      return NULL;
-    }
+  conn = g_new0 (mongo_connection, 1);
 
   memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_STREAM;
@@ -250,7 +245,7 @@ mongo_packet_recv (mongo_connection *conn)
     }
 
   size = h.length - sizeof (mongo_packet_header);
-  data = g_try_new0 (guint8, size);
+  data = g_new0 (guint8, size);
   if ((guint32)recv (conn->fd, data, size, MSG_NOSIGNAL) != size)
     {
       int e = errno;
