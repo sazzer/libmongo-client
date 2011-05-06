@@ -37,9 +37,7 @@ mongo_sync_connect (const gchar *host, int port,
   c = mongo_connect (host, port);
   if (!c)
     return NULL;
-  s = g_try_realloc (c, sizeof (mongo_sync_connection));
-  if (!s)
-    return NULL;
+  s = g_realloc (c, sizeof (mongo_sync_connection));
 
   s->slaveok = slaveok;
   s->safe_mode = FALSE;
@@ -778,9 +776,7 @@ mongo_sync_cmd_insert (mongo_sync_connection *conn,
       return FALSE;
     }
 
-  docs = (bson **)g_try_new0 (bson *, 1);
-  if (!docs)
-    return FALSE;
+  docs = (bson **)g_new0 (bson *, 1);
 
   va_start (ap, ns);
   while ((d = (bson *)va_arg (ap, gpointer)))
@@ -792,9 +788,7 @@ mongo_sync_cmd_insert (mongo_sync_connection *conn,
 	  return FALSE;
 	}
 
-      docs = (bson **)g_try_renew (bson *, docs, n + 1);
-      if (!docs)
-	return FALSE;
+      docs = (bson **)g_renew (bson *, docs, n + 1);
       docs[n++] = d;
     }
   va_end (ap);
@@ -1300,8 +1294,6 @@ mongo_sync_cmd_user_add (mongo_sync_connection *conn,
     }
 
   userns = g_strconcat (db, ".system.users", NULL);
-  if (!userns)
-    return FALSE;
 
   _pass_digest (user, pw, hex_digest);
 
@@ -1347,8 +1339,6 @@ mongo_sync_cmd_user_remove (mongo_sync_connection *conn,
     }
 
   userns = g_strconcat (db, ".system.users", NULL);
-  if (!userns)
-    return FALSE;
 
   s = bson_build (BSON_TYPE_STRING, "user", user, -1,
 		  BSON_TYPE_NONE);
