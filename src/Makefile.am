@@ -39,5 +39,7 @@ coverage:
 				;;\
 		esac \
 	done
+	@c=`(echo "scale=2"; echo -n "("; echo -n $$(grep "Lines executed" coverage | cut -d: -f2 | cut -d "%" -f 1) | sed -e "s, , + ,g"; echo ") / " $$(grep -c "Lines executed" coverage)) | bc -q`; \
+	 echo -n "Overall coverage: $$c%" >>coverage
 
 .PHONY: coverage
