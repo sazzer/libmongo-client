@@ -1,6 +1,6 @@
 #+STARTUP: indent showall			-*- org -*-
 
-* 0.0.2 - UNRELEASED
+* 0.0.2 - <2011-05-07 Sat>
 
 ** Replica set seeding support
 It is now possible to add seeds to a connection, so that the library
@@ -34,6 +34,6 @@ checks (along with the post-mortem failover).
 
 Safe-mode is off by default.
 
-* 0.0.1 - 2011-04-10
+* 0.0.1 - <2011-04-10 Sun>
 
 Initial public release.
