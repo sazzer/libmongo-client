@@ -1,7 +1,7 @@
 SUBDIRS		= src tests examples
 
 ACLOCAL_AMFLAGS	= -I m4 --install
-EXTRA_DIST	= NEWS
+EXTRA_DIST	= NEWS README.rst
 
 coverage:
 	@echo "Making $@ in src"
