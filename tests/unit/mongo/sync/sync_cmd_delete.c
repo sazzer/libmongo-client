@@ -9,6 +9,7 @@ test_mongo_sync_cmd_delete_net_secondary (void)
 {
   mongo_sync_connection *conn;
   bson *b;
+  GList *l;
 
   skip (!config.secondary_host, 2,
 	"Secondary server not configured");
@@ -26,6 +27,8 @@ test_mongo_sync_cmd_delete_net_secondary (void)
 
   conn = mongo_sync_connect (config.secondary_host, config.secondary_port,
 			     TRUE);
+  mongo_sync_conn_set_auto_reconnect (conn, TRUE);
+
   ok (mongo_sync_cmd_delete (conn, config.ns, 0, b) == TRUE,
       "mongo_sync_cmd_delete() can reconnect to master");
   mongo_sync_disconnect (conn);
@@ -37,7 +40,16 @@ test_mongo_sync_cmd_delete_net_secondary (void)
 
   conn = mongo_sync_connect (config.secondary_host, config.secondary_port,
 			     TRUE);
+  mongo_sync_conn_set_auto_reconnect (conn, TRUE);
+
   shutdown (conn->super.fd, SHUT_RDWR);
+  l = conn->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+  conn->rs.hosts = NULL;
   sleep (3);
 
   ok (mongo_sync_cmd_delete (conn, config.ns, 0, b) == FALSE,
@@ -58,6 +70,7 @@ test_mongo_sync_cmd_delete_net (void)
   begin_network_tests (4);
 
   conn = mongo_sync_connect (config.primary_host, config.primary_port, TRUE);
+  mongo_sync_conn_set_auto_reconnect (conn, TRUE);
 
   b = bson_new ();
   bson_append_string (b, "unit-test", __FILE__, -1);

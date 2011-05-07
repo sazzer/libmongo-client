@@ -53,7 +53,8 @@ bson_unit_tests	= \
 		unit/bson/bson_cursor_get_int64
 
 bson_func_tests	= \
-		func/bson/huge_doc
+		func/bson/huge_doc \
+		func/bson/f_weird_types
 
 mongo_utils_unit_tests	= \
 		unit/mongo/utils/oid_init \
@@ -89,8 +90,11 @@ mongo_client_unit_tests	= \
 
 mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_connect \
+		unit/mongo/sync/sync_conn_seed_add \
 		unit/mongo/sync/sync_reconnect \
 		unit/mongo/sync/sync_disconnect \
+		unit/mongo/sync/sync_get_set_auto_reconnect \
+		unit/mongo/sync/sync_get_set_safe_mode \
 		unit/mongo/sync/sync_get_set_slaveok \
 		unit/mongo/sync/sync_get_set_max_insert_size \
 		unit/mongo/sync/sync_cmd_update \
@@ -112,7 +116,10 @@ mongo_sync_unit_tests	= \
 		unit/mongo/sync/sync_cmd_authenticate
 
 mongo_sync_func_tests	= \
-		func/mongo/sync/f_sync_max_insert_size
+		func/mongo/sync/f_sync_max_insert_size \
+		func/mongo/sync/f_sync_conn_seed_add \
+		func/mongo/sync/f_sync_safe_mode \
+		func/mongo/sync/f_sync_auto_reconnect
 
 mongo_sync_pool_unit_tests	= \
 		unit/mongo/sync-pool/sync_pool_new \
@@ -130,7 +137,8 @@ FUNC_TESTS	= ${bson_func_tests} ${mongo_sync_func_tests} \
 		${mongo_sync_pool_func_tests}
 TESTCASES	= ${UNIT_TESTS} ${FUNC_TESTS}
 
-check_PROGRAMS = ${TESTCASES}
+check_PROGRAMS	= ${TESTCASES}
+noinst_PROGRAMS= test_cleanup
 
 AM_CFLAGS = -I$(top_srcdir)/src/ -I${top_srcdir}/tests/libtap/ @GLIB_CFLAGS@
 LDADD = $(top_builddir)/src/libmongo-client.la ${top_builddir}/tests/libtap/libtap.la @GLIB_LIBS@
@@ -140,7 +148,8 @@ EXTRA_DIST = README
 check:
 	@${MAKE} ${AM_MAKEFLAGS} check-HARNESS
 
-check-HARNESS: ${TESTS}
+check-HARNESS: ${TESTS} ${noinst_PROGRAMS}
 	$(AM_V_GEN)srcdir=${srcdir} prove -e "${PROVE_ENV}" ${PROVE_OPTIONS} ${TESTCASES}
+	@${builddir}/test_cleanup
 
 .PHONY: check-HARNESS

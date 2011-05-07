@@ -9,6 +9,7 @@ void
 test_mongo_sync_reconnect (void)
 {
   mongo_sync_connection *conn, *o;
+  GList *l;
 
   ok (mongo_sync_reconnect (NULL, FALSE) == NULL,
       "mongo_sync_reconnect() fails with a NULL connection");
@@ -51,6 +52,14 @@ test_mongo_sync_reconnect (void)
 				 config.primary_port, TRUE);
   shutdown (conn->super.fd, SHUT_RDWR);
   sleep (3);
+  l = conn->rs.hosts;
+  while (l)
+    {
+      g_free (l->data);
+      l = g_list_delete_link (l, l);
+    }
+  conn->rs.hosts = NULL;
+
   conn = mongo_sync_reconnect (conn, FALSE);
 
   ok (conn != o && conn == NULL,

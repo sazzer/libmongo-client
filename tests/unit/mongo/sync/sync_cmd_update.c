@@ -10,8 +10,16 @@ test_mongo_sync_cmd_update (void)
 {
   mongo_sync_connection *c;
   bson *sel, *upd;
+  guint8 *oid;
 
-  sel = test_bson_generate_full ();
+  mongo_util_oid_init (0);
+
+  sel = bson_new ();
+  oid = mongo_util_oid_new (0);
+  bson_append_oid (sel, "_id", oid);
+  g_free (oid);
+  bson_finish (sel);
+
   upd = test_bson_generate_full ();
   c = test_make_fake_sync_conn (-1, FALSE);
 
@@ -34,23 +42,30 @@ test_mongo_sync_cmd_update (void)
   begin_network_tests (4);
 
   sel = bson_new ();
+  oid = mongo_util_oid_new (1);
+  bson_append_oid (sel, "_id", oid);
+  g_free (oid);
   bson_finish (sel);
-  upd = test_bson_generate_full ();
+
+  upd = bson_new ();
+  oid = mongo_util_oid_new (1);
+  bson_append_oid (upd, "_id", oid);
+  g_free (oid);
+  bson_finish (upd);
+
   c = mongo_sync_connect (config.primary_host, config.primary_port,
 			  FALSE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
 
   ok (mongo_sync_cmd_update (c, config.ns,
-			     MONGO_WIRE_FLAG_UPDATE_UPSERT |
-			     MONGO_WIRE_FLAG_UPDATE_MULTI, sel,
-			     upd) == TRUE,
+			     MONGO_WIRE_FLAG_UPDATE_UPSERT, sel, upd) == TRUE,
       "mongo_sync_cmd_update() works");
 
   shutdown (c->super.fd, SHUT_RDWR);
   sleep (3);
 
   ok (mongo_sync_cmd_update (c, config.ns,
-			     MONGO_WIRE_FLAG_UPDATE_UPSERT |
-			     MONGO_WIRE_FLAG_UPDATE_MULTI, sel, upd) == TRUE,
+			     MONGO_WIRE_FLAG_UPDATE_UPSERT, sel, upd) == TRUE,
       "mongo_sync_cmd_update() automatically reconnects");
 
   mongo_sync_disconnect (c);
@@ -63,13 +78,13 @@ test_mongo_sync_cmd_update (void)
 
   c = mongo_sync_connect (config.secondary_host, config.secondary_port,
 			  TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
+
   ok (mongo_sync_cmd_is_master (c) == FALSE,
       "Connected to a secondary");
 
   ok (mongo_sync_cmd_update (c, config.ns,
-			     MONGO_WIRE_FLAG_UPDATE_UPSERT |
-			     MONGO_WIRE_FLAG_UPDATE_MULTI, sel,
-			     upd) == TRUE,
+			     MONGO_WIRE_FLAG_UPDATE_UPSERT, sel, upd) == TRUE,
       "mongo_sync_cmd_update() automatically reconnects to master");
   mongo_sync_disconnect (c);
   endskip;

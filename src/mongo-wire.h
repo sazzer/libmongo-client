@@ -293,9 +293,9 @@ mongo_packet *mongo_wire_cmd_insert (gint32 id, const gchar *ns, ...) GNUC_SENTI
  * @param n is the number of documents to insert.
  * @param docs is the array containing the bson documents to insert.
  *
- * @returnsA newly allocated packet, or NULL on error. It is the
+ * @returns A newly allocated packet, or NULL on error. It is the
  * responsibility of the caller to free the packet once it is not used
- * anymore. 
+ * anymore.
  */
 mongo_packet *mongo_wire_cmd_insert_n (gint32 id, const gchar *ns, gint32 n,
 				       const bson **docs);
@@ -306,20 +306,25 @@ mongo_packet *mongo_wire_cmd_insert_n (gint32 id, const gchar *ns, gint32 n,
 enum
   {
     /** Set the TailableCursor flag on the query. */
-    MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR = 2 << 0,
+    MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR = 1 << 1,
     /** Allow queries made against a replica slave. */
-    MONGO_WIRE_FLAG_QUERY_SLAVE_OK = 2 << 1,
+    MONGO_WIRE_FLAG_QUERY_SLAVE_OK = 1 << 2,
     /** Disable cursor timeout. */
-    MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT = 2 << 3,
+    MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT = 1 << 4,
     /** Block if at the end of the data block, awaiting data.
      * Use only with #MONGO_WIRE_FLAG_QUERY_TAILABLE_CURSOR!
      */
-    MONGO_WIRE_FLAG_QUERY_AWAIT_DATA = 2 << 4,
+    MONGO_WIRE_FLAG_QUERY_AWAIT_DATA = 1 << 5,
     /** Stream the data down full blast in multiple packages.
      * When set, the client is not allowed not to read all the data,
      * unless it closes connection.
      */
-    MONGO_WIRE_FLAG_QUERY_EXHAUST = 2 << 5
+    MONGO_WIRE_FLAG_QUERY_EXHAUST = 1 << 6,
+    /** Allow partial results in a sharded environment.
+     * In case one or more required shards are down, with this flag
+     * set, partial results will be returned instead of failing.
+     */
+    MONGO_WIRE_FLAG_QUERY_PARTIAL_RESULTS = 1 << 7
   };
 
 /** Construct a query command.

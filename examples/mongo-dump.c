@@ -59,14 +59,21 @@ mongo_dump (config_t *config)
   gint64 cid;
   gdouble cnt, pos = 0;
 
+  gchar *error;
+  int e;
+
   VLOG ("Connecting to %s:%d/%s.%s...\n", config->host, config->port,
 	config->db, config->coll);
 
   conn = mongo_sync_connect (config->host, config->port, config->slaveok);
   if (!conn)
     {
+      e = errno;
+
+      mongo_sync_cmd_get_last_error (conn, config->db, &error);
       fprintf (stderr, "Error connecting to %s:%d: %s\n", config->host,
-	       config->port, strerror (errno));
+	       config->port, (error) ? error : strerror (e));
+      g_free (error);
       exit (1);
     }
 
@@ -76,8 +83,11 @@ mongo_dump (config_t *config)
       conn = mongo_sync_reconnect (conn, TRUE);
       if (!conn)
 	{
+	  e = errno;
+
+	  mongo_sync_cmd_get_last_error (conn, config->db, &error);
 	  fprintf (stderr, "Error reconnecting to the master of %s:%d: %s\n",
-		   config->host, config->port, strerror (errno));
+		   config->host, config->port, (error) ? error : strerror (e));
 	  exit (1);
 	}
     }
@@ -86,8 +96,11 @@ mongo_dump (config_t *config)
   cnt = mongo_sync_cmd_count (conn, config->db, config->coll, NULL);
   if (cnt < 0)
     {
+      e = errno;
+
+      mongo_sync_cmd_get_last_error (conn, config->db, &error);
       fprintf (stderr, "Error counting documents in %s.%s: %s\n",
-	       config->db, config->coll, strerror (errno));
+	       config->db, config->coll, (error) ? error : strerror (e));
       mongo_sync_disconnect (conn);
       exit (1);
     }
@@ -113,16 +126,21 @@ mongo_dump (config_t *config)
   p = mongo_sync_cmd_query (conn, config->ns,
 			    MONGO_WIRE_FLAG_QUERY_NO_CURSOR_TIMEOUT,
 			    0, 10, b, NULL);
-  bson_free (b);
   if (!p)
     {
+      e = errno;
+
+      bson_free (b);
       unlink (config->output);
       close (fd);
+
+      mongo_sync_cmd_get_last_error (conn, config->db, &error);
       fprintf (stderr, "Error retrieving the cursor: %s\n",
-	       strerror (errno));
+	       (error) ? error : strerror (e));
       mongo_sync_disconnect (conn);
       exit (1);
     }
+  bson_free (b);
 
   mongo_wire_reply_packet_get_header (p, &rh);
   cid = rh.cursor_id;
@@ -140,10 +158,15 @@ mongo_dump (config_t *config)
       p = mongo_sync_cmd_get_more (conn, config->ns, 10, cid);
       if (!p)
 	{
+	  e = errno;
+
 	  unlink (config->output);
 	  close (fd);
+
+	  mongo_sync_cmd_get_last_error (conn, config->db, &error);
 	  fprintf (stderr, "Error advancing the cursor: %s\n",
-		   strerror (errno));
+		   (error) ? error : strerror (e));
+
 	  mongo_sync_disconnect (conn);
 	  exit (1);
 	}

@@ -12,8 +12,13 @@ test_func_mongo_sync_max_insert_size (void)
   const bson *docs[10];
   bson *b1, *b2, *b3;
 
-  b1 = test_bson_generate_full ();
-  b2 = test_bson_generate_full ();
+  b1 = bson_new ();
+  bson_append_string (b1, "func_mongo_sync_max_insert_size", "works", -1);
+
+  bson_finish (b1);
+  b2 = bson_new ();
+  bson_append_int32 (b2, "int32", 1984);
+  bson_finish (b2);
   b3 = bson_new ();
   bson_finish (b3);
 

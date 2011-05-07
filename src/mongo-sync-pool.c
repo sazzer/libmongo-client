@@ -39,10 +39,7 @@ _mongo_sync_pool_connect (const gchar *host, gint port, gboolean slaveok)
   c = mongo_sync_connect (host, port, slaveok);
   if (!c)
     return NULL;
-  conn = g_try_realloc (c, sizeof (mongo_sync_pool_connection));
-  if (!conn)
-    return NULL;
-
+  conn = g_realloc (c, sizeof (mongo_sync_pool_connection));
   conn->pool_id = 0;
   conn->in_use = FALSE;
 
@@ -85,16 +82,7 @@ mongo_sync_pool_new (const gchar *host,
       return NULL;
     }
 
-  pool = g_try_new0 (mongo_sync_pool, 1);
-  if (!pool)
-    {
-      int e = errno;
-
-      mongo_sync_disconnect ((mongo_sync_connection *)conn);
-      errno = e;
-      return NULL;
-    }
-
+  pool = g_new0 (mongo_sync_pool, 1);
   pool->nmasters = nmasters;
   pool->nslaves = nslaves;
 

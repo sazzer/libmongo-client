@@ -24,15 +24,7 @@
 
 #include "bson.h"
 #include "libmongo-macros.h"
-
-/** @internal BSON structure.
- */
-struct _bson
-{
-  GByteArray *data; /**< The actual data of the BSON object. */
-  gboolean finished; /**< Flag to indicate whether the object is open
-			or finished. */
-};
+#include "libmongo-private.h"
 
 /** @internal BSON cursor structure.
  */
@@ -48,53 +40,37 @@ struct _bson_cursor
 		       key. */
 };
 
-/** @internal Convenience macro to check data integrity.
- *
- * This macro is used whenever we want to make sure that memory
- * allocation did not fail, and our data member is still intact.
- */
-#define DATA_OK(b) (b->data) ? TRUE : FALSE
-
 /** @internal Append a byte to a BSON stream.
  *
  * @param b is the BSON stream to append to.
  * @param byte is the byte to append.
- *
- * @returns TRUE on success, FALSE otherwise.
  */
-static inline gboolean
+static inline void
 _bson_append_byte (bson *b, const guint8 byte)
 {
   b->data = g_byte_array_append (b->data, &byte, sizeof (byte));
-  return DATA_OK (b);
 }
 
 /** @internal Append a 32-bit integer to a BSON stream.
  *
  * @param b is the BSON stream to append to.
  * @param i is the integer to append.
- *
- * @returns TRUE on success, FALSE otherwise.
  */
-static inline gboolean
+static inline void
 _bson_append_int32 (bson *b, const gint32 i)
 {
   b->data = g_byte_array_append (b->data, (const guint8 *)&i, sizeof (gint32));
-  return DATA_OK (b);
 }
 
 /** @internal Append a 64-bit integer to a BSON stream.
  *
  * @param b is the BSON stream to append to.
  * @param i is the integer to append.
- *
- * @returns TRUE on success, FALSE otherwise.
  */
-static inline gboolean
+static inline void
 _bson_append_int64 (bson *b, const gint64 i)
 {
   b->data = g_byte_array_append (b->data, (const guint8 *)&i, sizeof (gint64));
-  return DATA_OK (b);
 }
 
 /** @internal Append an element header to a BSON stream.
@@ -108,11 +84,6 @@ _bson_append_int64 (bson *b, const gint64 i)
  * @param name is the key name.
  *
  * @returns TRUE on success, FALSE otherwise.
- *
- * @note If the append fails mid-way, the data size is not rolled
- * back, thus if this function fails, the object MUST be treated as
- * invalid, and freed at the first opportunity, never accessed or
- * written to.
  */
 static inline gboolean
 _bson_append_element_header (bson *b, bson_type type, const gchar *name)
@@ -123,13 +94,11 @@ _bson_append_element_header (bson *b, bson_type type, const gchar *name)
   if (b->finished)
     return FALSE;
 
-  if (!_bson_append_byte (b, (guint8) type))
-    return FALSE;
-
+  _bson_append_byte (b, (guint8) type);
   b->data = g_byte_array_append (b->data, (const guint8 *)name,
 				 strlen (name) + 1);
 
-  return DATA_OK (b);
+  return TRUE;
 }
 
 /** @internal Append a string-like element to a BSON object.
@@ -163,14 +132,12 @@ _bson_append_string_element (bson *b, bson_type type, const gchar *name,
   if (!_bson_append_element_header (b, type, name))
     return FALSE;
 
-  if (!_bson_append_int32 (b, GINT32_TO_LE (len)))
-    return FALSE;
+  _bson_append_int32 (b, GINT32_TO_LE (len));
 
   b->data = g_byte_array_append (b->data, (const guint8 *)val, len - 1);
-  if (!b->data)
-    return FALSE;
+  _bson_append_byte (b, 0);
 
-  return _bson_append_byte (b, 0);
+  return TRUE;
 }
 
 /** @internal Append a document-like element to a BSON object.
@@ -201,7 +168,7 @@ _bson_append_document_element (bson *b, bson_type type, const gchar *name,
     return FALSE;
 
   b->data = g_byte_array_append (b->data, bson_data (doc), bson_size (doc));
-  return DATA_OK (b);
+  return TRUE;
 }
 
 /** @internal Append a 64-bit integer to a BSON object.
@@ -220,7 +187,8 @@ _bson_append_int64_element (bson *b, bson_type type, const gchar *name,
   if (!_bson_append_element_header (b, type, name))
     return FALSE;
 
-  return _bson_append_int64 (b, GINT64_TO_LE (i));
+  _bson_append_int64 (b, GINT64_TO_LE (i));
+  return TRUE;
 }
 
 /********************
@@ -288,23 +256,10 @@ bson_new (void)
 bson *
 bson_new_sized (gint32 size)
 {
-  bson *b = g_try_new0 (bson, 1);
-
-  if (!b)
-    return NULL;
+  bson *b = g_new0 (bson, 1);
 
   b->data = g_byte_array_sized_new (size + 1);
-  if (!b->data)
-    {
-      g_free (b);
-      return NULL;
-    }
-
-  if (!_bson_append_int32 (b, 0))
-    {
-      bson_free (b);
-      return NULL;
-    }
+  _bson_append_int32 (b, 0);
 
   return b;
 }
@@ -317,23 +272,9 @@ bson_new_from_data (const guint8 *data, gint32 size)
   if (!data || size <= 0)
     return NULL;
 
-  b = g_try_new0 (bson, 1);
-  if (!b)
-    return NULL;
-
+  b = g_new0 (bson, 1);
   b->data = g_byte_array_sized_new (size + 1);
-  if (!b->data)
-    {
-      g_free (b);
-      return NULL;
-    }
-
   b->data = g_byte_array_append (b->data, data, size);
-  if (!b->data)
-    {
-      g_free (b);
-      return NULL;
-    }
 
   return b;
 }
@@ -586,8 +527,7 @@ bson_finish (bson *b)
   if (b->finished)
     return TRUE;
 
-  if (!_bson_append_byte (b, 0))
-    return FALSE;
+  _bson_append_byte (b, 0);
 
   i = (gint32 *) (&b->data->data[0]);
   *i = GINT32_TO_LE ((gint32) (b->data->len));
@@ -629,7 +569,9 @@ bson_reset (bson *b)
 
   b->finished = FALSE;
   g_byte_array_set_size (b->data, 0);
-  return _bson_append_int32 (b, 0);
+  _bson_append_int32 (b, 0);
+
+  return TRUE;
 }
 
 void
@@ -656,7 +598,7 @@ bson_append_double (bson *b, const gchar *name, gdouble val)
     return FALSE;
 
   b->data = g_byte_array_append (b->data, (const guint8 *)&d, sizeof (val));
-  return DATA_OK (b);
+  return TRUE;
 }
 
 gboolean
@@ -688,14 +630,11 @@ bson_append_binary (bson *b, const gchar *name, bson_binary_subtype subtype,
   if (!_bson_append_element_header (b, BSON_TYPE_BINARY, name))
     return FALSE;
 
-  if (!_bson_append_int32 (b, GINT32_TO_LE (size)))
-    return FALSE;
-
-  if (!_bson_append_byte (b, (guint8)subtype))
-    return FALSE;
+  _bson_append_int32 (b, GINT32_TO_LE (size));
+  _bson_append_byte (b, (guint8)subtype);
 
   b->data = g_byte_array_append (b->data, data, size);
-  return DATA_OK (b);
+  return TRUE;
 }
 
 gboolean
@@ -708,7 +647,7 @@ bson_append_oid (bson *b, const gchar *name, const guint8 *oid)
     return FALSE;
 
   b->data = g_byte_array_append (b->data, oid, 12);
-  return DATA_OK (b);
+  return TRUE;
 }
 
 gboolean
@@ -717,7 +656,8 @@ bson_append_boolean (bson *b, const gchar *name, gboolean value)
   if (!_bson_append_element_header (b, BSON_TYPE_BOOLEAN, name))
     return FALSE;
 
-  return _bson_append_byte (b, (guint8)value);
+  _bson_append_byte (b, (guint8)value);
+  return TRUE;
 }
 
 gboolean
@@ -747,7 +687,7 @@ bson_append_regex (bson *b, const gchar *name, const gchar *regexp,
   b->data = g_byte_array_append (b->data, (const guint8 *)options,
 				 strlen (options) + 1);
 
-  return DATA_OK (b);
+  return TRUE;
 }
 
 gboolean
@@ -782,24 +722,16 @@ bson_append_javascript_w_scope (bson *b, const gchar *name,
 
   size = length + sizeof (gint32) + sizeof (gint32) + bson_size (scope);
 
-  if (!_bson_append_int32 (b, GINT32_TO_LE (size)))
-    return FALSE;
+  _bson_append_int32 (b, GINT32_TO_LE (size));
 
   /* Append the JS code */
-  if (!_bson_append_int32 (b, GINT32_TO_LE (length)))
-    return FALSE;
-
+  _bson_append_int32 (b, GINT32_TO_LE (length));
   b->data = g_byte_array_append (b->data, (const guint8 *)js, length - 1);
-  if (!b->data)
-    return FALSE;
-  if (!_bson_append_byte (b, 0))
-    return FALSE;
+  _bson_append_byte (b, 0);
 
   /* Append the scope */
   b->data = g_byte_array_append (b->data, bson_data (scope),
 				 bson_size (scope));
-  if (!b->data)
-    return FALSE;
 
   return TRUE;
 }
@@ -810,16 +742,14 @@ bson_append_int32 (bson *b, const gchar *name, gint32 i)
   if (!_bson_append_element_header (b, BSON_TYPE_INT32, name))
     return FALSE;
 
-  return _bson_append_int32 (b, GINT32_TO_LE (i));
-}
+  _bson_append_int32 (b, GINT32_TO_LE (i));
+  return TRUE;
+ }
 
 gboolean
 bson_append_timestamp (bson *b, const gchar *name, gint64 ts)
 {
-  if (!_bson_append_element_header (b, BSON_TYPE_TIMESTAMP, name))
-    return FALSE;
-
-  return _bson_append_int64 (b, GINT64_TO_LE (ts));
+  return _bson_append_int64_element (b, BSON_TYPE_TIMESTAMP, name, ts);
 }
 
 gboolean
@@ -839,10 +769,7 @@ bson_cursor_new (const bson *b)
   if (bson_size (b) == -1)
     return NULL;
 
-  c = (bson_cursor *)g_try_new0 (bson_cursor, 1);
-  if (!c)
-    return NULL;
-
+  c = (bson_cursor *)g_new0 (bson_cursor, 1);
   c->obj = b;
 
   return c;
@@ -918,7 +845,7 @@ gboolean
 bson_cursor_next (bson_cursor *c)
 {
   const guint8 *d;
-  gint32 pos;
+  gint32 pos, bs;
 
   if (!c)
     return FALSE;
@@ -928,8 +855,12 @@ bson_cursor_next (bson_cursor *c)
   if (c->pos == 0)
     pos = sizeof (guint32);
   else
-    pos = c->value_pos +
-      _bson_get_block_size (bson_cursor_type (c), d + c->value_pos);
+    {
+      bs = _bson_get_block_size (bson_cursor_type (c), d + c->value_pos);
+      if (bs == -1)
+	return FALSE;
+      pos = c->value_pos + bs;
+    }
 
   if (pos >= bson_size (c->obj) - 1)
     return FALSE;
@@ -944,7 +875,7 @@ bson_cursor_next (bson_cursor *c)
 bson_cursor *
 bson_find (const bson *b, const gchar *name)
 {
-  gint32 pos = sizeof (guint32);
+  gint32 pos = sizeof (guint32), bs;
   const guint8 *d;
 
   if (bson_size (b) == -1 || !name)
@@ -962,9 +893,7 @@ bson_find (const bson *b, const gchar *name)
 	{
 	  bson_cursor *c;
 
-	  c = (bson_cursor *)g_try_new0 (bson_cursor, 1);
-	  if (!c)
-	    return NULL;
+	  c = (bson_cursor *)g_new0 (bson_cursor, 1);
 
 	  c->obj = b;
 	  c->key = key;
@@ -973,7 +902,10 @@ bson_find (const bson *b, const gchar *name)
 
 	  return c;
 	}
-      pos = value_pos + _bson_get_block_size (t, &d[value_pos]);
+      bs = _bson_get_block_size (t, &d[value_pos]);
+      if (bs == -1)
+	return NULL;
+      pos = value_pos + bs;
     }
 
   return NULL;

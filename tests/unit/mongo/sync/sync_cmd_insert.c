@@ -29,13 +29,16 @@ test_mongo_sync_cmd_insert (void)
 
   begin_network_tests (4);
 
-  b1 = test_bson_generate_full ();
+  b1 = bson_new ();
+  bson_append_string (b1, "sync_cmd_insert", "works", -1);
+  bson_finish (b1);
   b2 = bson_new ();
   bson_append_int32 (b2, "int32", 1984);
   bson_finish (b2);
 
   c = mongo_sync_connect (config.primary_host, config.primary_port,
 			  TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
 
   ok (mongo_sync_cmd_insert (c, config.ns, b1, b2, NULL) == TRUE,
       "mongo_sync_cmd_insert() works");
@@ -55,6 +58,8 @@ test_mongo_sync_cmd_insert (void)
 
   c = mongo_sync_connect (config.secondary_host, config.secondary_port,
 			  TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
+
   ok (c && mongo_sync_cmd_is_master (c) == FALSE,
       "Connected to a secondary");
 

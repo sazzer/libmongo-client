@@ -25,6 +25,7 @@ test_mongo_sync_cmd_drop_net_secondary (void)
   conn = mongo_sync_connect (config.secondary_host, config.secondary_port,
 			     TRUE);
   mongo_sync_cmd_is_master (conn);
+  mongo_sync_conn_set_auto_reconnect (conn, TRUE);
 
   ret = mongo_sync_cmd_drop (conn, config.db, config.coll);
   ok (ret && mongo_sync_cmd_is_master (conn),
@@ -43,6 +44,8 @@ test_mongo_sync_cmd_drop_net (void)
   begin_network_tests (3);
 
   conn = mongo_sync_connect (config.primary_host, config.primary_port, FALSE);
+  mongo_sync_conn_set_auto_reconnect (conn, TRUE);
+
   b = bson_build (BSON_TYPE_BOOLEAN, "filler", TRUE,
 		  BSON_TYPE_NONE);
   bson_finish (b);

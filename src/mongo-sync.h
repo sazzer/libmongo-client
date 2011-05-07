@@ -67,6 +67,20 @@ mongo_sync_connection *mongo_sync_connect (const char *host,
 					   int port,
 					   gboolean slaveok);
 
+/** Add a seed to an existing MongoDB connection.
+ *
+ * The seed list will be used for reconnects, prioritized before the
+ * automatically discovered host list.
+ *
+ * @param conn is the connection to add a seed to.
+ * @param host is the seed host to add.
+ * @param port is the seed's port.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_conn_seed_add (mongo_sync_connection *conn,
+				   const gchar *host, gint port);
+
 /** Attempt to connect to another member of a replica set.
  *
  * Given an existing connection, this function will try to connect to
@@ -104,11 +118,64 @@ gboolean mongo_sync_conn_get_slaveok (const mongo_sync_connection *conn);
  *
  * @param conn is the connection to set the flag on.
  * @param slaveok is the state to set.
+ *
+ * @returns TRUE on sucess, FALSE otherwise.
  */
-void mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
-				  gboolean slaveok);
+gboolean mongo_sync_conn_set_slaveok (mongo_sync_connection *conn,
+				      gboolean slaveok);
 
-/* Get the maximum size of a bulk insert package.
+/** Retrieve the state of the safe mode flag from a sync connection.
+ *
+ * @param conn is the connection to check the flag on.
+ *
+ * @returns The state of the safe mode flag.
+ */
+gboolean mongo_sync_conn_get_safe_mode (const mongo_sync_connection *conn);
+
+/** Set the safe mode flag on a sync connection.
+ *
+ * Enabling safe mode will result in an additional getLastError() call
+ * after each insert or update, and extra checks performed on other
+ * commands aswell.
+ *
+ * The upside is more guarantees that the commands succeed, at the
+ * expense of network traffic and speed.
+ *
+ * @param conn is the connection to set the flag on.
+ * @param safe_mode is the state to set it to.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_conn_set_safe_mode (mongo_sync_connection *conn,
+					gboolean safe_mode);
+
+/** Get the state of the auto-reconnect flag from a sync connection.
+ *
+ * @param conn is the connection to check the flag on.
+ *
+ * @returns The state of the auto-reconnect flag.
+ */
+gboolean mongo_sync_conn_get_auto_reconnect (const mongo_sync_connection *conn);
+
+/** Set the state of the auto-reconnect flag on a sync connection.
+ *
+ * When auto-reconnect is enabled, the library will automatically
+ * attempt to reconnect to a server behind the scenes, when it detects
+ * an error.
+ *
+ * If safe-mode is turned on aswell, then auto-reconnect will only
+ * happen if the error is detected before a command is sent towards
+ * the database.
+ *
+ * @param conn is the connection to set auto-reconnect on.
+ * @param auto_reconnect is the state to set it to.
+ *
+ * @returns TRUE on success, FALSE otherwise.
+ */
+gboolean mongo_sync_conn_set_auto_reconnect (mongo_sync_connection *conn,
+					     gboolean auto_reconnect);
+
+/** Get the maximum size of a bulk insert package.
  *
  * @param conn is the connection to get the maximum size from.
  *
@@ -126,9 +193,10 @@ gint32 mongo_sync_conn_get_max_insert_size (mongo_sync_connection *conn);
  * @param conn is the connection to set the maximum size for.
  * @param max_size is the maximum size, in bytes.
  *
+ * @returns TRUE on success, FALSE otherwise.
  */
-void mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
-					  gint32 max_size);
+gboolean mongo_sync_conn_set_max_insert_size (mongo_sync_connection *conn,
+					      gint32 max_size);
 
 /** Send an update command to MongoDB.
  *

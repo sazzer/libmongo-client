@@ -62,6 +62,7 @@ test_mongo_sync_cmd_get_more_net (void)
   begin_network_tests (4);
 
   conn = mongo_sync_connect (config.primary_host, config.primary_port, TRUE);
+  mongo_sync_conn_set_auto_reconnect (conn, TRUE);
 
   b = bson_new ();
   for (i = 0; i < 40; i++)

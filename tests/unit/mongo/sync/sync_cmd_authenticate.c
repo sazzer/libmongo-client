@@ -16,6 +16,7 @@ test_mongo_sync_cmd_authenticate_net_secondary (void)
 	"Secondary server not configured");
 
   c = mongo_sync_connect (config.secondary_host, config.secondary_port, TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
   mongo_sync_cmd_is_master (c);
 
   ok (mongo_sync_cmd_authenticate (c, config.db, "test", "s3kr1+") == TRUE,
@@ -44,6 +45,7 @@ test_mongo_sync_cmd_authenticate_net (void)
   begin_network_tests (8);
 
   c = mongo_sync_connect (config.primary_host, config.primary_port, TRUE);
+  mongo_sync_conn_set_auto_reconnect (c, TRUE);
 
   mongo_sync_cmd_user_add (c, config.db, "test", "s3kr1+");
 

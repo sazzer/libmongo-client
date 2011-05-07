@@ -21,6 +21,15 @@
 
 #include "mongo.h"
 
+/** @internal BSON structure.
+ */
+struct _bson
+{
+  GByteArray *data; /**< The actual data of the BSON object. */
+  gboolean finished; /**< Flag to indicate whether the object is open
+			or finished. */
+};
+
 /** @internal Mongo Connection state object. */
 struct _mongo_connection
 {
@@ -34,10 +43,13 @@ struct _mongo_sync_connection
   mongo_connection super; /**< The parent object. */
   gboolean slaveok; /**< Whether queries against slave nodes are
 		       acceptable. */
+  gboolean safe_mode; /**< Safe-mode signal flag. */
+  gboolean auto_reconnect; /**< Auto-reconnect flag. */
 
   /** Replica Set properties. */
   struct
   {
+    GList *seeds; /**< Replica set seeds, as a list of strings. */
     GList *hosts; /**< Replica set members, as a list of strings. */
     gchar *primary; /**< The replica master, if any. */
   } rs;
