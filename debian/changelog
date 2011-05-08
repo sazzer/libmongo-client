@@ -1,0 +1,5 @@
+libmongo-client (0.0.2-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)
+
+ -- Gergely Nagy <algernon@madhouse-project.org>  Sun, 08 May 2011 21:07:52 +0200

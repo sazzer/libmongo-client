@@ -1,0 +1,20 @@
+Working with the Debianized libmongo-client
+===========================================
+
+The package is meant to be built from a git checkout, the original
+tarballs are git snapshots aswell. To this end, the debian/rules clean
+target will erase all generated files, to maintain a clean debian
+patchset.
+
+Since I'm also upstream for the package, my main development goes into
+the master branch, and the debian changes are kept on a debian branch
+instead. This would confuse git-buildpackage, so a configuration like
+below should be used (putting it into this package's .git/gbp.conf
+works just fine):
+
+[DEFAULT]
+upstream-branch=master
+debian-branch=debian
+
+--
+Gergely Nagy <algernon@madhouse-project.org>

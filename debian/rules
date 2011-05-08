@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+override_dh_auto_configure:
+	dh_testdir
+	./autogen.sh
+	dh_auto_configure -O-Bbuild-tree -- --enable-shared
+
+override_dh_auto_clean:
+	dh_testdir
+	dh_auto_clean -O-Bbuild-tree
+	find . -name 'Makefile.in' | xargs rm -f
+	rm -rf aclocal.m4 config.guess config.sub config.h.in configure depcomp \
+	       install-sh ltmain.sh m4 missing
+
+%:
+	dh $@ -Bbuild-tree
