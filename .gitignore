@@ -18,3 +18,5 @@ missing
 tests/*.ok
 docs/
 b/
+debian/patches
+.pc/
